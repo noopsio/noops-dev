@@ -123,53 +123,45 @@ impl Database {
 mod tests {
 
     use super::*;
-    use std::{fs, path::Path};
+    use tempfile::tempdir;
 
-    static PATH: &str = "test.db";
-    static TEST_PROJECT_NAME: &str = "test_project";
-    static TEST_FUNCTION_NAME: &str = "test_function";
-
-    fn setup() -> Database {
-        let path = Path::new(PATH);
-        if path.exists() {
-            fs::remove_file(path).unwrap();
-        }
-        Database::new(path).unwrap()
-    }
+    static DATABASE_NAME: &str = "noops.test_db";
+    static PROJECT_NAME: &str = "test_project";
+    static FUNCTION_NAME: &str = "test_function";
 
     #[test]
     fn new() {
-        let db = setup();
-        assert!(Path::new(PATH).exists());
+        let temp_dir = tempdir().unwrap();
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
         let tx = db.database.tx(false).unwrap();
         let _ = tx.get_bucket(PROJECT_BUCKET).unwrap();
     }
 
     #[test]
     fn create_project() {
-        let db = setup();
-        db.project_create(TEST_PROJECT_NAME).unwrap();
-        let functions = db.project_list(TEST_PROJECT_NAME).unwrap();
+        let temp_dir = tempdir().unwrap();
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+        db.project_create(PROJECT_NAME).unwrap();
+        let functions = db.project_list(PROJECT_NAME).unwrap();
         assert!(functions.is_empty());
     }
 
     #[test]
     fn create_function() {
-        let db = setup();
-        db.project_create(TEST_PROJECT_NAME).unwrap();
+        let temp_dir = tempdir().unwrap();
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+        db.project_create(PROJECT_NAME).unwrap();
 
         let test_function = schemas::CreateFunctionSchema {
-            project: TEST_PROJECT_NAME.to_string(),
-            name: TEST_FUNCTION_NAME.to_string(),
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
             params: vec!["param1".to_string(), "param2".to_string()],
             wasm: vec![0, 0, 0, 0, 0, 0, 0],
         };
 
-        db.function_create(TEST_PROJECT_NAME, TEST_FUNCTION_NAME, &test_function)
+        db.function_create(PROJECT_NAME, FUNCTION_NAME, &test_function)
             .unwrap();
-        let function = db
-            .function_get(TEST_PROJECT_NAME, TEST_FUNCTION_NAME)
-            .unwrap();
+        let function = db.function_get(PROJECT_NAME, FUNCTION_NAME).unwrap();
         assert_eq!(test_function, function);
     }
 }
