@@ -9,7 +9,7 @@ pub struct CreateFunctionSchema {
     pub wasm: Vec<u8>,
 }
 
-#[derive(ApiResponse)]
+#[derive(ApiResponse, PartialEq, Debug)]
 pub enum CreateResponse {
     /// Returned if the creation was successful
     #[oai(status = 204)]
@@ -22,7 +22,20 @@ pub enum CreateResponse {
     InternalServerError,
 }
 
-#[derive(ApiResponse)]
+#[derive(ApiResponse, PartialEq, Debug)]
+pub enum CreateFunctionResponse {
+    /// Returned if the function was creation successfully
+    #[oai(status = 204)]
+    Ok,
+    /// Returned if the project is not found
+    #[oai(status = 404)]
+    NotFound,
+    /// Returned if there was a critical server error
+    #[oai(status = 500)]
+    InternalServerError,
+}
+
+#[derive(ApiResponse, PartialEq, Debug)]
 pub enum DeleteResponse {
     /// Returned if the deletion was successful
     #[oai(status = 200)]
@@ -35,7 +48,7 @@ pub enum DeleteResponse {
     InternalServerError,
 }
 
-#[derive(ApiResponse)]
+#[derive(ApiResponse,PartialEq, Debug)]
 pub enum ExecuteResponse {
     /// Returned if the execution was successful
     #[oai(status = 200)]
