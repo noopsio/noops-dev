@@ -17,9 +17,11 @@ async fn main() -> anyhow::Result<()> {
     let matches = create_arg_matches();
     match matches.subcommand() {
         Some(("init", _)) => {
-            config::init()?;
+            println!("Initializing Project");
+            let config = config::init();
             println!("Project Initialized");
-
+            println!("Uploading Project to Server");
+            client::NoopsClient::from(&config).create_project().await?;
             Ok(())
         },
 
@@ -40,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
         Some(("deploy", _)) => {
             let config = load_config();
             println!("Deploying project");
-            client::NoopsClient::from(&config).upload_modules(config.modules).await?;
+            client::NoopsClient::from(&config).upload_modules(config.modules).await;
             Ok(())
         },
         _ => Err(anyhow!("No command provided")),

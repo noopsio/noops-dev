@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{modules::Module, print};
 
-pub fn init() -> anyhow::Result<()> {
+pub fn init() -> Config {
     let config_name = print::Color::prompt_text(
         &print::Color::White,
         "Name your Project",
     );
     let config = Config::new(&config_name);
-    config.to_yaml(None)?;
-    Ok(())
+    config.to_yaml(None).unwrap();
+    return config
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
