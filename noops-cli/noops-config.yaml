@@ -1,0 +1,6 @@
+name: noops-example
+modules:
+- name: my-module
+  root: test/
+  template: dummy
+  description: my super duper module
