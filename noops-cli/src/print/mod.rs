@@ -24,7 +24,8 @@ impl InteractiveTable {
         table
     }
 
-    fn create_header(header: Vec<&str>) -> Row {
+    fn create_header(mut header: Vec<&str>) -> Row {
+        header.insert(0, "Nr");
         Self::data_to_row(header, Some(prettytable::Attr::Bold))
     }
 
@@ -114,8 +115,8 @@ mod tests {
 
         let mut wanted_table = Table::new();
         wanted_table.set_format(*format::consts::FORMAT_BOX_CHARS);
-
-        let headers = Row::new(vec![Cell::new("HEADER").with_style(prettytable::Attr::Bold)]);
+        let style = prettytable::Attr::Bold;
+        let headers = Row::new(vec![Cell::new("Nr").with_style(style), Cell::new("HEADER").with_style(style)]);
         wanted_table.set_titles(headers);
 
         let data_row = Row::new(vec![Cell::new("DATA")]);

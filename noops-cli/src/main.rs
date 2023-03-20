@@ -3,6 +3,7 @@ mod config;
 mod print;
 mod modules;
 mod helpers;
+pub mod handlers;
 
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
