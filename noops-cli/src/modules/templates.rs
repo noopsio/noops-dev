@@ -1,7 +1,7 @@
 use crate::{
-    adapter::GitAdapter,
+    helpers::GitAdapter,
     config::Config,
-    modules::{Module, ModuleTemplate},
+    modules::Module,
     print,
 };
 
@@ -48,9 +48,9 @@ fn prompt_module_name() -> String {
 }
 
 pub struct ModuleTemplate {
-    index: String,
+    pub index: String,
     pub name: String,
-    description: String,
+    pub description: String,
     pub repository: String,
 }
 

@@ -1,14 +1,13 @@
-mod adapter;
 mod client;
 mod config;
-mod filesystem;
 mod print;
-mod templates;
 mod modules;
+mod helpers;
 
-use adapter::Toolchain;
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
+use crate::helpers::Toolchain;
+use crate::modules::templates;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -35,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         Some(("build", _)) => {
             let config = load_config();
             println!("Building modules");
-            adapter::CargoAdapter::build_project(config.modules)?;
+            helpers::CargoAdapter::build_project(config.modules)?;
             Ok(())
         },
 
@@ -44,6 +43,9 @@ async fn main() -> anyhow::Result<()> {
             println!("Deploying project");
             client::NoopsClient::from(&config).upload_modules(config.modules).await;
             Ok(())
+        },
+        Some(("remove", _)) => {
+    todo!()
         },
         _ => Err(anyhow!("No command provided")),
     }
@@ -55,6 +57,7 @@ fn create_arg_matches() -> ArgMatches {
         .subcommand(Command::new("add").about("Add a new module"))
         .subcommand(Command::new("build").about("Builds all functions in project"))
         .subcommand(Command::new("deploy").about("Deploy the project"))
+        .subcommand(Command::new("remove").about("Remove a module"))
         .get_matches()
 }
 

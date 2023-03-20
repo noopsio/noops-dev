@@ -58,7 +58,7 @@ pub fn delete_file(file: &str) {
 #[cfg(test)]
 mod test {
     use std::path::PathBuf;
-    use crate::filesystem::find_binary;
+    use crate::helpers::filesystem::find_binary;
 
     #[test]
     fn test_find_binary() {

@@ -1,3 +1,5 @@
+pub mod filesystem;
+
 use anyhow::{anyhow, Ok};
 use std::process::Command;
 
@@ -74,7 +76,7 @@ impl GitAdapter {
 
 #[cfg(test)]
 mod tests {
-    use crate::{modules::Module, adapter::GitAdapter};
+    use crate::{modules::Module, helpers::GitAdapter};
     use super::{CargoAdapter, Toolchain};
 
 
@@ -100,6 +102,6 @@ mod tests {
             "dir exists"
         );
 
-        crate::filesystem::remove_dir(cloned_path);
+        crate::helpers::filesystem::remove_dir(cloned_path);
     }
 }

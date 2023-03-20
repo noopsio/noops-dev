@@ -1,4 +1,4 @@
-mod templates;
+pub mod templates;
 
 use serde::{Deserialize, Serialize};
 

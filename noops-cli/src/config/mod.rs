@@ -90,7 +90,7 @@ mod tests {
         let written_config = Config::from_yaml(file_path).unwrap();
         assert_eq!(config, written_config);
     
-        crate::filesystem::delete_file(file_path)
+        crate::helpers::filesystem::delete_file(file_path)
     
     }
 }

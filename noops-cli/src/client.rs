@@ -4,8 +4,8 @@ use futures::future::join_all;
 
 
 use crate::{
-    config::{Config},
-    filesystem::{find_binary, read_binary}, modules::Module,
+    config::Config,
+    helpers::filesystem::{find_binary, read_binary}, modules::Module,
 };
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
