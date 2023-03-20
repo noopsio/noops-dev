@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "noops-cli"
+    "noops-cli",
+    "noops-server"
 ]
 
 [workspace.package]
