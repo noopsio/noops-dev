@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "noops"
+]
+[workspace.package]
+authors = ["Giom-fm <giom@jfcomputing.io Falumpaset <marc@jfcomputing.io"]
+[workspace.dependencies]
+anyhow = "1.0.69"
