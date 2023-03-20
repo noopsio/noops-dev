@@ -62,11 +62,11 @@ impl NoopsClient {
         .send()
         .await?;
 
-        Self::handle_reponse(response).await?;
+        Self::handle_response(response).await?;
         Ok(())
     }
 
-    async fn handle_reponse(response: Response) -> anyhow::Result<()> {
+    async fn handle_response(response: Response) -> anyhow::Result<()> {
         if response.status().is_success() {
             println!("Upload succeeded!");
             Ok(())

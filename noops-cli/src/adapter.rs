@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Ok};
-use std::{process::Command};
+use std::process::Command;
 
-use crate::{modules::Module};
+use crate::modules::Module;
 
 pub trait Toolchain {
     fn execute_build(target_dir: String) -> anyhow::Result<()>;

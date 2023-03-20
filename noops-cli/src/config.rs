@@ -52,6 +52,7 @@ impl Config {
             None => {
                 writer = std::fs::OpenOptions::new()
                     .write(true)
+                    .create(true)
                     .open("noops-config.yaml")
                     .expect("Couldn't open file");
             }

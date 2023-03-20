@@ -18,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
     match matches.subcommand() {
         Some(("init", _)) => {
             config::init()?;
-            println!("Project Inititalized");
+            println!("Project Initialized");
 
             Ok(())
         },

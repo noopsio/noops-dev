@@ -9,8 +9,8 @@ use crate::{
 pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();
     show_templates(&templates);
-    let template = promt_template(&templates);
-    let module_name = promt_module_name();
+    let template = prompt_template(&templates);
+    let module_name = prompt_module_name();
     let mut new_module = Module::from(template);
     new_module.name = module_name;
     
@@ -21,7 +21,7 @@ pub fn create(mut config: Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn promt_template(templates: &Vec<ModuleTemplate>) -> &ModuleTemplate{
+fn prompt_template(templates: &Vec<ModuleTemplate>) -> &ModuleTemplate{
 
     let template_index = print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
     let template = &templates[template_index]; 
@@ -41,7 +41,7 @@ fn show_templates(templates: &[ModuleTemplate]) {
 }
 
 
-fn promt_module_name() -> String {
+fn prompt_module_name() -> String {
     let module_name = print::Color::prompt_text(
         &print::Color::White,
         "Name your Module (This will name the root directory)",
