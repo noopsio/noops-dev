@@ -55,7 +55,13 @@ pub fn delete_file(file: &str) {
     }
 }
 
-#[test]
-fn test_find_binary() {
-    assert_eq!(find_binary(PathBuf::from("test")).unwrap(), "test/target/wasm32-wasi/release/noops-test-function.wasm");
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+    use crate::filesystem::find_binary;
+
+    #[test]
+    fn test_find_binary() {
+        assert_eq!(find_binary(PathBuf::from("test")).unwrap(), "test/target/wasm32-wasi/release/noops-test-function.wasm");
+    }
 }

@@ -62,29 +62,35 @@ impl Config {
     }
 }
 
-#[test]
-fn test_from_yaml() {
-    let file_path = "test/noops-config.yaml";
-    let parsed_config = Config::from_yaml(file_path).unwrap();
+#[cfg(test)]
 
-    let mut wanted_config = Config::new("noops-example");
-    let example_module = Module::new("my-module", "test/", "my super duper module", "dummy");
-    wanted_config.add_module(example_module).unwrap();
+mod tests {
+    use crate::{config::Config, modules::Module};
 
-    assert_eq!(parsed_config, wanted_config);
-}
-
-#[test]
-fn test_to_yaml() {
-    let file_path = "test/noops-config.yaml";
-    let config = Config::from_yaml(file_path).unwrap();
-
-    config.to_yaml(Some("test/saved.yaml")).unwrap();
-
-    let file_path = "test/saved.yaml";
-    let written_config = Config::from_yaml(file_path).unwrap();
-    assert_eq!(config, written_config);
-
-    crate::filesystem::delete_file(file_path)
-
+    #[test]
+    fn test_from_yaml() {
+        let file_path = "test/noops-config.yaml";
+        let parsed_config = Config::from_yaml(file_path).unwrap();
+    
+        let mut wanted_config = Config::new("noops-example");
+        let example_module = Module::new("my-module", "test/", "my super duper module", "dummy");
+        wanted_config.add_module(example_module).unwrap();
+    
+        assert_eq!(parsed_config, wanted_config);
+    }
+    
+    #[test]
+    fn test_to_yaml() {
+        let file_path = "test/noops-config.yaml";
+        let config = Config::from_yaml(file_path).unwrap();
+    
+        config.to_yaml(Some("test/saved.yaml")).unwrap();
+    
+        let file_path = "test/saved.yaml";
+        let written_config = Config::from_yaml(file_path).unwrap();
+        assert_eq!(config, written_config);
+    
+        crate::filesystem::delete_file(file_path)
+    
+    }
 }

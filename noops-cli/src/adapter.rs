@@ -72,26 +72,34 @@ impl GitAdapter {
     }
 }
 
-#[test]
-fn test_execute_build_cargo() {
-    CargoAdapter::execute_build("test/".to_string()).unwrap()
-}
+#[cfg(test)]
+mod tests {
+    use crate::{modules::Module, adapter::GitAdapter};
+    use super::{CargoAdapter, Toolchain};
 
-#[test]
-fn test_build_project_cargo() {
-    let example_modules = Module::new("my-module", "test/", "my super duper module", "dummy");
-    let modules = vec![example_modules];
-    CargoAdapter::build_project(modules).unwrap();
-}
 
-#[test]
-fn test_git_clone() {
-    let cloned_path = "cloned";
-    GitAdapter::clone_repository("JFcomputing/templates-rust-hello-world", cloned_path).unwrap();
-    assert!(
-        std::fs::metadata(cloned_path).unwrap().is_dir(),
-        "dir exists"
-    );
+    #[test]
+    fn test_execute_build_cargo() {
+        CargoAdapter::execute_build("test/".to_string()).unwrap()
+    }
 
-    crate::filesystem::remove_dir(cloned_path);
+    #[test]
+    fn test_build_project_cargo() {
+        let example_modules = Module::new("my-module", "test/", "my super duper module", "dummy");
+        let modules = vec![example_modules];
+        CargoAdapter::build_project(modules).unwrap();
+    }
+
+    #[test]
+    fn test_git_clone() {
+        let cloned_path = "cloned";
+        GitAdapter::clone_repository("JFcomputing/templates-rust-hello-world", cloned_path)
+            .unwrap();
+        assert!(
+            std::fs::metadata(cloned_path).unwrap().is_dir(),
+            "dir exists"
+        );
+
+        crate::filesystem::remove_dir(cloned_path);
+    }
 }
