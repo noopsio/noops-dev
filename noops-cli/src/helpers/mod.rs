@@ -63,6 +63,7 @@ pub struct GitAdapter;
 
 impl GitAdapter {
     pub fn clone_repository(repository: &str, dir_name: &str) -> anyhow::Result<()> {
+        println!("Cloning template to {}", dir_name);
         let mut git = Command::new("git");
         let git_clone = git
             .arg("clone")

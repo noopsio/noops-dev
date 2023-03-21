@@ -3,22 +3,31 @@ use crate::{config::Config, helpers::GitAdapter, modules::Module, print};
 pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();
     show_templates(&templates);
-    let template = prompt_template(templates);
-    let module_name = prompt_module_name();
-    let mut new_module = Module::from(template);
-    new_module.name = module_name;
+    let mut template = prompt_template(templates);
+    prompt_module_infomation(&mut template);
+    let new_module = Module::from(template);
 
-    GitAdapter::clone_repository(&new_module.template, &new_module.name)?;
-    println!("Adding Module {} to config", new_module.name);
+    GitAdapter::clone_repository(&new_module.template, &new_module.root.to_string_lossy())?;
+    println!("Adding module {} to config", &new_module.name);
 
     config.add_module(new_module)?;
+    println!("Added module to config!");
     Ok(())
+}
+
+fn prompt_module_infomation(template: &mut ModuleTemplate) {
+    template.module_name = prompt_question("---\nEnter module name:\n---");
+    template.module_root =
+        prompt_question("---\nEnter module root: (Leave blank to use module name)\n---");
 }
 
 fn prompt_template(templates: Vec<ModuleTemplate>) -> ModuleTemplate {
     let template_index =
         print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
-    let template = templates.into_iter().nth(template_index).expect("Invalid template index");
+    let template = templates
+        .into_iter()
+        .nth(template_index)
+        .expect("Invalid template index");
     template
 }
 
@@ -29,17 +38,18 @@ fn show_templates(templates: &[ModuleTemplate]) {
         .map(|template| template.into()) // Assuming the `into` function returns Vec<&str>
         .collect::<Vec<Vec<String>>>();
 
-    crate::print::Color::print_colorful(&print::Color::Red, "Choose Template by Number");
+    crate::print::Color::print_colorful(&print::Color::Red, "Choose template by index");
     let template_table = print::InteractiveTable::new(headers, &template_data);
     template_table.print_tty(true).unwrap();
 }
 
-fn prompt_module_name() -> String {
-    let module_name = print::Color::prompt_text(
-        &print::Color::White,
-        "Name your Module (This will name the root directory)",
-    );
-    module_name.to_string()
+fn prompt_question(question: &str) -> Option<String> {
+    let answer = print::Color::prompt_text(&print::Color::White, question);
+    if answer.trim().is_empty() {
+        None
+    } else {
+        Some(answer)
+    }
 }
 
 pub struct ModuleTemplate {
@@ -71,7 +81,6 @@ impl ModuleTemplate {
         ]
     }
 }
-
 
 impl From<&ModuleTemplate> for Vec<String> {
     fn from(template: &ModuleTemplate) -> Vec<String> {
