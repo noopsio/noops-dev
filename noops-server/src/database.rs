@@ -88,9 +88,9 @@ impl Database {
     ) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
         let bucket = tx.get_bucket(PROJECT_BUCKET)?;
-        let projects = bucket.get_bucket(project_name)?;
+        let project = bucket.get_bucket(project_name)?;
 
-        projects.put(function_name, bincode::serialize(&function)?)?;
+        project.put(function_name, bincode::serialize(&function)?)?;
         tx.commit()?;
 
         Ok(())
@@ -110,11 +110,12 @@ impl Database {
     }
 
     pub fn function_delete(&self, project_name: &str, function_name: &str) -> anyhow::Result<()> {
-        let tx = self.database.tx(false)?;
+        let tx = self.database.tx(true)?;
         let root = tx.get_bucket(PROJECT_BUCKET)?;
-        let projects = root.get_bucket(project_name)?;
+        let project = root.get_bucket(project_name)?;
 
-        projects.delete(function_name)?;
+        project.delete(function_name)?;
+        tx.commit()?;
         Ok(())
     }
 }
@@ -122,12 +123,24 @@ impl Database {
 #[cfg(test)]
 mod tests {
 
+    use crate::schemas::CreateFunctionSchema;
+
     use super::*;
+    use lazy_static::lazy_static;
     use tempfile::tempdir;
 
     static DATABASE_NAME: &str = "noops.test_db";
     static PROJECT_NAME: &str = "test_project";
     static FUNCTION_NAME: &str = "test_function";
+
+    lazy_static! {
+        static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
+            wasm: vec![0],
+            params: vec![String::default()],
+        };
+    }
 
     #[test]
     fn new() {
@@ -138,30 +151,51 @@ mod tests {
     }
 
     #[test]
-    fn create_project() {
+    fn project_create() {
         let temp_dir = tempdir().unwrap();
         let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+
         db.project_create(PROJECT_NAME).unwrap();
-        let functions = db.project_list(PROJECT_NAME).unwrap();
-        assert!(functions.is_empty());
+        assert!(db.project_exists(PROJECT_NAME).unwrap());
     }
 
     #[test]
-    fn create_function() {
+    fn project_delete() {
         let temp_dir = tempdir().unwrap();
         let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+
         db.project_create(PROJECT_NAME).unwrap();
+        assert!(db.project_exists(PROJECT_NAME).unwrap());
 
-        let test_function = schemas::CreateFunctionSchema {
-            project: PROJECT_NAME.to_string(),
-            name: FUNCTION_NAME.to_string(),
-            params: vec!["param1".to_string(), "param2".to_string()],
-            wasm: vec![0, 0, 0, 0, 0, 0, 0],
-        };
+        db.project_delete(PROJECT_NAME).unwrap();
+        assert!(!db.project_exists(PROJECT_NAME).unwrap());
+    }
 
-        db.function_create(PROJECT_NAME, FUNCTION_NAME, &test_function)
+    #[test]
+    fn function_create() {
+        let temp_dir = tempdir().unwrap();
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+
+        db.project_create(PROJECT_NAME).unwrap();
+        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)
             .unwrap();
+        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
+
         let function = db.function_get(PROJECT_NAME, FUNCTION_NAME).unwrap();
-        assert_eq!(test_function, function);
+        assert_eq!(*FUNCTION_SCHEMA, function);
+    }
+
+    #[test]
+    fn function_delete() {
+        let temp_dir = tempdir().unwrap();
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+
+        db.project_create(PROJECT_NAME).unwrap();
+        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)
+            .unwrap();
+        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
+
+        db.function_delete(PROJECT_NAME, FUNCTION_NAME).unwrap();
+        assert!(!db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
     }
 }

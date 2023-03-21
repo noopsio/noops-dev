@@ -1581,6 +1581,7 @@ dependencies = [
  "bincode",
  "clap",
  "jammdb",
+ "lazy_static",
  "poem",
  "poem-openapi",
  "serde",

@@ -19,4 +19,5 @@ poem-openapi = { version = "2.0.26", features = ["swagger-ui"] }
 poem = "1.3.55" 
 
 [dev-dependencies]
+lazy_static = "1.4.0"
 tempfile = "3.4.0"

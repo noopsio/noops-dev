@@ -87,7 +87,10 @@ impl API {
         function_name: Path<String>,
         database: Data<&Arc<Database>>,
     ) -> schemas::DeleteResponse {
-        if !database.project_exists(&project_name).unwrap() {
+        if !database
+            .function_exists(&project_name, &function_name)
+            .unwrap()
+        {
             return schemas::DeleteResponse::NotFound;
         }
         match database.function_delete(&project_name, &function_name) {
@@ -124,25 +127,34 @@ impl API {
 #[cfg(test)]
 mod tests {
 
-    use crate::schemas::{CreateFunctionSchema, CreateResponse, DeleteResponse, CreateFunctionResponse};
     use super::*;
+    use crate::schemas::{
+        CreateFunctionResponse, CreateFunctionSchema, CreateResponse, DeleteResponse,
+    };
+    use lazy_static::lazy_static;
     use tempfile::tempdir;
 
     static DATABASE_NAME: &str = "noops.test_db";
     static PROJECT_NAME: &str = "test_project";
     static FUNCTION_NAME: &str = "test_function";
 
+    lazy_static! {
+        static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
+            wasm: vec![0],
+            params: vec![String::default()],
+        };
+    }
 
     #[tokio::test]
     async fn create_project_ok() {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
 
         let result = api
-            .create_project(Path(project_name), Data(&database))
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Ok, result);
     }
@@ -151,17 +163,15 @@ mod tests {
     async fn create_project_conflict() {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
-
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
 
         let result = api
-            .create_project(Path(project_name.clone()), Data(&database))
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Ok, result);
+
         let result = api
-            .create_project(Path(project_name), Data(&database))
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Conflict, result);
     }
@@ -170,17 +180,15 @@ mod tests {
     async fn delete_project_ok() {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
-
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
 
         let result = api
-            .create_project(Path(project_name.clone()), Data(&database))
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Ok, result);
+
         let result = api
-            .delete_project(Path(project_name), Data(&database))
+            .delete_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(DeleteResponse::Ok, result);
     }
@@ -190,13 +198,11 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
 
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
-
         let result = api
-            .delete_project(Path(project_name), Data(&database))
+            .delete_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
+
         assert_eq!(DeleteResponse::NotFound, result);
     }
 
@@ -204,60 +210,106 @@ mod tests {
     async fn create_function_ok() {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
-
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
-        let function_name = FUNCTION_NAME.to_string();
-        let function_schema = CreateFunctionSchema {
-            project: project_name.clone(),
-            name: function_name.clone(),
-            wasm: vec![0],
-            params: vec!["".to_string()],
-        };
 
         let result = api
-            .create_project(Path(project_name.clone()), Data(&database))
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Ok, result);
 
         let result = api
             .create_function(
-                Path(project_name),
-                Path(function_name),
-                Json(function_schema),
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Json(FUNCTION_SCHEMA.clone()),
                 Data(&database),
             )
             .await;
         assert_eq!(CreateFunctionResponse::Ok, result);
     }
 
-
-
     #[tokio::test]
     async fn create_function_not_found() {
         let temp_dir = tempdir().unwrap();
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
-
-
         let api = API {};
-        let project_name = PROJECT_NAME.to_string();
-        let function_name = FUNCTION_NAME.to_string();
-        let function_schema = CreateFunctionSchema {
-            project: project_name.clone(),
-            name: function_name.clone(),
-            wasm: vec![0],
-            params: vec!["".to_string()],
-        };
 
         let result = api
             .create_function(
-                Path(project_name),
-                Path(function_name),
-                Json(function_schema),
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Json(FUNCTION_SCHEMA.clone()),
                 Data(&database),
             )
             .await;
         assert_eq!(CreateFunctionResponse::NotFound, result);
+    }
+
+    #[tokio::test]
+    async fn delete_function_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+
+        let result = api
+            .create_function(
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Json(FUNCTION_SCHEMA.clone()),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(CreateFunctionResponse::Ok, result);
+
+        let result = api
+            .delete_function(
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(DeleteResponse::Ok, result);
+    }
+
+    #[tokio::test]
+    async fn delete_function_not_found() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+
+        let result = api
+            .delete_function(
+                Path(PROJECT_NAME.to_string()),
+                Path("unknown_function".to_string()),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(DeleteResponse::NotFound, result);
+    }
+
+    #[tokio::test]
+    async fn delete_function_project_not_found() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .delete_function(
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(DeleteResponse::NotFound, result);
     }
 }
