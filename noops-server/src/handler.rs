@@ -1,11 +1,7 @@
 use std::sync::Arc;
 
 use poem::web::Data;
-use poem_openapi::{
-    param::Path,
-    payload::Json,
-    OpenApi,
-};
+use poem_openapi::{param::Path, payload::Json, OpenApi};
 
 use crate::database::Database;
 use crate::executor;
@@ -73,13 +69,13 @@ impl API {
         function_name: Path<String>,
         body: Json<schemas::CreateFunctionSchema>,
         database: Data<&Arc<Database>>,
-    ) -> schemas::CreateResponse {
+    ) -> schemas::CreateFunctionResponse {
         if !database.project_exists(&project_name).unwrap() {
-            return schemas::CreateResponse::Conflict;
+            return schemas::CreateFunctionResponse::NotFound;
         }
         match database.function_create(&project_name, &function_name, &body) {
-            Ok(_) => schemas::CreateResponse::Ok,
-            Err(_) => schemas::CreateResponse::InternalServerError,
+            Ok(_) => schemas::CreateFunctionResponse::Ok,
+            Err(_) => schemas::CreateFunctionResponse::InternalServerError,
         }
     }
 
@@ -120,7 +116,148 @@ impl API {
                 executor::execute(function.wasm).unwrap();
                 schemas::ExecuteResponse::Ok
             }
-            Err(_) => schemas::ExecuteResponse::InternalServerError
+            Err(_) => schemas::ExecuteResponse::InternalServerError,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::schemas::{CreateFunctionSchema, CreateResponse, DeleteResponse, CreateFunctionResponse};
+    use super::*;
+    use tempfile::tempdir;
+
+    static DATABASE_NAME: &str = "noops.test_db";
+    static PROJECT_NAME: &str = "test_project";
+    static FUNCTION_NAME: &str = "test_function";
+
+
+    #[tokio::test]
+    async fn create_project_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+
+        let result = api
+            .create_project(Path(project_name), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+    }
+
+    #[tokio::test]
+    async fn create_project_conflict() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+
+        let result = api
+            .create_project(Path(project_name.clone()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+        let result = api
+            .create_project(Path(project_name), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Conflict, result);
+    }
+
+    #[tokio::test]
+    async fn delete_project_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+
+        let result = api
+            .create_project(Path(project_name.clone()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+        let result = api
+            .delete_project(Path(project_name), Data(&database))
+            .await;
+        assert_eq!(DeleteResponse::Ok, result);
+    }
+
+    #[tokio::test]
+    async fn delete_project_not_found() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+
+        let result = api
+            .delete_project(Path(project_name), Data(&database))
+            .await;
+        assert_eq!(DeleteResponse::NotFound, result);
+    }
+
+    #[tokio::test]
+    async fn create_function_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+        let function_name = FUNCTION_NAME.to_string();
+        let function_schema = CreateFunctionSchema {
+            project: project_name.clone(),
+            name: function_name.clone(),
+            wasm: vec![0],
+            params: vec!["".to_string()],
+        };
+
+        let result = api
+            .create_project(Path(project_name.clone()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+
+        let result = api
+            .create_function(
+                Path(project_name),
+                Path(function_name),
+                Json(function_schema),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(CreateFunctionResponse::Ok, result);
+    }
+
+
+
+    #[tokio::test]
+    async fn create_function_not_found() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+
+
+        let api = API {};
+        let project_name = PROJECT_NAME.to_string();
+        let function_name = FUNCTION_NAME.to_string();
+        let function_schema = CreateFunctionSchema {
+            project: project_name.clone(),
+            name: function_name.clone(),
+            wasm: vec![0],
+            params: vec!["".to_string()],
+        };
+
+        let result = api
+            .create_function(
+                Path(project_name),
+                Path(function_name),
+                Json(function_schema),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(CreateFunctionResponse::NotFound, result);
     }
 }
