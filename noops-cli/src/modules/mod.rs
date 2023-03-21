@@ -31,22 +31,26 @@ impl From<ModuleTemplate> for Module {
     fn from(template: ModuleTemplate) -> Self {
         match template {
             ModuleTemplate {
-                name,
+                name: _,
                 description,
                 repository,
                 module_name,
                 module_root,
-            } => Module {
-                name: module_name.expect("Module Name required"),
-                root: module_root
-                    .map(|root| std::path::PathBuf::from(root))
-                    .unwrap_or_else(|| std::path::PathBuf::from(&name)),
-                description: description.to_string(),
-                template: repository.to_string(),
-            },
+            } => {
+                let module_name = module_name.expect("Module name required");
+                Module {
+                    name: module_name.clone(),
+                    root: module_root
+                        .map(|root| std::path::PathBuf::from(root))
+                        .unwrap_or_else(|| std::path::PathBuf::from(&module_name)),
+                    description: description.to_string(),
+                    template: repository.to_string(),
+                }
+            }
         }
     }
 }
+
 
 impl From<&Module> for Vec<String> {
     fn from(module: &Module) -> Vec<String> {
