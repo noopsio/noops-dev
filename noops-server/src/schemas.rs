@@ -1,7 +1,7 @@
 use poem_openapi::{ApiResponse, Object};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Object)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone)]
 pub struct CreateFunctionSchema {
     pub name: String,
     pub params: Vec<String>,
