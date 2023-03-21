@@ -10,7 +10,10 @@ use crate::{
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ModuleDTO {
+    name: String,
     wasm: Vec<u8>,
+    params: Vec<String>,
+    project: String
 }
 
 impl From<Module> for ModuleDTO {
@@ -19,12 +22,15 @@ impl From<Module> for ModuleDTO {
         let binary_buffer = read_binary(binary_location).unwrap();
         ModuleDTO {
             wasm: binary_buffer,
+            name: module.name,
+            params: vec![],
+            project: String::new(),
         }
     }
 }
 
 pub struct NoopsClient {
-    project: String,
+    pub project: String,
     server_url: String,
     client: Client,
 }
@@ -77,7 +83,8 @@ impl NoopsClient {
         log::debug!("Uploading module {} / {}", &self.project, &module.name);
         log::debug!("Module endpoint {}", module_endpoint);
         
-        let payload = ModuleDTO::from(module);
+        let mut payload = ModuleDTO::from(module);
+        payload.project = self.project.clone();
 
         let response = self.client
         .post(module_endpoint)
