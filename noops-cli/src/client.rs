@@ -39,6 +39,16 @@ impl From<&Config> for NoopsClient {
     }
 }
 
+impl From<&mut Config> for NoopsClient {
+    fn from(config: &mut Config) -> Self {
+        NoopsClient {
+            project: config.name.clone(),
+            server_url: "http://localhost:3000/api/".to_string(),
+            client: Client::new(),
+        }
+    }
+}
+
 impl NoopsClient {
     pub async fn upload_modules(&self, modules: Vec<Module>) {
         let mut uploads = vec![];
@@ -62,15 +72,30 @@ impl NoopsClient {
         Ok(())
     }
     async fn upload_module(&self, module: Module) -> anyhow::Result<()> {
-        let module_endpoint = self.server_url.clone() +"/" + &self.project + "/" + &module.name;
+        let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
 
-        log::debug!("Uploading Module {} / {}", &self.project, &module.name);
+        log::debug!("Uploading module {} / {}", &self.project, &module.name);
+        log::debug!("Module endpoint {}", module_endpoint);
         
         let payload = ModuleDTO::from(module);
 
         let response = self.client
         .post(module_endpoint)
         .json(&payload)
+        .send()
+        .await?;
+
+        Self::handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn delete_module(&self, module: &Module) -> anyhow::Result<()> {
+        let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
+
+        log::debug!("Deleting Module {} / {}", &self.project, &module.name);
+        
+        let response = self.client
+        .delete(module_endpoint)
         .send()
         .await?;
 

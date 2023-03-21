@@ -38,6 +38,7 @@ pub struct CargoAdapter;
 impl Toolchain for CargoAdapter {
     fn execute_build(target_dir: String) -> anyhow::Result<()> {
         let cargo_toml_path = target_dir + "Cargo.toml";
+        log::debug!("Cargo Toml path: {}", cargo_toml_path);
         let mut cargo = Command::new("cargo");
         let cargo_build = cargo
             .arg("build")
@@ -53,6 +54,7 @@ impl Toolchain for CargoAdapter {
     fn build_project(modules: Vec<Module>) -> anyhow::Result<()> {
         for module in modules {
             let build_dir = String::from(module.root.to_string_lossy());
+            log::debug!("Bulding dir: {}", build_dir);
             CargoAdapter::execute_build(build_dir).unwrap();
         }
         Ok(())

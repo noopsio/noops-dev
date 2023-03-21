@@ -39,6 +39,18 @@ impl Config {
         self.to_yaml(None)?;
         Ok(())
     }
+
+    pub fn get_module(&self, index: usize) -> &Module {
+        let module = self.modules.get(index).unwrap();
+        module
+    }
+
+    pub fn delete_module(&mut self, module: usize) -> anyhow::Result<()> {
+        self.modules.remove(module);
+        self.to_yaml(None)?;
+        Ok(())
+    }
+
     pub fn to_yaml(&self, file_name: Option<&str>) -> anyhow::Result<()> {
         let writer;
         match file_name {

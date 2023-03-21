@@ -41,8 +41,8 @@ impl From<ModuleTemplate> for Module {
                 Module {
                     name: module_name.clone(),
                     root: module_root
-                        .map(|root| std::path::PathBuf::from(root))
-                        .unwrap_or_else(|| std::path::PathBuf::from(&module_name)),
+                        .map(|root| std::path::PathBuf::from(root + "/"))
+                        .unwrap_or_else(|| std::path::PathBuf::from(module_name + "/")),
                     description: description.to_string(),
                     template: repository.to_string(),
                 }

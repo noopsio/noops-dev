@@ -7,6 +7,7 @@ pub mod handlers;
 
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
+use handlers::module_delete;
 use crate::helpers::Toolchain;
 use crate::modules::templates;
 
@@ -36,6 +37,7 @@ async fn main() -> anyhow::Result<()> {
             let config = load_config();
             println!("Building modules");
             helpers::CargoAdapter::build_project(config.modules)?;
+            println!("Done");
             Ok(())
         },
 
@@ -46,7 +48,8 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         },
         Some(("remove", _)) => {
-    todo!()
+            module_delete().await?;
+            Ok(())
         },
         _ => Err(anyhow!("No command provided")),
     }
@@ -63,12 +66,12 @@ fn create_arg_matches() -> ArgMatches {
 }
 
 fn load_config() -> config::Config {
-    println!("Loading Config");
+    println!("Loading config");
     let config = config::Config::from_yaml("noops-config.yaml").unwrap_or_else(|_| {
         println!("Please init project first with 'noops init' command.");
         std::process::exit(1);
     });
-    println!("Successfully loaded Config {}", config.name);
+    println!("Successfully loaded config {}", config.name);
 
     config
 }
