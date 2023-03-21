@@ -30,10 +30,13 @@ impl InteractiveTable {
     }
 
     fn create_entries(entries: &Vec<Vec<&str>>) -> Vec<Row> {
-        let rows = entries
+        let mut rows = entries
             .iter()
             .map(|row| Self::data_to_row(row.to_vec(), None))
             .collect::<Vec<Row>>();
+            for (i, row) in rows.iter_mut().enumerate()  {
+                row.insert_cell(i, Cell::new(&i.to_string()));
+            }
         rows
     }
 
@@ -119,7 +122,7 @@ mod tests {
         let headers = Row::new(vec![Cell::new("Nr").with_style(style), Cell::new("HEADER").with_style(style)]);
         wanted_table.set_titles(headers);
 
-        let data_row = Row::new(vec![Cell::new("DATA")]);
+        let data_row = Row::new(vec![Cell::new("0"), Cell::new("DATA")]);
 
         wanted_table.add_row(data_row);
         assert_eq!(table, wanted_table)

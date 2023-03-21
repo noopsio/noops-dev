@@ -1,8 +1,7 @@
 pub mod templates;
 
-use serde::{Deserialize, Serialize};
-
 use self::templates::ModuleTemplate;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Module {
@@ -28,20 +27,41 @@ impl Module {
     }
 }
 
-impl From<&ModuleTemplate> for Module {
-    fn from(template: &ModuleTemplate) -> Self {
+impl From<ModuleTemplate> for Module {
+    fn from(template: ModuleTemplate) -> Self {
         match template {
             ModuleTemplate {
-                index: _,
-                ref name,
-                ref description,
-                ref repository,
+                name,
+                description,
+                repository,
+                module_name,
+                module_root,
             } => Module {
-                name: name.to_string(),
-                root: std::path::PathBuf::from(&template.name),
+                name: module_name.expect("Module Name required"),
+                root: module_root
+                    .map(|root| std::path::PathBuf::from(root))
+                    .unwrap_or_else(|| std::path::PathBuf::from(&name)),
                 description: description.to_string(),
                 template: repository.to_string(),
             },
+        }
+    }
+}
+
+impl From<&Module> for Vec<String> {
+    fn from(module: &Module) -> Vec<String> {
+        match module {
+            Module {
+                name,
+                root: _,
+                template,
+                description,
+            } => vec![
+                name.clone(),
+                name.clone(),
+                template.clone(),
+                description.clone(),
+            ],
         }
     }
 }
