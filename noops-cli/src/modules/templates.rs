@@ -23,7 +23,7 @@ fn prompt_template(templates: Vec<ModuleTemplate>) -> ModuleTemplate {
 }
 
 fn show_templates(templates: &[ModuleTemplate]) {
-    let headers = vec!["Template", "Description", "Template"];
+    let headers = vec!["Name", "Description", "Template"];
     let template_data = templates
         .iter()
         .map(|template| template.into()) // Assuming the `into` function returns Vec<&str>
