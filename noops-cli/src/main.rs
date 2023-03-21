@@ -3,11 +3,11 @@ mod config;
 mod print;
 mod modules;
 mod helpers;
-pub mod handlers;
+mod handlers;
 
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
-use handlers::module_delete;
+use handlers::{module_delete, project_destroy};
 use crate::helpers::Toolchain;
 use crate::modules::templates;
 
@@ -51,6 +51,10 @@ async fn main() -> anyhow::Result<()> {
             module_delete().await?;
             Ok(())
         },
+        Some(("destroy", _)) => {
+            project_destroy().await?;
+            Ok(())
+        }
         _ => Err(anyhow!("No command provided")),
     }
 }
@@ -62,6 +66,7 @@ fn create_arg_matches() -> ArgMatches {
         .subcommand(Command::new("build").about("Builds all functions in project"))
         .subcommand(Command::new("deploy").about("Deploy the project"))
         .subcommand(Command::new("remove").about("Remove a module"))
+        .subcommand(Command::new("destroy").about("Destroy the project"))
         .get_matches()
 }
 
