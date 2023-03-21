@@ -1,9 +1,9 @@
 pub mod filesystem;
 
-use anyhow::{anyhow, Ok};
+use anyhow::anyhow;
 use std::process::Command;
 
-use crate::modules::Module;
+use crate::{modules::Module, helpers::filesystem::remove_dir};
 
 pub trait Toolchain {
     fn execute_build(target_dir: String) -> anyhow::Result<()>;
@@ -54,7 +54,7 @@ impl Toolchain for CargoAdapter {
     fn build_project(modules: Vec<Module>) -> anyhow::Result<()> {
         for module in modules {
             let build_dir = String::from(module.root.to_string_lossy());
-            log::debug!("Bulding dir: {}", build_dir);
+            log::debug!("Building dir: {}", build_dir);
             CargoAdapter::execute_build(build_dir).unwrap();
         }
         Ok(())
@@ -73,6 +73,7 @@ impl GitAdapter {
             .arg(dir_name);
 
         execute_command(git_clone)?;
+        remove_dir(&(dir_name.to_owned() + "/.git"));
         Ok(())
     }
 }
