@@ -35,7 +35,7 @@ impl InteractiveTable {
             .map(|row| Self::data_to_row(row.to_vec(), None))
             .collect::<Vec<Row>>();
             for (i, row) in rows.iter_mut().enumerate()  {
-                row.insert_cell(i, Cell::new(&i.to_string()));
+                row.insert_cell(0, Cell::new(&i.to_string()));
             }
         rows
     }
