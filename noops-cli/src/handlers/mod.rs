@@ -1,44 +1,10 @@
+pub mod modules;
+pub mod project;
+
 use crate::{
-    client,
     config::{self, Config},
     print,
 };
-
-pub async fn module_delete() -> anyhow::Result<()> {
-    let mut config = load_config();
-    print_modules(&config);
-    let module_index =
-        print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
-
-    let module = config.get_module(module_index);
-    client::NoopsClient::from(&config)
-        .delete_module(module)
-        .await?;
-    config.delete_module(module_index)?;
-    Ok(())
-}
-
-pub async fn project_destroy() -> anyhow::Result<()> {
-    let mut answer = print::Color::prompt_text(
-        &crate::print::Color::Red,
-        "--- \nDestroying the Project! Are you sure? \nYes/ No \n---",
-    );
-    answer = answer.to_lowercase();
-
-    match &answer[..] {
-        "yes" => {
-            print::Color::print_colorful(&crate::print::Color::Red, "Destroying...");
-            let config = load_config();
-            client::NoopsClient::from(&config).delete_project().await?;
-            print::Color::print_colorful(&crate::print::Color::Green, "Successfully destroyed project...");
-            Ok(())
-        }
-        _ => {
-            print::Color::print_colorful(&crate::print::Color::Green, "Aborting...");
-            Ok(())
-        }
-    }
-}
 
 fn print_modules(config: &Config) {
     let headers = vec!["Name", "Root", "Template", "Description"];
