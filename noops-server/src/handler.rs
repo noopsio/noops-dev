@@ -7,6 +7,8 @@ use crate::database::Database;
 use crate::executor;
 use crate::schemas;
 
+use tracing;
+
 pub struct API;
 
 #[OpenApi]
@@ -24,7 +26,10 @@ impl API {
 
         match database.project_create(&project_name) {
             Ok(_) => schemas::CreateResponse::Ok,
-            Err(_) => schemas::CreateResponse::InternalServerError,
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::CreateResponse::InternalServerError
+            }
         }
     }
 
@@ -57,7 +62,10 @@ impl API {
         }
         match database.project_delete(&project_name) {
             Ok(_) => schemas::DeleteResponse::Ok,
-            Err(_) => schemas::DeleteResponse::InternalServerError,
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::DeleteResponse::InternalServerError
+            }
         }
     }
 
@@ -75,7 +83,10 @@ impl API {
         }
         match database.function_create(&project_name, &function_name, &body) {
             Ok(_) => schemas::CreateFunctionResponse::Ok,
-            Err(_) => schemas::CreateFunctionResponse::InternalServerError,
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::CreateFunctionResponse::InternalServerError
+            }
         }
     }
 
@@ -95,7 +106,10 @@ impl API {
         }
         match database.function_delete(&project_name, &function_name) {
             Ok(_) => schemas::DeleteResponse::Ok,
-            Err(_) => schemas::DeleteResponse::InternalServerError,
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::DeleteResponse::InternalServerError
+            }
         }
     }
 
@@ -119,7 +133,10 @@ impl API {
                 executor::execute(function.wasm).unwrap();
                 schemas::ExecuteResponse::Ok
             }
-            Err(_) => schemas::ExecuteResponse::InternalServerError,
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::ExecuteResponse::InternalServerError
+            }
         }
     }
 }
