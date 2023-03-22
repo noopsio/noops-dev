@@ -1,6 +1,6 @@
-use crate::{client, print, modules::templates};
+use crate::{client, modules::templates, print};
 
-use super::{print_modules, load_config};
+use super::{load_config, print_modules};
 
 pub async fn module_delete() -> anyhow::Result<()> {
     let mut config = load_config();
@@ -16,7 +16,7 @@ pub async fn module_delete() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn module_add() -> anyhow::Result<()> {
+pub fn module_add() -> anyhow::Result<()> {
     let config = load_config();
     println!("Creating new module");
     templates::create(config)?;

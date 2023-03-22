@@ -4,7 +4,7 @@ pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();
     show_templates(&templates);
     let mut template = prompt_template(templates);
-    prompt_module_infomation(&mut template);
+    prompt_module_information(&mut template);
     let new_module = Module::from(template);
 
     GitAdapter::clone_repository(&new_module.template, &new_module.root.to_string_lossy())?;
@@ -15,7 +15,7 @@ pub fn create(mut config: Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn prompt_module_infomation(template: &mut ModuleTemplate) {
+fn prompt_module_information(template: &mut ModuleTemplate) {
     template.module_name = prompt_question("---\nEnter module name:\n---");
     template.module_root =
         prompt_question("---\nEnter module root: (Leave blank to use module name)\n---");

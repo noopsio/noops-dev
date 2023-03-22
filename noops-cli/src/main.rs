@@ -20,7 +20,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         Some(("add", _)) => {
-            handlers::modules::module_add().await?;
+            handlers::modules::module_add()?;
             Ok(())
         }
 
