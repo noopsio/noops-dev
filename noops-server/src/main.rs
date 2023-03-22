@@ -4,7 +4,7 @@ mod handler;
 mod schemas;
 
 use std::sync::Arc;
-use tracing_subscriber;
+use tracing_subscriber::{FmtSubscriber, EnvFilter};
 
 use poem::{
     listener::TcpListener,
@@ -17,11 +17,12 @@ const DATABASE_PATH: &str = "noops.db";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "poem=debug");
-    }
+    let subscriber = FmtSubscriber::builder()
+        .with_env_filter(EnvFilter::from_default_env())
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
+
     let database = Arc::new(database::Database::new(DATABASE_PATH)?);
-    tracing_subscriber::fmt::init();
 
     let api = OpenApiService::new(handler::API, "noops API", "1.0");
     let doc = api.swagger_ui();

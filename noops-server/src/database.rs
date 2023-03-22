@@ -24,7 +24,7 @@ impl Database {
     }
 
     pub fn project_exists(&self, project_name: &str) -> anyhow::Result<bool> {
-        let tx = self.database.tx(true)?;
+        let tx = self.database.tx(false)?;
         let root = tx.get_bucket(PROJECT_BUCKET)?;
         match root.get_bucket(project_name) {
             Ok(_) => Ok(true),
@@ -67,7 +67,7 @@ impl Database {
     }
 
     pub fn function_exists(&self, project_name: &str, function_name: &str) -> anyhow::Result<bool> {
-        let tx = self.database.tx(true)?;
+        let tx = self.database.tx(false)?;
         let root = tx.get_bucket(PROJECT_BUCKET)?;
         return if let Ok(project) = root.get_bucket(project_name) {
             return if let Some(_) = project.get(function_name) {
