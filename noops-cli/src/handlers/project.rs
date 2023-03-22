@@ -1,7 +1,6 @@
 use crate::{
-    client, config,
-    adapter::{Toolchain, cargo::CargoAdapter},
-    print,
+    adapter::{cargo::CargoAdapter, Toolchain},
+    client, config, print,
 };
 
 use super::load_config;
@@ -11,7 +10,9 @@ pub async fn project_init() -> anyhow::Result<()> {
     let config = config::init();
     println!("Project Initialized");
     println!("Uploading Project to Server");
-    client::NoopsClient::from(&config).create_project().await?;
+    client::NoopsClient::from_config(&config)
+        .create_project()
+        .await?;
     Ok(())
 }
 
@@ -26,7 +27,7 @@ pub async fn project_build() -> anyhow::Result<()> {
 pub async fn project_deploy() -> anyhow::Result<()> {
     let config = load_config();
     println!("Deploying project");
-    client::NoopsClient::from(&config)
+    client::NoopsClient::from_config(&config)
         .upload_modules(config.modules)
         .await;
     Ok(())
@@ -43,7 +44,9 @@ pub async fn project_destroy() -> anyhow::Result<()> {
         "yes" => {
             print::Color::print_colorful(&crate::print::Color::Red, "Destroying...");
             let config = load_config();
-            client::NoopsClient::from(&config).delete_project().await?;
+            client::NoopsClient::from_config(&config)
+                .delete_project()
+                .await?;
             print::Color::print_colorful(
                 &crate::print::Color::Green,
                 "Successfully destroyed project...",

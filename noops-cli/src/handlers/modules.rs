@@ -9,7 +9,7 @@ pub async fn module_delete() -> anyhow::Result<()> {
         print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
 
     let module = config.get_module(module_index);
-    client::NoopsClient::from(&config)
+    client::NoopsClient::from_config(&config)
         .delete_module(module)
         .await?;
     config.delete_module(module_index)?;
