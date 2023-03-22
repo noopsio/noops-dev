@@ -50,22 +50,15 @@ impl Config {
 
     pub fn to_yaml(&self, file_name: Option<&str>) -> anyhow::Result<()> {
         let writer;
-        match file_name {
-            Some(file_name) => {
-                writer = std::fs::OpenOptions::new()
-                    .write(true)
-                    .create(true)
-                    .open(file_name)
-                    .expect("Couldn't open file");
-            }
-            None => {
-                writer = std::fs::OpenOptions::new()
-                    .write(true)
-                    .create(true)
-                    .open("noops-config.yaml")
-                    .expect("Couldn't open file");
-            }
-        }
+        let default_file_name = "noops-config.yaml";
+        let final_file_name = file_name.unwrap_or(default_file_name);
+
+        writer = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(final_file_name)
+            .expect("Couldn't open file");
+
         serde_yaml::to_writer(writer, &self).unwrap();
         Ok(())
     }
