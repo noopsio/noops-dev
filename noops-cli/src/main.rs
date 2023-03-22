@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         Some(("deploy", _)) => {
-            handlers::project::project_deploy().await?;
+            handlers::project::project_deploy().await;
             Ok(())
         }
         Some(("remove", _)) => {

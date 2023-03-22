@@ -24,13 +24,12 @@ pub async fn project_build() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn project_deploy() -> anyhow::Result<()> {
+pub async fn project_deploy() {
     let config = load_config();
     println!("Deploying project");
     client::NoopsClient::from_config(&config)
         .upload_modules(config.modules)
         .await;
-    Ok(())
 }
 
 pub async fn project_destroy() -> anyhow::Result<()> {
