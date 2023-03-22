@@ -1,4 +1,4 @@
-use crate::{config::Config, modules::Module, print, adapter::git::GitAdapter};
+use crate::{adapter::git::GitAdapter, config::Config, modules::Module, print};
 
 pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();
@@ -23,7 +23,7 @@ fn prompt_module_information(template: &mut ModuleTemplate) {
 
 fn prompt_template(templates: Vec<ModuleTemplate>) -> ModuleTemplate {
     let template_index =
-        print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
+        print::Color::prompt_number(&print::Color::White, "--- \nEnter index \n---");
     let template = templates
         .into_iter()
         .nth(template_index)
@@ -35,10 +35,10 @@ fn show_templates(templates: &[ModuleTemplate]) {
     let headers = vec!["Name", "Description", "Template"];
     let template_data = templates
         .iter()
-        .map(|template| template.into()) // Assuming the `into` function returns Vec<&str>
+        .map(|template| template.to_vec_string()) // Assuming the `into` function returns Vec<&str>
         .collect::<Vec<Vec<String>>>();
 
-    crate::print::Color::print_colorful(&print::Color::Red, "Choose template by index");
+    print::Color::print_colorful(&print::Color::Red, "Choose template by index");
     let template_table = print::InteractiveTable::new(headers, &template_data);
     template_table.print_tty(true).unwrap();
 }
@@ -80,18 +80,12 @@ impl ModuleTemplate {
             },
         ]
     }
-}
 
-impl From<&ModuleTemplate> for Vec<String> {
-    fn from(template: &ModuleTemplate) -> Vec<String> {
-        match template {
-            ModuleTemplate {
-                name,
-                description,
-                repository,
-                module_name: _,
-                module_root: _,
-            } => vec![name.clone(), description.clone(), repository.clone()],
-        }
+    pub fn to_vec_string(&self) -> Vec<String> {
+        vec![
+            self.name.clone(),
+            self.description.clone(),
+            self.repository.clone(),
+        ]
     }
 }

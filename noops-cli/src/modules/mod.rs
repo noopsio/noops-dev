@@ -25,6 +25,14 @@ impl Module {
             template: template.to_string(),
         }
     }
+    pub fn to_vec_string(&self) -> Vec<String> {
+        vec![
+            self.name.clone(),
+            self.name.clone(),
+            self.template.clone(),
+            self.description.clone(),
+        ]
+    }
 }
 
 impl From<ModuleTemplate> for Module {
@@ -47,25 +55,6 @@ impl From<ModuleTemplate> for Module {
                     template: repository.to_string(),
                 }
             }
-        }
-    }
-}
-
-
-impl From<&Module> for Vec<String> {
-    fn from(module: &Module) -> Vec<String> {
-        match module {
-            Module {
-                name,
-                root: _,
-                template,
-                description,
-            } => vec![
-                name.clone(),
-                name.clone(),
-                template.clone(),
-                description.clone(),
-            ],
         }
     }
 }
