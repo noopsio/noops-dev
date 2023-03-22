@@ -78,11 +78,13 @@ impl Config {
 
 mod tests {
     use crate::{config::Config, modules::Module};
+    const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
+
 
     #[test]
     fn test_from_yaml() {
-        let file_path = "test/noops-config.yaml";
-        let parsed_config = Config::from_yaml(file_path).unwrap();
+        
+        let parsed_config = Config::from_yaml(TEST_CONFIG_PATH).unwrap();
     
         let mut wanted_config = Config::new("noops-example");
         let example_module = Module::new("my-module", "test/", "my super duper module", "dummy");
@@ -93,16 +95,15 @@ mod tests {
     
     #[test]
     fn test_to_yaml() {
-        let file_path = "test/noops-config.yaml";
-        let config = Config::from_yaml(file_path).unwrap();
+        let config = Config::from_yaml(TEST_CONFIG_PATH).unwrap();
+        let saved_config_path = "test/saved.yaml";
+
+        config.to_yaml(Some(saved_config_path)).unwrap();
     
-        config.to_yaml(Some("test/saved.yaml")).unwrap();
-    
-        let file_path = "test/saved.yaml";
-        let written_config = Config::from_yaml(file_path).unwrap();
+        let written_config = Config::from_yaml(saved_config_path).unwrap();
         assert_eq!(config, written_config);
     
-        crate::helpers::filesystem::delete_file(file_path)
+        crate::helpers::filesystem::delete_file(saved_config_path)
     
     }
 }
