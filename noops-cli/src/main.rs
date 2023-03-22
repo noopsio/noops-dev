@@ -1,7 +1,8 @@
+mod adapter;
 mod client;
 mod config;
+mod filesystem;
 mod handlers;
-mod helpers;
 mod modules;
 mod print;
 

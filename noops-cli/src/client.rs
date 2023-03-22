@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::Config,
-    helpers::filesystem::{find_binary, read_binary},
+    filesystem::{find_binary, read_binary},
     modules::Module,
 };
 

@@ -1,4 +1,4 @@
-use crate::{config::Config, helpers::GitAdapter, modules::Module, print};
+use crate::{config::Config, modules::Module, print, adapter::git::GitAdapter};
 
 pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();

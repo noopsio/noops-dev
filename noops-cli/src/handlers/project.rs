@@ -1,6 +1,6 @@
 use crate::{
     client, config,
-    helpers::{self, Toolchain},
+    adapter::{Toolchain, cargo::CargoAdapter},
     print,
 };
 
@@ -18,7 +18,7 @@ pub async fn project_init() -> anyhow::Result<()> {
 pub async fn project_build() -> anyhow::Result<()> {
     let config = load_config();
     println!("Building modules");
-    helpers::CargoAdapter::build_project(config.modules)?;
+    CargoAdapter::build_project(config.modules)?;
     println!("Done");
     Ok(())
 }
