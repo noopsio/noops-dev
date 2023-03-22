@@ -59,7 +59,7 @@ impl Config {
             .open(final_file_name)
             .expect("Couldn't open file");
 
-        serde_yaml::to_writer(writer, &self).unwrap();
+        serde_yaml::to_writer(writer, &self)?;
         Ok(())
     }
 }
