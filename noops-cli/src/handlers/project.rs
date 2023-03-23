@@ -1,5 +1,5 @@
 use crate::{
-    adapter::{cargo::CargoAdapter, Toolchain},
+    adapter::{cargo::CargoExecutor, Adapter, Toolchain},
     client, config, print,
 };
 
@@ -19,7 +19,8 @@ pub async fn project_init() -> anyhow::Result<()> {
 pub async fn project_build() -> anyhow::Result<()> {
     let config = load_config();
     println!("Building modules");
-    CargoAdapter::build_project(config.modules)?;
+    let cargo_adapter = Adapter::new(config.modules, CargoExecutor);
+    cargo_adapter.build_project()?;
     println!("Done");
     Ok(())
 }
@@ -46,10 +47,7 @@ pub async fn project_destroy() -> anyhow::Result<()> {
             client::NoopsClient::from_config(&config)
                 .delete_project()
                 .await?;
-            print::Color::print_colorful(
-                &print::Color::Green,
-                "Successfully destroyed project...",
-            );
+            print::Color::print_colorful(&print::Color::Green, "Successfully destroyed project...");
             Ok(())
         }
         _ => {

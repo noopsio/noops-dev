@@ -4,7 +4,7 @@ use self::templates::ModuleTemplate;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-enum Language {
+pub enum Language {
     Rust,
     Golang,
 }

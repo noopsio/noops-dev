@@ -7,9 +7,37 @@ use std::process::Command;
 
 use crate::modules::Module;
 
+pub trait BuildExecutor {
+    fn execute_build(&self, target_dir: String) -> anyhow::Result<()>;
+}
+
 pub trait Toolchain {
-    fn execute_build(target_dir: String) -> anyhow::Result<()>;
-    fn build_project(modules: Vec<Module>) -> anyhow::Result<()>;
+    fn build_project(&self) -> anyhow::Result<()>;
+}
+
+pub struct Adapter<T: BuildExecutor> {
+    modules: Vec<Module>,
+    build_executor: T,
+}
+
+impl<T: BuildExecutor> Adapter<T> {
+    pub fn new(modules: Vec<Module>, build_executor: T) -> Self {
+        Adapter {
+            modules,
+            build_executor,
+        }
+    }
+}
+
+impl<T: BuildExecutor> Toolchain for Adapter<T> {
+    fn build_project(&self) -> anyhow::Result<()> {
+        for module in &self.modules {
+            let build_dir = String::from(module.root.to_string_lossy());
+            log::debug!("Building dir: {}", build_dir);
+            self.build_executor.execute_build(build_dir)?;
+        }
+        Ok(())
+    }
 }
 
 fn execute_command(command: &mut Command) -> anyhow::Result<()> {

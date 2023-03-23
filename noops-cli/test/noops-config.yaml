@@ -5,3 +5,4 @@ modules:
     root: "test/"
     description: "my super duper module"
     template: "dummy"
+    language: "Rust"

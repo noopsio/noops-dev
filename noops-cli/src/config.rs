@@ -75,7 +75,13 @@ mod tests {
         let parsed_config = Config::from_yaml(TEST_CONFIG_PATH).unwrap();
 
         let mut wanted_config = Config::new("noops-example");
-        let example_module = Module::new("my-module", "test/", "my super duper module", "dummy");
+        let example_module = Module::new(
+            "my-module",
+            "test/",
+            "my super duper module",
+            "dummy",
+            crate::modules::Language::Rust,
+        );
         wanted_config.add_module(example_module).unwrap();
 
         assert_eq!(parsed_config, wanted_config);
