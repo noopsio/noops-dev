@@ -1,4 +1,5 @@
-use super::BuildExecutor;
+use super::{Adapter, BuildExecutor, LanguageAdapter, LanguageAdapterFactory};
+use crate::modules::Module;
 use std::process::Command;
 
 pub struct CargoExecutor;
@@ -17,6 +18,12 @@ impl BuildExecutor for CargoExecutor {
             .arg(cargo_toml_path);
         super::execute_command(cargo_build)?;
         Ok(())
+    }
+}
+
+impl LanguageAdapter for CargoExecutor {
+    fn new_adapter(modules: Vec<Module>) -> Adapter<Self> {
+        Adapter::new(modules, Self)
     }
 }
 

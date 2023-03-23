@@ -3,7 +3,7 @@ pub mod templates;
 use self::templates::ModuleTemplate;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Hash, Clone, Copy)]
 pub enum Language {
     Rust,
     Golang,
@@ -24,7 +24,7 @@ pub struct Module {
     pub root: std::path::PathBuf,
     pub template: String,
     description: String,
-    language: Language,
+    pub language: Language,
 }
 
 impl Module {

@@ -11,6 +11,12 @@ pub trait BuildExecutor {
     fn execute_build(&self, target_dir: String) -> anyhow::Result<()>;
 }
 
+pub trait LanguageAdapter: BuildExecutor {
+    fn new_adapter(modules: Vec<Module>) -> Adapter<Self>
+    where
+        Self: Sized;
+}
+
 pub trait Toolchain {
     fn build_project(&self) -> anyhow::Result<()>;
 }

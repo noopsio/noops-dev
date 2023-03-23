@@ -1,6 +1,7 @@
+use super::{execute_command, LanguageAdapter};
+use super::{Adapter, BuildExecutor};
+use crate::modules::Module;
 use std::process::Command;
-
-use super::{execute_command, BuildExecutor};
 
 pub struct GolangExecutor;
 
@@ -15,5 +16,11 @@ impl BuildExecutor for GolangExecutor {
             .arg(target_dir + "src/main.go");
         execute_command(tinygo_build)?;
         Ok(())
+    }
+}
+
+impl LanguageAdapter for GolangExecutor {
+    fn new_adapter(modules: Vec<Module>) -> Adapter<Self> {
+        Adapter::new(modules, Self)
     }
 }

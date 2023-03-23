@@ -1,9 +1,12 @@
-use crate::{
-    adapter::{cargo::CargoExecutor, Adapter, Toolchain},
-    client, config, print,
-};
+use std::collections::HashMap;
 
 use super::load_config;
+use crate::{
+    adapter::{cargo::CargoExecutor, golang::GolangExecutor, LanguageAdapter, Toolchain},
+    client, config,
+    modules::{Language, Module},
+    print,
+};
 
 pub async fn project_init() -> anyhow::Result<()> {
     println!("Initializing Project");
@@ -19,8 +22,26 @@ pub async fn project_init() -> anyhow::Result<()> {
 pub async fn project_build() -> anyhow::Result<()> {
     let config = load_config();
     println!("Building modules");
-    let cargo_adapter = Adapter::new(config.modules, CargoExecutor);
-    cargo_adapter.build_project()?;
+
+    // Group modules based on their language
+    let mut grouped_modules: HashMap<Language, Vec<Module>> = HashMap::new();
+    for module in config.modules {
+        grouped_modules
+            .entry(module.language)
+            .or_default()
+            .push(module);
+    }
+
+    for (language, modules) in grouped_modules {
+        let adapter: Box<dyn Toolchain> = match language {
+            Language::Rust => Box::new(CargoExecutor::new_adapter(modules)),
+            Language::Golang => Box::new(GolangExecutor::new_adapter(modules)),
+            // Add more languages and their corresponding adapter creators here
+        };
+
+        adapter.build_project()?;
+    }
+
     println!("Done");
     Ok(())
 }
