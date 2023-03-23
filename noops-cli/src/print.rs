@@ -65,7 +65,6 @@ impl InteractiveTable {
 pub enum Color {
     Red,
     Green,
-    Blue,
     White,
 }
 
@@ -74,7 +73,6 @@ impl Color {
         match self {
             Color::Red => println!("{}", text.red()),
             Color::Green => println!("{}", text.green()),
-            Color::Blue => println!("{}", text.blue()),
             Color::White => println!("{}", text.white()),
         }
     }
