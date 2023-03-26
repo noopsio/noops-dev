@@ -2,11 +2,10 @@ mod adapter;
 mod client;
 mod config;
 mod filesystem;
-mod print;
-mod templates;
+mod handlers;
 mod modules;
+mod print;
 
-use adapter::Toolchain;
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
 
@@ -17,32 +16,32 @@ async fn main() -> anyhow::Result<()> {
     let matches = create_arg_matches();
     match matches.subcommand() {
         Some(("init", _)) => {
-            config::init()?;
-            println!("Project Initialized");
-
+            handlers::project::project_init().await?;
             Ok(())
-        },
+        }
 
         Some(("add", _)) => {
-            let config = load_config();
-            println!("Creating new module");
-            templates::create(config)?;
+            handlers::modules::module_add()?;
             Ok(())
-        },
+        }
 
         Some(("build", _)) => {
-            let config = load_config();
-            println!("Building modules");
-            adapter::CargoAdapter::build_project(config.modules)?;
+            handlers::project::project_build().await?;
             Ok(())
-        },
+        }
 
         Some(("deploy", _)) => {
-            let config = load_config();
-            println!("Deploying project");
-            client::NoopsClient::from(&config).upload_modules(config.modules).await?;
+            handlers::project::project_deploy().await;
             Ok(())
-        },
+        }
+        Some(("remove", _)) => {
+            handlers::modules::module_delete().await?;
+            Ok(())
+        }
+        Some(("destroy", _)) => {
+            handlers::project::project_destroy().await?;
+            Ok(())
+        }
         _ => Err(anyhow!("No command provided")),
     }
 }
@@ -53,16 +52,7 @@ fn create_arg_matches() -> ArgMatches {
         .subcommand(Command::new("add").about("Add a new module"))
         .subcommand(Command::new("build").about("Builds all functions in project"))
         .subcommand(Command::new("deploy").about("Deploy the project"))
+        .subcommand(Command::new("remove").about("Remove a module"))
+        .subcommand(Command::new("destroy").about("Destroy the project"))
         .get_matches()
-}
-
-fn load_config() -> config::Config {
-    println!("Loading Config");
-    let config = config::Config::from_yaml("noops-config.yaml").unwrap_or_else(|_| {
-        println!("Please init project first with 'noops init' command.");
-        std::process::exit(1);
-    });
-    println!("Successfully loaded Config {}", config.name);
-
-    config
 }

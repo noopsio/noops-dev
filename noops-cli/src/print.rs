@@ -24,15 +24,19 @@ impl InteractiveTable {
         table
     }
 
-    fn create_header(header: Vec<&str>) -> Row {
+    fn create_header(mut header: Vec<&str>) -> Row {
+        header.insert(0, "Nr");
         Self::data_to_row(header, Some(prettytable::Attr::Bold))
     }
 
     fn create_entries(entries: &Vec<Vec<&str>>) -> Vec<Row> {
-        let rows = entries
+        let mut rows = entries
             .iter()
             .map(|row| Self::data_to_row(row.to_vec(), None))
             .collect::<Vec<Row>>();
+        for (i, row) in rows.iter_mut().enumerate() {
+            row.insert_cell(0, Cell::new(&i.to_string()));
+        }
         rows
     }
 
@@ -61,7 +65,6 @@ impl InteractiveTable {
 pub enum Color {
     Red,
     Green,
-    Blue,
     White,
 }
 
@@ -70,7 +73,6 @@ impl Color {
         match self {
             Color::Red => println!("{}", text.red()),
             Color::Green => println!("{}", text.green()),
-            Color::Blue => println!("{}", text.blue()),
             Color::White => println!("{}", text.white()),
         }
     }
@@ -78,13 +80,11 @@ impl Color {
         Color::print_colorful(color, question);
         io::stdout().flush().unwrap();
 
-        // Read the user input
         let mut user_input = String::new();
         io::stdin()
             .read_line(&mut user_input)
             .expect("Failed to read the user input");
 
-        // Remove the newline character at the end of the input
         user_input = user_input.trim_end().to_string();
         user_input
     }
@@ -103,9 +103,9 @@ impl Color {
 
 #[cfg(test)]
 mod tests {
-    use prettytable::{Row, format, Table, Cell};
     use crate::print::InteractiveTable;
-    
+    use prettytable::{format, Cell, Row, Table};
+
     #[test]
     fn test_table_generation() {
         let header = vec!["HEADER"];
@@ -114,11 +114,14 @@ mod tests {
 
         let mut wanted_table = Table::new();
         wanted_table.set_format(*format::consts::FORMAT_BOX_CHARS);
-
-        let headers = Row::new(vec![Cell::new("HEADER").with_style(prettytable::Attr::Bold)]);
+        let style = prettytable::Attr::Bold;
+        let headers = Row::new(vec![
+            Cell::new("Nr").with_style(style),
+            Cell::new("HEADER").with_style(style),
+        ]);
         wanted_table.set_titles(headers);
 
-        let data_row = Row::new(vec![Cell::new("DATA")]);
+        let data_row = Row::new(vec![Cell::new("0"), Cell::new("DATA")]);
 
         wanted_table.add_row(data_row);
         assert_eq!(table, wanted_table)
