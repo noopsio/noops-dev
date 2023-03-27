@@ -1,5 +1,7 @@
 use std::process::Command;
 
+use crate::filesystem::remove_dir;
+
 pub struct GitAdapter;
 
 impl GitAdapter {
@@ -12,6 +14,7 @@ impl GitAdapter {
             .arg(dir_name);
 
         super::execute_command(git_clone)?;
+        remove_dir(&(dir_name.to_owned() + "/.git"));
         Ok(())
     }
 }
