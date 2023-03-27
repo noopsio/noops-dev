@@ -1,4 +1,4 @@
-use poem_openapi::{ApiResponse, Object};
+use poem_openapi::{payload::Json, ApiResponse, Object};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone)]
@@ -9,6 +9,13 @@ pub struct CreateFunctionSchema {
     pub wasm: Vec<u8>,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone)]
+pub struct GetFunctionSchema {
+    pub name: String,
+    pub params: Vec<String>,
+    pub project: String,
+}
+
 #[derive(ApiResponse, PartialEq, Debug)]
 pub enum CreateResponse {
     /// Returned if the creation was successful
@@ -17,6 +24,19 @@ pub enum CreateResponse {
     /// Returned if the resource already exists
     #[oai(status = 409)]
     Conflict,
+    /// Returned if there was a critical server error
+    #[oai(status = 500)]
+    InternalServerError,
+}
+
+#[derive(ApiResponse, PartialEq, Debug)]
+pub enum GetProjectResponse {
+    /// Returned if success
+    #[oai(status = 200)]
+    Ok(Json<Vec<GetFunctionSchema>>),
+    /// Returned if the project is not found
+    #[oai(status = 404)]
+    NotFound,
     /// Returned if there was a critical server error
     #[oai(status = 500)]
     InternalServerError,

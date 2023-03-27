@@ -33,22 +33,24 @@ impl API {
         }
     }
 
-    /*
-        #[oai(path = "/:project_name", method = "get")]
-        async fn list(
-            &self,
-            project_name: Path<String>,
-            database: Data<&Arc<Database>>,
-        ) -> Result<Vec<FunctionDTO>> {
-            if !database.project_exists(&project_name).unwrap() {
-                return Err(Error::from_status(StatusCode::NOT_FOUND));
-            }
-            match database.project_list(&project_name) {
-                Ok(functions) => todo!(),
-                Err(_) => Err(Error::from_status(StatusCode::INTERNAL_SERVER_ERROR)),
+    /// List all functions in a project
+    #[oai(path = "/:project_name", method = "get")]
+    async fn list(
+        &self,
+        project_name: Path<String>,
+        database: Data<&Arc<Database>>,
+    ) -> schemas::GetProjectResponse {
+        if !database.project_exists(&project_name).unwrap() {
+            return schemas::GetProjectResponse::NotFound;
+        }
+        match database.project_list(&project_name) {
+            Ok(functions) => schemas::GetProjectResponse::Ok(Json(functions)),
+            Err(err) => {
+                tracing::error!("{}", err);
+                schemas::GetProjectResponse::InternalServerError
             }
         }
-    */
+    }
 
     /// Delete a project
     #[oai(path = "/api/:project_name", method = "delete")]
@@ -147,8 +149,10 @@ mod tests {
     use super::*;
     use crate::schemas::{
         CreateFunctionResponse, CreateFunctionSchema, CreateResponse, DeleteResponse,
+        GetFunctionSchema, GetProjectResponse,
     };
     use lazy_static::lazy_static;
+    use poem_openapi::payload::Json;
     use tempfile::tempdir;
 
     static DATABASE_NAME: &str = "noops.test_db";
@@ -191,6 +195,73 @@ mod tests {
             .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
             .await;
         assert_eq!(CreateResponse::Conflict, result);
+    }
+
+    #[tokio::test]
+    async fn get_project_empty_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+
+        let result = api
+            .list(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+
+        let function_list: Vec<GetFunctionSchema> = vec![];
+
+        assert_eq!(GetProjectResponse::Ok(Json(function_list)), result);
+    }
+
+    #[tokio::test]
+    async fn get_project_ok() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .create_project(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+        assert_eq!(CreateResponse::Ok, result);
+
+        let result = api
+            .create_function(
+                Path(PROJECT_NAME.to_string()),
+                Path(FUNCTION_NAME.to_string()),
+                Json(FUNCTION_SCHEMA.clone()),
+                Data(&database),
+            )
+            .await;
+        assert_eq!(CreateFunctionResponse::Ok, result);
+
+        let result = api
+            .list(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+
+        let function_list: Vec<GetFunctionSchema> = vec![GetFunctionSchema {
+            name: FUNCTION_NAME.to_string(),
+            project: PROJECT_NAME.to_string(),
+            params: vec![String::default()],
+        }];
+
+        assert_eq!(GetProjectResponse::Ok(Json(function_list)), result);
+    }
+
+    #[tokio::test]
+    async fn get_project_not_found() {
+        let temp_dir = tempdir().unwrap();
+        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap());
+        let api = API {};
+
+        let result = api
+            .list(Path(PROJECT_NAME.to_string()), Data(&database))
+            .await;
+
+        assert_eq!(GetProjectResponse::NotFound, result);
     }
 
     #[tokio::test]
