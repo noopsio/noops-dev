@@ -8,9 +8,9 @@ impl Toolchain for CargoAdapter {
     fn execute_build(target_dir: String) -> anyhow::Result<()> {
         let build_arg = "build";
         let release_flag = "--release";
-        let target_flag = "target";
+        let target_flag = "--target";
         let target_arch = "wasm32-wasi";
-        let manifest_flag = "--manifest_path";
+        let manifest_flag = "--manifest-path";
 
         let cargo_toml_path = target_dir + "Cargo.toml";
         log::debug!("Cargo Toml path: {}", cargo_toml_path);
