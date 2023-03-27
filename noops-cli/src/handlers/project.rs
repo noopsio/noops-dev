@@ -46,10 +46,7 @@ pub async fn project_destroy() -> anyhow::Result<()> {
             client::NoopsClient::from_config(&config)
                 .delete_project()
                 .await?;
-            print::Color::print_colorful(
-                &print::Color::Green,
-                "Successfully destroyed project...",
-            );
+            print::Color::print_colorful(&print::Color::Green, "Successfully destroyed project...");
             Ok(())
         }
         _ => {
