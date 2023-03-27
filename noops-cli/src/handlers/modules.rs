@@ -1,6 +1,6 @@
-use crate::{client, print, modules::templates};
+use crate::{client, modules::templates, print};
 
-use super::{print_modules, load_config};
+use super::{load_config, print_modules};
 
 pub async fn module_delete() -> anyhow::Result<()> {
     let mut config = load_config();
@@ -9,14 +9,14 @@ pub async fn module_delete() -> anyhow::Result<()> {
         print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
 
     let module = config.get_module(module_index);
-    client::NoopsClient::from(&config)
+    client::NoopsClient::from_config(&config)
         .delete_module(module)
         .await?;
     config.delete_module(module_index)?;
     Ok(())
 }
 
-pub async fn module_add() -> anyhow::Result<()> {
+pub fn module_add() -> anyhow::Result<()> {
     let config = load_config();
     println!("Creating new module");
     templates::create(config)?;

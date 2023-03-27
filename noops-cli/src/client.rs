@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::Config,
-    helpers::filesystem::{find_binary, read_binary},
+    filesystem::{find_binary, read_binary},
     modules::Module,
 };
 
@@ -35,16 +35,6 @@ pub struct NoopsClient {
     client: Client,
 }
 
-impl From<&Config> for NoopsClient {
-    fn from(config: &Config) -> Self {
-        NoopsClient {
-            project: config.name.clone(),
-            server_url: "http://localhost:3000/api/".to_string(),
-            client: Client::new(),
-        }
-    }
-}
-
 impl From<&mut Config> for NoopsClient {
     fn from(config: &mut Config) -> Self {
         NoopsClient {
@@ -56,6 +46,13 @@ impl From<&mut Config> for NoopsClient {
 }
 
 impl NoopsClient {
+    pub fn from_config(config: &Config) -> Self {
+        NoopsClient {
+            project: config.name.clone(),
+            server_url: "http://localhost:3000/api/".to_string(),
+            client: Client::new(),
+        }
+    }
     pub async fn upload_modules(&self, modules: Vec<Module>) {
         let mut uploads = vec![];
         for module in modules {

@@ -11,7 +11,7 @@ fn print_modules(config: &Config) {
     let modules = config
         .modules
         .iter()
-        .map(|module| Vec::from(module)) // Assuming the `into` function returns Vec<&str>
+        .map(|module| module.to_vec_string())
         .collect::<Vec<Vec<String>>>();
 
     crate::print::Color::print_colorful(&print::Color::Red, "Choose Module to delete");
