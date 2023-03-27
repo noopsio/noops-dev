@@ -4,7 +4,7 @@ mod handler;
 mod schemas;
 
 use std::sync::Arc;
-use tracing_subscriber::{FmtSubscriber, EnvFilter};
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use poem::{
     listener::TcpListener,

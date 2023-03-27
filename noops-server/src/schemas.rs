@@ -48,7 +48,7 @@ pub enum DeleteResponse {
     InternalServerError,
 }
 
-#[derive(ApiResponse,PartialEq, Debug)]
+#[derive(ApiResponse, PartialEq, Debug)]
 pub enum ExecuteResponse {
     /// Returned if the execution was successful
     #[oai(status = 200)]

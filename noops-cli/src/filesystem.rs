@@ -1,11 +1,10 @@
-use std::fs::{File, self};
-use std::io::Read;
-use std::path::PathBuf;
 use anyhow::{anyhow, Context};
 use log::info;
+use std::fs::{self, File};
+use std::io::Read;
+use std::path::PathBuf;
 
 pub fn read_binary(file_path: String) -> anyhow::Result<Vec<u8>> {
-    
     info!("File Path {}", file_path);
 
     let mut file = File::open(file_path)?;
@@ -22,7 +21,12 @@ pub fn find_binary(project_root: PathBuf) -> anyhow::Result<String> {
     let path = combined_path.as_path();
 
     if let Some(entry) = fs::read_dir(path)
-        .with_context(|| format!("Failed to read directory '{}'", combined_path.as_os_str().to_string_lossy()))?
+        .with_context(|| {
+            format!(
+                "Failed to read directory '{}'",
+                combined_path.as_os_str().to_string_lossy()
+            )
+        })?
         .filter_map(|entry| entry.ok())
         .find(|entry| {
             let path = entry.path();
@@ -32,7 +36,10 @@ pub fn find_binary(project_root: PathBuf) -> anyhow::Result<String> {
     {
         return Ok(entry);
     }
-    Err(anyhow!("No .wasm file found in directory '{}'", combined_path.as_os_str().to_string_lossy()))
+    Err(anyhow!(
+        "No .wasm file found in directory '{}'",
+        combined_path.as_os_str().to_string_lossy()
+    ))
 }
 
 // Test Helpers
@@ -48,7 +55,6 @@ pub fn remove_dir(dir: &str) {
 
 #[allow(dead_code)]
 pub fn delete_file(file: &str) {
-
     match fs::remove_file(file) {
         Ok(_) => println!("File successfully deleted."),
         Err(e) => println!("Error deleting file: {}", e),
@@ -61,6 +67,9 @@ mod test {
 
     #[test]
     fn test_find_binary() {
-        assert_eq!(crate::filesystem::find_binary(PathBuf::from("test")).unwrap(), "test/target/wasm32-wasi/release/noops-test-function.wasm");
+        assert_eq!(
+            crate::filesystem::find_binary(PathBuf::from("test")).unwrap(),
+            "test/target/wasm32-wasi/release/noops-test-function.wasm"
+        );
     }
 }
