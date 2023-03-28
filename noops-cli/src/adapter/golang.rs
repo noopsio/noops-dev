@@ -7,7 +7,7 @@ pub struct GolangExecutor;
 
 impl BuildExecutor for GolangExecutor {
     fn execute_build(&self, target_dir: String) -> anyhow::Result<()> {
-        //tinygo build -target wasi main.go
+        //tinygo build -o target/main.wasm -target wasi main.go
         let build_arg = "build";
         let target_arch_flag = "-target";
         let wasi_arg = "wasi";
@@ -60,12 +60,17 @@ mod tests {
 
     #[test]
     fn test_build_project() {
+        let module_name = "my-module";
+        let module_description = "my super duper module";
+        let template_name = "dummy";
+        let module_lang = crate::modules::Language::Golang;
+
         let example_module = Module::new(
-            "my-module",
+            module_name,
             GOLANG_TEST_DIR,
-            "my super duper module",
-            "dummy",
-            crate::modules::Language::Golang,
+            module_description,
+            template_name,
+            module_lang,
         );
         let modules = vec![example_module];
         let go_adapter = Adapter::new(modules, GolangExecutor);

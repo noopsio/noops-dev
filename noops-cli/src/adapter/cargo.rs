@@ -59,12 +59,16 @@ mod tests {
 
     #[test]
     fn test_build_project() {
+        let module_name = "my-module";
+        let module_description = "my super duper module";
+        let template_name = "dummy";
+        let module_lang = crate::modules::Language::Rust;
         let example_module = Module::new(
-            "my-module",
+            module_name,
             RUST_TEST_DIR,
-            "my super duper module",
-            "dummy",
-            crate::modules::Language::Rust,
+            module_description,
+            template_name,
+            module_lang,
         );
         let modules = vec![example_module];
         let cargo_adapter = Adapter::new(modules, CargoExecutor);
