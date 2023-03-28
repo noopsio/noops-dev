@@ -3,7 +3,7 @@ pub mod git;
 pub mod golang;
 
 use anyhow::anyhow;
-use std::{path::PathBuf, process::Command};
+use std::process::Command;
 
 use crate::modules::Module;
 

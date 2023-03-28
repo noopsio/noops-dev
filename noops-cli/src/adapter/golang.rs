@@ -38,7 +38,7 @@ impl LanguageAdapter for GolangExecutor {
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
 
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
