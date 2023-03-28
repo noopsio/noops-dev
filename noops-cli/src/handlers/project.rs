@@ -19,6 +19,7 @@ pub async fn project_init() -> anyhow::Result<()> {
     Ok(())
 }
 
+// projects.rs
 pub async fn project_build() -> anyhow::Result<()> {
     let config = load_config();
     println!("Building modules");
@@ -45,6 +46,7 @@ pub async fn project_build() -> anyhow::Result<()> {
     println!("Done");
     Ok(())
 }
+
 
 pub async fn project_deploy() {
     let config = load_config();
