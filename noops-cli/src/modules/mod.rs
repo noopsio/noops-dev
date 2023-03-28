@@ -49,10 +49,11 @@ impl Module {
     pub fn to_vec_string(&self) -> Vec<String> {
         vec![
             self.name.clone(),
-            self.name.clone(),
+            self.root.to_string_lossy().to_string(),
             self.template.clone(),
             self.description.clone(),
             self.language.to_string(),
+            self.target_dir.to_string_lossy().to_string(),
         ]
     }
 }

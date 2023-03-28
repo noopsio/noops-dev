@@ -7,7 +7,14 @@ use crate::{
 };
 
 fn print_modules(config: &Config) {
-    let headers = vec!["Name", "Root", "Template", "Description"];
+    let headers = vec![
+        "Name",
+        "Root",
+        "Template",
+        "Description",
+        "Language",
+        "Target Dir",
+    ];
     let modules = config
         .modules
         .iter()
