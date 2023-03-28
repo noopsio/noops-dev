@@ -7,37 +7,30 @@ use std::process::Command;
 
 use crate::modules::Module;
 
-pub struct Adapter<T: BuildExecutor> {
-    modules: Vec<Module>,
-    build_executor: T,
-}
-
 pub trait BuildExecutor {
     fn execute_build(&self, target_dir: String) -> anyhow::Result<std::path::PathBuf>;
-}
-
-pub trait LanguageAdapter: BuildExecutor {
-    fn new_adapter(modules: Vec<Module>) -> Adapter<Self>
-    where
-        Self: Sized;
 }
 
 pub trait Toolchain {
     fn build_project(&mut self) -> anyhow::Result<()>;
 }
 
-impl<T: BuildExecutor> Adapter<T> {
-    pub fn new(modules: Vec<Module>, build_executor: T) -> Self {
+pub struct Adapter<'a, T: BuildExecutor> {
+    modules: Vec<&'a mut Module>,
+    build_executor: T,
+}
+
+impl<'a, T: BuildExecutor> Adapter<'a, T> {
+    pub fn new(modules: Vec<&'a mut Module>, build_executor: T) -> Self {
         Adapter {
             modules,
             build_executor,
         }
     }
 }
-
-impl<T: BuildExecutor> Toolchain for Adapter<T> {
+impl<'a, T: BuildExecutor> Toolchain for Adapter<'a, T> {
     fn build_project(&mut self) -> anyhow::Result<()> {
-        for mut module in &mut self.modules {
+        for module in &mut self.modules {
             let build_dir = String::from(module.root.to_string_lossy());
             log::debug!("Building dir: {}", build_dir);
             let target_location = self.build_executor.execute_build(build_dir)?;

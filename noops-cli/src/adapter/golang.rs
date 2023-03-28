@@ -1,6 +1,5 @@
-use super::{execute_command, LanguageAdapter};
-use super::{Adapter, BuildExecutor};
-use crate::modules::Module;
+use super::execute_command;
+use super::BuildExecutor;
 use std::process::Command;
 
 pub struct GolangExecutor;
@@ -27,12 +26,6 @@ impl BuildExecutor for GolangExecutor {
 
         let target_path: std::path::PathBuf = output_dir.into();
         Ok(target_path)
-    }
-}
-
-impl LanguageAdapter for GolangExecutor {
-    fn new_adapter(modules: Vec<Module>) -> Adapter<Self> {
-        Adapter::new(modules, Self)
     }
 }
 
@@ -70,7 +63,7 @@ mod tests {
         let module_lang = crate::modules::Language::Golang;
         let module_target_path = PathBuf::default();
 
-        let example_module = Module::new(
+        let mut example_module = Module::new(
             module_name,
             GOLANG_TEST_DIR,
             module_description,
@@ -78,7 +71,7 @@ mod tests {
             module_lang,
             module_target_path,
         );
-        let modules = vec![example_module];
+        let modules = vec![&mut example_module];
         let mut go_adapter = Adapter::new(modules, GolangExecutor);
 
         go_adapter.build_project().unwrap();

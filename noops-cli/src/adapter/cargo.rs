@@ -1,5 +1,4 @@
-use super::{Adapter, BuildExecutor, LanguageAdapter};
-use crate::modules::Module;
+use super::BuildExecutor;
 use std::{path::PathBuf, process::Command};
 
 pub struct CargoExecutor;
@@ -24,17 +23,11 @@ impl BuildExecutor for CargoExecutor {
             .arg(cargo_toml_path);
         super::execute_command(cargo_build)?;
 
-        let binary_location = target_dir.clone() + "/" + target_arch + "/release";
+        let binary_location = target_dir.clone() + target_arch + "/release";
         log::info!("Output Path {}", binary_location);
         let target_path: std::path::PathBuf = binary_location.into();
 
         Ok(target_path)
-    }
-}
-
-impl LanguageAdapter for CargoExecutor {
-    fn new_adapter(modules: Vec<Module>) -> Adapter<Self> {
-        Adapter::new(modules, Self)
     }
 }
 
@@ -71,8 +64,8 @@ mod tests {
         let template_name = "dummy";
         let module_lang = crate::modules::Language::Rust;
         let module_default_path = PathBuf::default();
-        
-        let example_module = Module::new(
+
+        let mut example_module = Module::new(
             module_name,
             RUST_TEST_DIR,
             module_description,
@@ -80,7 +73,7 @@ mod tests {
             module_lang,
             module_default_path,
         );
-        let modules = vec![example_module];
+        let modules = vec![&mut example_module];
         let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
 
         cargo_adapter.build_project().unwrap();

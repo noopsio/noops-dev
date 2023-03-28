@@ -18,7 +18,7 @@ impl Language {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Module {
     pub name: String,
     pub root: std::path::PathBuf,
