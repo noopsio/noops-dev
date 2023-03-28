@@ -1,4 +1,4 @@
-use super::{Adapter, BuildExecutor, LanguageAdapter, LanguageAdapterFactory};
+use super::{Adapter, BuildExecutor, LanguageAdapter};
 use crate::modules::Module;
 use std::process::Command;
 
@@ -37,28 +37,31 @@ impl LanguageAdapter for CargoExecutor {
 mod tests {
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
+        filesystem,
         modules::Module,
     };
 
     use super::CargoExecutor;
 
-    const TEST_DIR: &str = "test/";
+    const RUST_TEST_DIR: &str = "test/rust/";
+    const RUST_TARGET_DIR: &str = "test/rust/target";
 
     #[test]
-    fn test_execute_build_cargo() {
+    fn test_execute_build() {
         let modules = vec![];
         let cargo_adapter = Adapter::new(modules, CargoExecutor);
         cargo_adapter
             .build_executor
-            .execute_build(TEST_DIR.to_string())
-            .unwrap()
+            .execute_build(RUST_TEST_DIR.to_string())
+            .unwrap();
+        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 
     #[test]
-    fn test_build_project_cargo() {
+    fn test_build_project() {
         let example_module = Module::new(
             "my-module",
-            "test/",
+            RUST_TEST_DIR,
             "my super duper module",
             "dummy",
             crate::modules::Language::Rust,
@@ -67,5 +70,6 @@ mod tests {
         let cargo_adapter = Adapter::new(modules, CargoExecutor);
 
         cargo_adapter.build_project().unwrap();
+        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 }
