@@ -6,3 +6,4 @@ modules:
     description: "my super duper module"
     template: "dummy"
     language: "Rust"
+    target_dir: ""

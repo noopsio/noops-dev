@@ -6,7 +6,7 @@ use std::process::Command;
 pub struct GolangExecutor;
 
 impl BuildExecutor for GolangExecutor {
-    fn execute_build(&self, target_dir: String) -> anyhow::Result<()> {
+    fn execute_build(&self, target_dir: String) -> anyhow::Result<std::path::PathBuf> {
         //tinygo build -o target/main.wasm -target wasi main.go
         let build_arg = "build";
         let target_arch_flag = "-target";
@@ -21,10 +21,12 @@ impl BuildExecutor for GolangExecutor {
             .arg(target_arch_flag)
             .arg(wasi_arg)
             .arg(output_flag)
-            .arg(output_dir)
+            .arg(&output_dir)
             .arg(target_dir + loc_main_go);
         execute_command(tinygo_build)?;
-        Ok(())
+
+        let target_path: std::path::PathBuf = output_dir.into();
+        Ok(target_path)
     }
 }
 
@@ -36,6 +38,8 @@ impl LanguageAdapter for GolangExecutor {
 
 #[cfg(test)]
 mod tests {
+    use std::path::{Path, PathBuf};
+
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
         filesystem,
@@ -64,6 +68,7 @@ mod tests {
         let module_description = "my super duper module";
         let template_name = "dummy";
         let module_lang = crate::modules::Language::Golang;
+        let module_target_path = PathBuf::default();
 
         let example_module = Module::new(
             module_name,
@@ -71,9 +76,10 @@ mod tests {
             module_description,
             template_name,
             module_lang,
+            module_target_path,
         );
         let modules = vec![example_module];
-        let go_adapter = Adapter::new(modules, GolangExecutor);
+        let mut go_adapter = Adapter::new(modules, GolangExecutor);
 
         go_adapter.build_project().unwrap();
         filesystem::delete_file(GOLANG_TARGET_FILE)

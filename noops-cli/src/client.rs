@@ -18,7 +18,7 @@ pub struct ModuleDTO {
 
 impl From<Module> for ModuleDTO {
     fn from(module: Module) -> Self {
-        let binary_location = find_binary(module.root).unwrap();
+        let binary_location = find_binary(module.target_dir).unwrap();
         let binary_buffer = read_binary(binary_location).unwrap();
         ModuleDTO {
             wasm: binary_buffer,

@@ -67,22 +67,31 @@ impl Config {
 #[cfg(test)]
 
 mod tests {
+    use std::path::PathBuf;
+
     use crate::{config::Config, modules::Module};
     const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
 
     #[test]
     fn test_from_yaml() {
-        let parsed_config = Config::from_yaml(TEST_CONFIG_PATH).unwrap();
-
         let mut wanted_config = Config::new("noops-example");
+        let module_name = "my-module";
+        let module_description = "my super duper module";
+        let template_name = "dummy";
+        let module_lang = crate::modules::Language::Rust;
+        let module_default_path = PathBuf::default();
+
         let example_module = Module::new(
-            "my-module",
+            module_name,
             "test/",
-            "my super duper module",
-            "dummy",
-            crate::modules::Language::Rust,
+            module_description,
+            template_name,
+            module_lang,
+            module_default_path,
         );
         wanted_config.add_module(example_module).unwrap();
+
+        let parsed_config = Config::from_yaml(TEST_CONFIG_PATH).unwrap();
 
         assert_eq!(parsed_config, wanted_config);
     }

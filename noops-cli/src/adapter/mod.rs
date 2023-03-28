@@ -3,12 +3,17 @@ pub mod git;
 pub mod golang;
 
 use anyhow::anyhow;
-use std::process::Command;
+use std::{path::PathBuf, process::Command};
 
 use crate::modules::Module;
 
+pub struct Adapter<T: BuildExecutor> {
+    modules: Vec<Module>,
+    build_executor: T,
+}
+
 pub trait BuildExecutor {
-    fn execute_build(&self, target_dir: String) -> anyhow::Result<()>;
+    fn execute_build(&self, target_dir: String) -> anyhow::Result<std::path::PathBuf>;
 }
 
 pub trait LanguageAdapter: BuildExecutor {
@@ -18,12 +23,7 @@ pub trait LanguageAdapter: BuildExecutor {
 }
 
 pub trait Toolchain {
-    fn build_project(&self) -> anyhow::Result<()>;
-}
-
-pub struct Adapter<T: BuildExecutor> {
-    modules: Vec<Module>,
-    build_executor: T,
+    fn build_project(&mut self) -> anyhow::Result<()>;
 }
 
 impl<T: BuildExecutor> Adapter<T> {
@@ -36,11 +36,12 @@ impl<T: BuildExecutor> Adapter<T> {
 }
 
 impl<T: BuildExecutor> Toolchain for Adapter<T> {
-    fn build_project(&self) -> anyhow::Result<()> {
-        for module in &self.modules {
+    fn build_project(&mut self) -> anyhow::Result<()> {
+        for mut module in &mut self.modules {
             let build_dir = String::from(module.root.to_string_lossy());
             log::debug!("Building dir: {}", build_dir);
-            self.build_executor.execute_build(build_dir)?;
+            let target_location = self.build_executor.execute_build(build_dir)?;
+            module.target_dir = target_location;
         }
         Ok(())
     }

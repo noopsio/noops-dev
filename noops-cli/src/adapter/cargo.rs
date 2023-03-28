@@ -1,17 +1,17 @@
 use super::{Adapter, BuildExecutor, LanguageAdapter};
 use crate::modules::Module;
-use std::process::Command;
+use std::{path::PathBuf, process::Command};
 
 pub struct CargoExecutor;
 
 impl BuildExecutor for CargoExecutor {
-    fn execute_build(&self, target_dir: String) -> anyhow::Result<()> {
+    fn execute_build(&self, target_dir: String) -> anyhow::Result<PathBuf> {
         let build_arg = "build";
         let release_flag = "--release";
         let target_flag = "--target";
         let target_arch = "wasm32-wasi";
         let manifest_flag = "--manifest-path";
-        let cargo_toml_path = target_dir + "Cargo.toml";
+        let cargo_toml_path = target_dir.clone() + "Cargo.toml";
 
         log::debug!("Cargo Toml path: {}", cargo_toml_path);
         let mut cargo = Command::new("cargo");
@@ -23,7 +23,12 @@ impl BuildExecutor for CargoExecutor {
             .arg(manifest_flag)
             .arg(cargo_toml_path);
         super::execute_command(cargo_build)?;
-        Ok(())
+
+        let binary_location = target_dir.clone() + "/" + target_arch + "/release";
+        log::info!("Output Path {}", binary_location);
+        let target_path: std::path::PathBuf = binary_location.into();
+
+        Ok(target_path)
     }
 }
 
@@ -35,6 +40,8 @@ impl LanguageAdapter for CargoExecutor {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
         filesystem,
@@ -63,15 +70,18 @@ mod tests {
         let module_description = "my super duper module";
         let template_name = "dummy";
         let module_lang = crate::modules::Language::Rust;
+        let module_default_path = PathBuf::default();
+        
         let example_module = Module::new(
             module_name,
             RUST_TEST_DIR,
             module_description,
             template_name,
             module_lang,
+            module_default_path,
         );
         let modules = vec![example_module];
-        let cargo_adapter = Adapter::new(modules, CargoExecutor);
+        let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
 
         cargo_adapter.build_project().unwrap();
         filesystem::remove_dir(RUST_TARGET_DIR);

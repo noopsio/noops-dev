@@ -25,6 +25,7 @@ pub struct Module {
     pub template: String,
     description: String,
     pub language: Language,
+    pub target_dir: std::path::PathBuf,
 }
 
 impl Module {
@@ -34,6 +35,7 @@ impl Module {
         description: &str,
         template: &str,
         language: Language,
+        target_dir: impl AsRef<std::path::Path>,
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -41,6 +43,7 @@ impl Module {
             description: description.to_string(),
             template: template.to_string(),
             language,
+            target_dir: target_dir.as_ref().to_path_buf(),
         }
     }
     pub fn to_vec_string(&self) -> Vec<String> {
@@ -74,6 +77,7 @@ impl From<ModuleTemplate> for Module {
                     description: description.to_string(),
                     template: repository.to_string(),
                     language,
+                    target_dir: std::path::PathBuf::default(),
                 }
             }
         }

@@ -34,7 +34,7 @@ pub async fn project_build() -> anyhow::Result<()> {
     }
 
     for (language, modules) in grouped_modules {
-        let adapter: Box<dyn Toolchain> = match language {
+        let mut adapter: Box<dyn Toolchain> = match language {
             Language::Rust => Box::new(CargoExecutor::new_adapter(modules)),
             Language::Golang => Box::new(GolangExecutor::new_adapter(modules)),
             // Add more languages and their corresponding adapter creators here
