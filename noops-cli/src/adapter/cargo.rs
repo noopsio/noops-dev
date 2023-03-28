@@ -4,13 +4,13 @@ use std::{path::PathBuf, process::Command};
 pub struct CargoExecutor;
 
 impl BuildExecutor for CargoExecutor {
-    fn execute_build(&self, target_dir: String) -> anyhow::Result<PathBuf> {
+    fn execute_build(&self, source_dir: String) -> anyhow::Result<PathBuf> {
         let build_arg = "build";
         let release_flag = "--release";
         let target_flag = "--target";
         let target_arch = "wasm32-wasi";
         let manifest_flag = "--manifest-path";
-        let cargo_toml_path = target_dir.clone() + "Cargo.toml";
+        let cargo_toml_path = source_dir.clone() + "Cargo.toml";
 
         log::debug!("Cargo Toml path: {}", cargo_toml_path);
         let mut cargo = Command::new("cargo");
@@ -23,11 +23,17 @@ impl BuildExecutor for CargoExecutor {
             .arg(cargo_toml_path);
         super::execute_command(cargo_build)?;
 
-        let binary_location = target_dir.clone() + target_arch + "/release";
-        log::info!("Output Path {}", binary_location);
-        let target_path: std::path::PathBuf = binary_location.into();
+        let target_dir = "target";
+        let release_dir = "release";
 
-        Ok(target_path)
+        let mut binary_location = PathBuf::from(source_dir);
+        binary_location.push(target_dir);
+        binary_location.push(target_arch);
+        binary_location.push(release_dir);
+
+        log::info!("Output Path {}", binary_location.to_string_lossy());
+
+        Ok(binary_location)
     }
 }
 

@@ -1,18 +1,19 @@
 use super::execute_command;
 use super::BuildExecutor;
+use std::path::PathBuf;
 use std::process::Command;
 
 pub struct GolangExecutor;
 
 impl BuildExecutor for GolangExecutor {
-    fn execute_build(&self, target_dir: String) -> anyhow::Result<std::path::PathBuf> {
+    fn execute_build(&self, source_dir: String) -> anyhow::Result<std::path::PathBuf> {
         //tinygo build -o target/main.wasm -target wasi main.go
         let build_arg = "build";
         let target_arch_flag = "-target";
         let wasi_arg = "wasi";
-        let loc_main_go = "src/main.go";
+        let location_main_go = source_dir.clone() + "src/main.go";
         let output_flag = "-o";
-        let output_dir = target_dir.clone() + "target/main.wasm";
+        let output_file = source_dir.clone() + "target/main.wasm";
 
         let mut tinygo = Command::new("tinygo");
         let tinygo_build = tinygo
@@ -20,12 +21,14 @@ impl BuildExecutor for GolangExecutor {
             .arg(target_arch_flag)
             .arg(wasi_arg)
             .arg(output_flag)
-            .arg(&output_dir)
-            .arg(target_dir + loc_main_go);
+            .arg(output_file)
+            .arg(location_main_go);
         execute_command(tinygo_build)?;
 
-        let target_path: std::path::PathBuf = output_dir.into();
-        Ok(target_path)
+        let target_dir = "target";
+        let mut binary_location = PathBuf::from(source_dir);
+        binary_location.push(target_dir);
+        Ok(binary_location)
     }
 }
 
