@@ -42,20 +42,19 @@ pub fn find_binary(target_path_buf: PathBuf) -> anyhow::Result<String> {
 
 // Test Helpers
 
-#[allow(dead_code)]
 pub fn remove_dir(dir: &str) {
     if let Err(e) = std::fs::remove_dir_all(dir) {
-        println!("Error removing directory: {}", e);
+        log::error!("Error removing directory: {}", e);
     } else {
-        println!("Directory {} removed successfully", dir);
+        log::info!("Directory {} removed successfully", dir);
     }
 }
 
 #[allow(dead_code)]
 pub fn delete_file(file: &str) {
     match fs::remove_file(file) {
-        Ok(_) => println!("File successfully deleted."),
-        Err(e) => println!("Error deleting file: {}", e),
+        Ok(_) => log::info!("File successfully deleted."),
+        Err(e) => log::error!("Error deleting file: {}", e),
     }
 }
 
