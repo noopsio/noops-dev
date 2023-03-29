@@ -51,7 +51,7 @@ impl Database {
     pub fn project_list(
         &self,
         project_name: &str,
-    ) -> anyhow::Result<Vec<schemas::CreateFunctionSchema>> {
+    ) -> anyhow::Result<Vec<schemas::GetFunctionSchema>> {
         let tx = self.database.tx(false)?;
         let bucket = tx.get_bucket(PROJECT_BUCKET)?;
         let projects = bucket.get_bucket(project_name)?;
@@ -60,7 +60,11 @@ impl Database {
         for data in projects.cursor() {
             if let Data::KeyValue(kv) = data {
                 let function: schemas::CreateFunctionSchema = bincode::deserialize(kv.value())?;
-                functions.push(function);
+                functions.push(schemas::GetFunctionSchema {
+                    name: function.name,
+                    project: function.project,
+                    params: function.params,
+                });
             }
         }
         Ok(functions)
