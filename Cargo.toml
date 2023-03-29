@@ -2,7 +2,7 @@
 members = [
     "noops-cli",
     "noops-server",
-    "component"
+    "component-rust"
 ]
 
 [workspace.package]
