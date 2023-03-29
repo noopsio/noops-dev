@@ -4,3 +4,5 @@ modules:
   root: test/
   template: dummy
   description: my super duper module
+  language: Rust
+  target_dir: ''

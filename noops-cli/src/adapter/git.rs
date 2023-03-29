@@ -14,7 +14,7 @@ impl GitAdapter {
             .arg(dir_name);
 
         super::execute_command(git_clone)?;
-        remove_dir(&(dir_name.to_owned() + "/.git"));
+        remove_dir(&(dir_name.to_owned() + ".git"));
         Ok(())
     }
 }

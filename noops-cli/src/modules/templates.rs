@@ -1,5 +1,7 @@
 use crate::{adapter::git::GitAdapter, config::Config, modules::Module, print};
 
+use super::Language;
+
 pub fn create(mut config: Config) -> anyhow::Result<()> {
     let templates = ModuleTemplate::load();
     show_templates(&templates);
@@ -56,6 +58,7 @@ pub struct ModuleTemplate {
     pub name: String,
     pub description: String,
     pub repository: String,
+    pub language: Language,
     pub module_name: Option<String>,
     pub module_root: Option<String>,
 }
@@ -68,6 +71,7 @@ impl ModuleTemplate {
                 name: "Rust Hello World".to_string(),
                 description: "A hello world function in Rust".to_string(),
                 repository: "jfcomputing/templates-rust-hello-world".to_string(),
+                language: super::Language::Rust,
                 module_name: None,
                 module_root: None,
             },
@@ -75,6 +79,7 @@ impl ModuleTemplate {
                 name: "Golang Hello World".to_string(),
                 description: "A hello world function in Golang".to_string(),
                 repository: "jfcomputing/templates-go-hello-world".to_string(),
+                language: super::Language::Golang,
                 module_name: None,
                 module_root: None,
             },
@@ -86,6 +91,7 @@ impl ModuleTemplate {
             self.name.clone(),
             self.description.clone(),
             self.repository.clone(),
+            self.language.to_string(),
         ]
     }
 }

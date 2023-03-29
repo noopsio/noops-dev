@@ -1,18 +1,17 @@
-use super::Toolchain;
-use crate::modules::Module;
-use std::process::Command;
+use super::BuildExecutor;
+use std::{path::PathBuf, process::Command};
 
-pub struct CargoAdapter;
+pub struct CargoExecutor;
 
-impl Toolchain for CargoAdapter {
-    fn execute_build(target_dir: String) -> anyhow::Result<()> {
+impl BuildExecutor for CargoExecutor {
+    fn execute_build(&self, source_dir: String) -> anyhow::Result<PathBuf> {
         let build_arg = "build";
         let release_flag = "--release";
         let target_flag = "--target";
         let target_arch = "wasm32-wasi";
         let manifest_flag = "--manifest-path";
+        let cargo_toml_path = source_dir.clone() + "Cargo.toml";
 
-        let cargo_toml_path = target_dir + "Cargo.toml";
         log::debug!("Cargo Toml path: {}", cargo_toml_path);
         let mut cargo = Command::new("cargo");
         let cargo_build = cargo
@@ -23,33 +22,67 @@ impl Toolchain for CargoAdapter {
             .arg(manifest_flag)
             .arg(cargo_toml_path);
         super::execute_command(cargo_build)?;
-        Ok(())
-    }
 
-    fn build_project(modules: Vec<Module>) -> anyhow::Result<()> {
-        for module in modules {
-            let build_dir = String::from(module.root.to_string_lossy());
-            log::debug!("Building dir: {}", build_dir);
-            CargoAdapter::execute_build(build_dir).unwrap();
-        }
-        Ok(())
+        let target_dir = "target";
+        let release_dir = "release";
+
+        let mut binary_location = PathBuf::from(source_dir);
+        binary_location.push(target_dir);
+        binary_location.push(target_arch);
+        binary_location.push(release_dir);
+
+        log::info!("Output Path {}", binary_location.to_string_lossy());
+
+        Ok(binary_location)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CargoAdapter, Toolchain};
-    use crate::modules::Module;
+    use std::path::PathBuf;
+
+    use crate::{
+        adapter::{Adapter, BuildExecutor, Toolchain},
+        filesystem,
+        modules::Module,
+    };
+
+    use super::CargoExecutor;
+
+    const RUST_TEST_DIR: &str = "test/rust/";
+    const RUST_TARGET_DIR: &str = "test/rust/target";
 
     #[test]
-    fn test_execute_build_cargo() {
-        CargoAdapter::execute_build("test/".to_string()).unwrap()
+    fn test_execute_build() {
+        let modules = vec![];
+        let cargo_adapter = Adapter::new(modules, CargoExecutor);
+        cargo_adapter
+            .build_executor
+            .execute_build(RUST_TEST_DIR.to_string())
+            .unwrap();
+        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 
     #[test]
-    fn test_build_project_cargo() {
-        let example_modules = Module::new("my-module", "test/", "my super duper module", "dummy");
-        let modules = vec![example_modules];
-        CargoAdapter::build_project(modules).unwrap();
+    fn test_build_project() {
+        let module_name = "my-module";
+        let module_description = "my super duper module";
+        let template_name = "dummy";
+        let module_lang = crate::modules::Language::Rust;
+        let module_default_path = PathBuf::default();
+
+        let mut example_module = Module::new(
+            module_name,
+            RUST_TEST_DIR,
+            module_description,
+            template_name,
+            module_lang,
+            module_default_path,
+        );
+        let modules = vec![&mut example_module];
+        let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
+
+        cargo_adapter.build_project().unwrap();
+        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 }
