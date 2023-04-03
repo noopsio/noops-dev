@@ -325,6 +325,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "046ae530c528f252094e4a77886ee1374437744b2bff1497aa898bbddbbb29b3"
 dependencies = [
  "clap_builder",
+ "clap_derive",
+ "once_cell",
 ]
 
 [[package]]
@@ -339,6 +341,18 @@ dependencies = [
  "clap_lex",
  "once_cell",
  "strsim",
+]
+
+[[package]]
+name = "clap_derive"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f9644cd56d6b87dbe899ef8b053e331c0637664e9e21a33dfcdc36093f5c5c4"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -535,7 +549,7 @@ dependencies = [
  "itertools",
  "log",
  "smallvec",
- "wasmparser",
+ "wasmparser 0.100.0",
  "wasmtime-types",
 ]
 
@@ -1198,6 +1212,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "host"
+version = "0.0.0"
+source = "git+https://github.com/bytecodealliance/preview2-prototyping?rev=47b30fd#47b30fdad11553841bbee4c5632101bbd645854b"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cap-rand",
+ "cap-std",
+ "clap",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "wasi-cap-std-sync 0.0.0",
+ "wasi-common 0.0.0",
+ "wasmtime",
+]
+
+[[package]]
 name = "http"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1661,6 +1693,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "clap",
+ "host",
  "jammdb",
  "lazy_static",
  "poem",
@@ -1670,6 +1703,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "wasi-cap-std-sync 0.0.0",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -2920,6 +2954,30 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasi-cap-std-sync"
+version = "0.0.0"
+source = "git+https://github.com/bytecodealliance/preview2-prototyping?rev=47b30fd#47b30fdad11553841bbee4c5632101bbd645854b"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "cap-fs-ext",
+ "cap-rand",
+ "cap-std",
+ "cap-time-ext",
+ "fs-set-times 0.18.1",
+ "io-extras",
+ "io-lifetimes",
+ "ipnet",
+ "is-terminal",
+ "once_cell",
+ "rustix 0.36.11",
+ "system-interface",
+ "tracing",
+ "wasi-common 0.0.0",
+ "windows-sys 0.45.0",
+]
+
+[[package]]
+name = "wasi-cap-std-sync"
 version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39c029a2dfc62195f26612e1f9de4c4207e4088ce48f84861229fa268021d1d0"
@@ -2938,7 +2996,27 @@ dependencies = [
  "rustix 0.36.11",
  "system-interface",
  "tracing",
- "wasi-common",
+ "wasi-common 7.0.0",
+ "windows-sys 0.45.0",
+]
+
+[[package]]
+name = "wasi-common"
+version = "0.0.0"
+source = "git+https://github.com/bytecodealliance/preview2-prototyping?rev=47b30fd#47b30fdad11553841bbee4c5632101bbd645854b"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bitflags",
+ "cap-fs-ext",
+ "cap-rand",
+ "cap-std",
+ "io-extras",
+ "ipnet",
+ "rustix 0.36.11",
+ "system-interface",
+ "thiserror",
+ "tracing",
  "windows-sys 0.45.0",
 ]
 
@@ -3030,6 +3108,15 @@ checksum = "0046fef7e28c3804e5e38bfa31ea2a0f73905319b677e57ebe37e49358989b5d"
 
 [[package]]
 name = "wasm-encoder"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c3e4bc09095436c8e7584d86d33e6c3ee67045af8fb262cbb9cc321de553428"
+dependencies = [
+ "leb128",
+]
+
+[[package]]
+name = "wasm-encoder"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4eff853c4f09eec94d76af527eddad4e9de13b11d6286a1ef7134bc30135a2b7"
@@ -3048,6 +3135,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasmparser"
+version = "0.102.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48134de3d7598219ab9eaf6b91b15d8e50d31da76b8519fe4ecfcec2cf35104b"
+dependencies = [
+ "indexmap",
+ "url",
+]
+
+[[package]]
+name = "wasmprinter"
+version = "0.2.54"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2dc17ae63836d010a2bf001c26a5fedbb9a05e5f71117fb63e0ab878bfbe1ca3"
+dependencies = [
+ "anyhow",
+ "wasmparser 0.102.0",
+]
+
+[[package]]
 name = "wasmtime"
 version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3057,6 +3164,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "cfg-if",
+ "encoding_rs",
  "indexmap",
  "libc",
  "log",
@@ -3067,9 +3175,10 @@ dependencies = [
  "rayon",
  "serde",
  "target-lexicon",
- "wasmparser",
+ "wasmparser 0.100.0",
  "wasmtime-cache",
  "wasmtime-component-macro",
+ "wasmtime-component-util",
  "wasmtime-cranelift",
  "wasmtime-environ",
  "wasmtime-fiber",
@@ -3146,7 +3255,7 @@ dependencies = [
  "object",
  "target-lexicon",
  "thiserror",
- "wasmparser",
+ "wasmparser 0.100.0",
  "wasmtime-environ",
 ]
 
@@ -3165,7 +3274,10 @@ dependencies = [
  "serde",
  "target-lexicon",
  "thiserror",
- "wasmparser",
+ "wasm-encoder 0.23.0",
+ "wasmparser 0.100.0",
+ "wasmprinter",
+ "wasmtime-component-util",
  "wasmtime-types",
 ]
 
@@ -3238,6 +3350,7 @@ dependencies = [
  "anyhow",
  "cc",
  "cfg-if",
+ "encoding_rs",
  "indexmap",
  "libc",
  "log",
@@ -3263,7 +3376,7 @@ dependencies = [
  "cranelift-entity",
  "serde",
  "thiserror",
- "wasmparser",
+ "wasmparser 0.100.0",
 ]
 
 [[package]]
@@ -3274,8 +3387,8 @@ checksum = "dc41b56ec1c032e4bb67cf0fe0b36443f7a8be341abce2e5ec9cc8ac6ef4bee0"
 dependencies = [
  "anyhow",
  "libc",
- "wasi-cap-std-sync",
- "wasi-common",
+ "wasi-cap-std-sync 7.0.0",
+ "wasi-common 7.0.0",
  "wasmtime",
  "wiggle",
 ]
@@ -3309,7 +3422,7 @@ dependencies = [
  "leb128",
  "memchr",
  "unicode-width",
- "wasm-encoder",
+ "wasm-encoder 0.25.0",
 ]
 
 [[package]]
