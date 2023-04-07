@@ -2,6 +2,7 @@
 name = "noops-server"
 version = "0.1.0"
 edition = "2021"
+authors = { workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,13 +13,19 @@ serde = { version = "1.0.154", features = ["derive"] }
 anyhow = "1.0.69"
 bincode = "1.3.3"
 tokio = { version = "1.26", features = ["full"] }
-wasmtime = "6.0.1"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
-wasmtime-wasi = "6.0.1"
+wasmtime = { version = "7.0.0",  features = ["component-model"]}
+wasmtime-wasi = "7.0.0"
+host = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
+wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
+#wasi_snapshot_preview1 = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c", features = ["reactor"], target = "wasm32-unknown-unknown", artifact = "cdylib" }
 poem-openapi = { version = "2.0.26", features = ["swagger-ui"] }
 poem = "1.3.55" 
 tracing = "0.1.37"
+wit-component = "0.7.4"
+
 
 [dev-dependencies]
 lazy_static = "1.4.0"
 tempfile = "3.4.0"
+return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }

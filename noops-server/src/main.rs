@@ -1,3 +1,4 @@
+mod bindgen;
 mod database;
 mod executor;
 mod handler;

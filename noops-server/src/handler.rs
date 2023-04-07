@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use poem::web::Data;
 use poem_openapi::{param::Path, payload::Json, OpenApi};
+use std::sync::Arc;
+use tracing;
 
+use crate::bindgen;
 use crate::database::Database;
 use crate::executor;
 use crate::schemas;
-
-use tracing;
 
 pub struct API;
 
@@ -83,7 +82,17 @@ impl API {
         if !database.project_exists(&project_name).unwrap() {
             return schemas::CreateFunctionResponse::NotFound;
         }
-        match database.function_create(&project_name, &function_name, &body) {
+
+        let mut function = body.0;
+        match bindgen::create_component(&function.wasm) {
+            Ok(component) => function.wasm = component,
+            Err(err) => {
+                tracing::error!("{}", err);
+                return schemas::CreateFunctionResponse::InternalServerError;
+            }
+        };
+
+        match database.function_create(&project_name, &function_name, &function) {
             Ok(_) => schemas::CreateFunctionResponse::Ok,
             Err(err) => {
                 tracing::error!("{}", err);
@@ -132,7 +141,12 @@ impl API {
 
         match database.function_get(&project_name, &function_name) {
             Ok(function) => {
-                executor::execute(function.wasm).unwrap();
+                let request = bindgen::Request {
+                    headers: &Vec::default(),
+                    params: &Vec::default(),
+                };
+
+                let _response = executor::execute(function.wasm, request).await.unwrap();
                 schemas::ExecuteResponse::Ok
             }
             Err(err) => {
@@ -163,7 +177,8 @@ mod tests {
         static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
-            wasm: vec![0],
+            wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
+                .expect("Unable to read test module"),
             params: vec![String::default()],
         };
     }

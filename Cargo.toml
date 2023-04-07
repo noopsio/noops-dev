@@ -1,11 +1,10 @@
+[workspace.package]
+authors = ["Giom-fm <giom@jfcomputing.io", "Falumpaset <marc@jfcomputing.io"]
+
 [workspace]
 members = [
     "noops-cli",
-    "noops-server"
+    "noops-server",
 ]
-
-[workspace.package]
-authors = ["Giom-fm <giom@jfcomputing.io Falumpaset <marc@jfcomputing.io"]
-[workspace.dependencies]
 
 
