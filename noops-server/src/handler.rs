@@ -142,8 +142,8 @@ impl API {
         match database.function_get(&project_name, &function_name) {
             Ok(function) => {
                 let request = bindgen::Request {
-                    headers: &vec![""],
-                    params: &vec![""],
+                    headers: &Vec::default(),
+                    params: &Vec::default(),
                 };
 
                 let _response = executor::execute(function.wasm, request).await.unwrap();
