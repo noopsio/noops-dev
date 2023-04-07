@@ -1,0 +1,13 @@
+default world handler {
+
+    record request {
+        headers: list<string>, 
+        params: list<string>,
+    }
+
+    record response {
+        status: u32
+    }
+
+    export handle: func(req: request) -> response
+}
