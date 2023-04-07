@@ -133,9 +133,9 @@ mod tests {
     use lazy_static::lazy_static;
     use tempfile::tempdir;
 
-    static DATABASE_NAME: &str = "noops.test_db";
-    static PROJECT_NAME: &str = "test_project";
-    static FUNCTION_NAME: &str = "test_function";
+    const DATABASE_NAME: &str = "noops.test_db";
+    const PROJECT_NAME: &str = "test_project";
+    const FUNCTION_NAME: &str = "test_function";
 
     lazy_static! {
         static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
