@@ -1,7 +1,7 @@
 cargo-features = ["per-package-target"]
 
 [package]
-name = "test-component"
+name = "return-status-code-200"
 version = "0.1.0"
 edition = "2021"
 default-target = "wasm32-wasi"

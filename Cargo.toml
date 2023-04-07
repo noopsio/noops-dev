@@ -5,7 +5,6 @@ authors = ["Giom-fm <giom@jfcomputing.io", "Falumpaset <marc@jfcomputing.io"]
 members = [
     "noops-cli",
     "noops-server",
-    "test-component"
 ]
 
 

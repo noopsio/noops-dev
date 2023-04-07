@@ -178,8 +178,8 @@ mod tests {
         static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
-            wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_TEST_COMPONENT"))
-                .expect("Unable to read test component"),
+            wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
+                .expect("Unable to read test module"),
             params: vec![String::default()],
         };
     }

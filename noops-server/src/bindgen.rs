@@ -11,6 +11,15 @@ wasmtime::component::bindgen!({
     async: true
 });
 
+impl Default for Request<'_> {
+    fn default() -> Self {
+        Self {
+            headers: Default::default(),
+            params: Default::default(),
+        }
+    }
+}
+
 pub fn create_component(wasm_module: &[u8]) -> anyhow::Result<Vec<u8>> {
     let adapter = fs::read(ADAPTER_PATH)?;
     let component = ComponentEncoder::default()

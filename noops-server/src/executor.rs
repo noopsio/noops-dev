@@ -11,29 +11,14 @@ pub async fn execute(
     wasm: Vec<u8>,
     request: bindgen::Request<'_>,
 ) -> anyhow::Result<bindgen::Response> {
-    println!("Starting");
-    println!("Creating Config");
-    let mut config = Config::new();
-    config.wasm_backtrace_details(WasmBacktraceDetails::Enable);
-    config.wasm_component_model(true);
-    config.async_support(true);
-
-    println!("Creating Engine");
+    let config = create_config();
     let engine = Engine::new(&config)?;
-
-    println!("Creating Component");
     let component = Component::from_binary(&engine, &wasm)?;
 
-    println!("Creating Linker");
     let mut linker = Linker::new(&engine);
-
     host::command::add_to_linker(&mut linker, |ctx: &mut WasiCtx| ctx)?;
+    let linker = linker;
 
-    // As with the core wasm API of Wasmtime instantiation occurs within a
-    // `Store`. The bindings structure contains an `instantiate` method which
-    // takes the store, component, and linker. This returns the `bindings`
-    // structure which is an instance of `HelloWorld` and supports typed access
-    // to the exports of the component.
     let mut store = Store::new(
         &engine,
         WasiCtxBuilder::new()
@@ -47,4 +32,30 @@ pub async fn execute(
 
     let response = bindings.call_handle(&mut store, request).await?;
     Ok(response)
+}
+
+fn create_config() -> Config {
+    Config::new()
+        .wasm_backtrace_details(WasmBacktraceDetails::Enable)
+        .wasm_component_model(true)
+        .async_support(true)
+        .clone()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::bindgen;
+    use crate::executor;
+
+    #[tokio::test]
+    async fn execute_handler() {
+        let path = env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200");
+        let module = std::fs::read(path).expect("Unable to read module");
+        let component =
+            bindgen::create_component(&module).expect("Unable to create component from module");
+        let request = bindgen::Request::default();
+        let response = executor::execute(component, request).await.unwrap();
+
+        assert_eq!(200, response.status);
+    }
 }
