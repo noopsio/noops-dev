@@ -141,7 +141,7 @@ mod tests {
         static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
-            wasm: vec![0],
+            wasm: Vec::default(),
             params: vec![String::default()],
         };
     }

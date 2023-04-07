@@ -88,7 +88,6 @@ impl API {
             Ok(component) => function.wasm = component,
             Err(err) => {
                 tracing::error!("{}", err);
-                println!("{:?}", err);
                 return schemas::CreateFunctionResponse::InternalServerError;
             }
         };
