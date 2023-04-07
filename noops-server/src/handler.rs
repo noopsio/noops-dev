@@ -260,7 +260,7 @@ mod tests {
         let function_list: Vec<GetFunctionSchema> = vec![GetFunctionSchema {
             name: FUNCTION_NAME.to_string(),
             project: PROJECT_NAME.to_string(),
-            params: vec![String::default()],
+            params: Vec::default(),
         }];
 
         assert_eq!(GetProjectResponse::Ok(Json(function_list)), result);
