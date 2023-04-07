@@ -169,9 +169,9 @@ mod tests {
     use poem_openapi::payload::Json;
     use tempfile::tempdir;
 
-    static DATABASE_NAME: &str = "noops.test_db";
-    static PROJECT_NAME: &str = "test_project";
-    static FUNCTION_NAME: &str = "test_function";
+    const DATABASE_NAME: &str = "noops.test_db";
+    const PROJECT_NAME: &str = "test_project";
+    const FUNCTION_NAME: &str = "test_function";
 
     lazy_static! {
         static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
@@ -179,7 +179,7 @@ mod tests {
             name: FUNCTION_NAME.to_string(),
             wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
                 .expect("Unable to read test module"),
-            params: vec![String::default()],
+            params: Vec::default(),
         };
     }
 
@@ -260,7 +260,7 @@ mod tests {
         let function_list: Vec<GetFunctionSchema> = vec![GetFunctionSchema {
             name: FUNCTION_NAME.to_string(),
             project: PROJECT_NAME.to_string(),
-            params: vec![String::default()],
+            params: Vec::default(),
         }];
 
         assert_eq!(GetProjectResponse::Ok(Json(function_list)), result);

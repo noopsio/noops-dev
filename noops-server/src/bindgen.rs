@@ -3,8 +3,8 @@ use std::fs;
 use wasmtime;
 use wit_component::ComponentEncoder;
 
-static ADAPTER_PATH: &str = "../wit/wasi_snapshot_preview1.wasm";
-static ADAPTER_NAME: &str = "wasi_snapshot_preview1";
+const ADAPTER_PATH: &str = "../wit/wasi_snapshot_preview1.wasm";
+const ADAPTER_NAME: &str = "wasi_snapshot_preview1";
 
 wasmtime::component::bindgen!({
     world: "handler",
