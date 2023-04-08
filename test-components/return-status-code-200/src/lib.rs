@@ -7,7 +7,10 @@ struct MyHandler;
 
 impl Handler for MyHandler {
     fn handle(req: Request) -> Response {
-        Response { status: 200 }
+        Response {
+            status: 200,
+            ..Default::default(),
+        }
     }
 }
 

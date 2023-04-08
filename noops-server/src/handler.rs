@@ -141,11 +141,7 @@ impl API {
 
         match database.function_get(&project_name, &function_name) {
             Ok(function) => {
-                let request = bindgen::Request {
-                    headers: &Vec::default(),
-                    params: &Vec::default(),
-                };
-
+                let request = bindgen::Request::default();
                 let _response = executor::execute(function.wasm, request).await.unwrap();
                 schemas::ExecuteResponse::Ok
             }
@@ -179,7 +175,7 @@ mod tests {
             name: FUNCTION_NAME.to_string(),
             wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
                 .expect("Unable to read test module"),
-            params: Vec::default(),
+            params: Default::default(),
         };
     }
 
@@ -260,7 +256,7 @@ mod tests {
         let function_list: Vec<GetFunctionSchema> = vec![GetFunctionSchema {
             name: FUNCTION_NAME.to_string(),
             project: PROJECT_NAME.to_string(),
-            params: Vec::default(),
+            params: Default::default(),
         }];
 
         assert_eq!(GetProjectResponse::Ok(Json(function_list)), result);

@@ -1,12 +1,12 @@
 default world handler {
 
     record request {
-        headers: list<string>, 
-        params: list<string>,
+        params: list<tuple<string, string>>
     }
 
     record response {
-        status: u32
+        status: u32,
+        body: string
     }
 
     export handle: func(req: request) -> response

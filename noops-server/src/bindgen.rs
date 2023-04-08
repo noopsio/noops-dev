@@ -15,7 +15,6 @@ wasmtime::component::bindgen!({
 impl Default for Request<'_> {
     fn default() -> Self {
         Self {
-            headers: Default::default(),
             params: Default::default(),
         }
     }
