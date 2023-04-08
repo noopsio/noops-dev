@@ -1,5 +1,11 @@
 use poem::web::Data;
-use poem_openapi::{param::Path, payload::Json, OpenApi};
+use poem::web::Query;
+use poem_openapi::{
+    param::Path,
+    payload::{Json, PlainText},
+    OpenApi,
+};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tracing;
 
@@ -130,6 +136,9 @@ impl API {
         &self,
         project_name: Path<String>,
         function_name: Path<String>,
+        // poem::web::Query has to be used here because oapi
+        // does not support this kind of query serialization right now
+        query_map: Query<HashMap<String, String>>,
         database: Data<&Arc<Database>>,
     ) -> schemas::ExecuteResponse {
         if !database
@@ -141,9 +150,17 @@ impl API {
 
         match database.function_get(&project_name, &function_name) {
             Ok(function) => {
-                let request = bindgen::Request::default();
-                let _response = executor::execute(function.wasm, request).await.unwrap();
-                schemas::ExecuteResponse::Ok
+                let mut query_list: Vec<(&str, &str)> = Vec::new();
+                for (key, value) in query_map.iter() {
+                    query_list.push((key, value));
+                }
+                let result = query_list;
+
+                let request = bindgen::Request {
+                    query_params: &result[..],
+                };
+                let response = executor::execute(function.wasm, request).await.unwrap();
+                schemas::ExecuteResponse::Ok(PlainText(response.body))
             }
             Err(err) => {
                 tracing::error!("{}", err);

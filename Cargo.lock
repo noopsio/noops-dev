@@ -1690,6 +1690,7 @@ dependencies = [
  "lazy_static",
  "poem",
  "poem-openapi",
+ "return-params",
  "return-status-code-200",
  "serde",
  "tempfile",
@@ -2213,6 +2214,13 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
+]
+
+[[package]]
+name = "return-params"
+version = "0.1.0"
+dependencies = [
+ "wit-bindgen",
 ]
 
 [[package]]

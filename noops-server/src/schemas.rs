@@ -1,7 +1,10 @@
-use poem_openapi::{payload::Json, ApiResponse, Object};
+use poem_openapi::{
+    payload::{Json, PlainText},
+    ApiResponse, Object,
+};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone, Default)]
 pub struct CreateFunctionSchema {
     pub name: String,
     pub params: Vec<String>,
@@ -9,7 +12,7 @@ pub struct CreateFunctionSchema {
     pub wasm: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Object, Clone, Default)]
 pub struct GetFunctionSchema {
     pub name: String,
     pub params: Vec<String>,
@@ -72,7 +75,7 @@ pub enum DeleteResponse {
 pub enum ExecuteResponse {
     /// Returned if the execution was successful
     #[oai(status = 200)]
-    Ok,
+    Ok(PlainText<String>),
     /// Returned if the resource was not found
     #[oai(status = 404)]
     NotFound,
