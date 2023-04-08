@@ -3,12 +3,15 @@ wit_bindgen::generate!({
     path: "../../wit"
 });
 
-struct MyHandler;
+struct TestHandler;
 
-impl Handler for MyHandler {
-    fn handle(req: Request) -> Response {
-        Response { status: 200 }
+impl Handler for TestHandler {
+    fn handle(_: Request) -> Response {
+        Response {
+            status: 200,
+            body: Default::default(),
+        }
     }
 }
 
-export_handler!(MyHandler);
+export_handler!(TestHandler);
