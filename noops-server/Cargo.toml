@@ -19,15 +19,19 @@ wasmtime-wasi = "7.0.0"
 host = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
 wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
 #wasi_snapshot_preview1 = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c", features = ["reactor"], target = "wasm32-unknown-unknown", artifact = "cdylib" }
-poem-openapi = { version = "2.0.26", features = ["swagger-ui"] }
-poem = "1.3.55" 
 tracing = "0.1.37"
 wit-component = "0.7.4"
+axum = "0.6.12"
+tower-http = { version = "0.4.0", features = ["trace"] }
 
 
 [dev-dependencies]
+serde_json = "1.0.95"
+tower = "0.4.13"
 lazy_static = "1.4.0"
 tempfile = "3.4.0"
+hyper = "0.14.25"
 return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
 return-params = { path = "../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
+mime = "0.3.17"
 
