@@ -1,3 +1,4 @@
+use super::errors::AppError;
 use crate::{bindgen, database::Database, schemas};
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
@@ -23,46 +24,27 @@ async fn create_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
     Json(body): Json<schemas::CreateFunctionSchema>,
-) -> StatusCode {
+) -> Result<StatusCode, AppError> {
     if !database.project_exists(&project_name).unwrap() {
-        return StatusCode::NOT_FOUND;
+        return Ok(StatusCode::NOT_FOUND);
     }
 
     let mut function = body;
-    match bindgen::create_component(&function.wasm) {
-        Ok(component) => function.wasm = component,
-        Err(err) => {
-            tracing::error!("{}", err);
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
-    };
+    function.wasm = bindgen::create_component(&function.wasm)?;
+    database.function_create(&project_name, &function_name, &function)?;
 
-    match database.function_create(&project_name, &function_name, &function) {
-        Ok(_) => StatusCode::OK,
-        Err(err) => {
-            tracing::error!("{}", err);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
+    Ok(StatusCode::OK)
 }
 
 async fn delete_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
-) -> StatusCode {
-    if !database
-        .function_exists(&project_name, &function_name)
-        .unwrap()
-    {
-        return StatusCode::NOT_FOUND;
+) -> Result<StatusCode, AppError> {
+    if !database.function_exists(&project_name, &function_name)? {
+        return Ok(StatusCode::NOT_FOUND);
     }
-    match database.function_delete(&project_name, &function_name) {
-        Ok(_) => StatusCode::OK,
-        Err(err) => {
-            tracing::error!("{}", err);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
+    database.function_delete(&project_name, &function_name)?;
+    Ok(StatusCode::OK)
 }
 
 #[cfg(test)]
@@ -74,12 +56,10 @@ mod tests {
         body::Body,
         http::{header, method::Method, Request},
     };
-    use hyper;
     use lazy_static::lazy_static;
     use mime;
     use serde_json;
     use tempfile::tempdir;
-    use tower::Service; // for `call`
     use tower::ServiceExt; // for `oneshot nad ready`
 
     const DATABASE_NAME: &str = "noops.test_db";

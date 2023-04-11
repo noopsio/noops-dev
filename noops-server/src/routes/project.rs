@@ -1,12 +1,14 @@
 use axum::{
-    extract::{Json, Path, State},
+    extract::{Path, State},
     http::StatusCode,
+    response::{IntoResponse, Response},
     routing::get,
-    Router,
+    Json, Router,
 };
 use std::sync::Arc;
 
-use crate::{database::Database, schemas};
+use super::errors::AppError;
+use crate::database::Database;
 
 pub fn create_routes(database: Arc<Database>) -> Router {
     Router::new()
@@ -22,50 +24,35 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 async fn create_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> StatusCode {
+) -> Result<StatusCode, AppError> {
     if database.project_exists(&project_name).unwrap() {
-        return StatusCode::CONFLICT;
+        return Ok(StatusCode::CONFLICT);
     }
 
-    match database.project_create(&project_name) {
-        Ok(_) => StatusCode::OK,
-        Err(err) => {
-            tracing::error!("{}", err);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
+    database.project_create(&project_name)?;
+    Ok(StatusCode::OK)
 }
-
+//axum::Json<Vec<schemas::GetFunctionSchema>
 async fn list_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> Result<axum::Json<Vec<schemas::GetFunctionSchema>>, StatusCode> {
+) -> Result<Response, AppError> {
     if !database.project_exists(&project_name).unwrap() {
-        return Err(StatusCode::NOT_FOUND);
+        return Ok(StatusCode::NOT_FOUND.into_response());
     }
-    match database.project_list(&project_name) {
-        Ok(functions) => Ok(Json(functions)),
-        Err(err) => {
-            tracing::error!("{}", err);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
+    let functions = database.project_list(&project_name)?;
+    Ok((StatusCode::OK, Json(functions)).into_response())
 }
 
 async fn delete_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> StatusCode {
+) -> Result<StatusCode, AppError> {
     if !database.project_exists(&project_name).unwrap() {
-        return StatusCode::NOT_FOUND;
+        return Ok(StatusCode::NOT_FOUND);
     }
-    match database.project_delete(&project_name) {
-        Ok(_) => StatusCode::OK,
-        Err(err) => {
-            tracing::error!("{}", err);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
+    database.project_delete(&project_name)?;
+    Ok(StatusCode::OK)
 }
 
 #[cfg(test)]
@@ -73,6 +60,7 @@ mod tests {
 
     use super::*;
 
+    use crate::schemas;
     use axum::{
         body::Body,
         http::{method::Method, Request},

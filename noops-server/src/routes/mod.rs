@@ -1,3 +1,4 @@
+mod errors;
 mod execute;
 mod functions;
 mod project;

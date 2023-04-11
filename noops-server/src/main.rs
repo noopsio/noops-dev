@@ -8,7 +8,7 @@ use axum::Server;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+use tracing_subscriber;
 
 const DATABASE_PATH: &str = "noops.db";
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
