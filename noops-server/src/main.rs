@@ -8,10 +8,9 @@ use axum::Server;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
-use tracing_subscriber;
+use tracing_subscriber::{self, layer::SubscriberExt, util::SubscriberInitExt};
 
 const DATABASE_PATH: &str = "noops.db";
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
