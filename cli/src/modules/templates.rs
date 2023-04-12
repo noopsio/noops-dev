@@ -9,7 +9,7 @@ pub fn create(mut config: Config) -> anyhow::Result<()> {
     prompt_module_information(&mut template);
     let new_module = Module::from(template);
 
-    GitAdapter::clone_repository(&new_module.template, &new_module.root.to_string_lossy())?;
+    GitAdapter::clone_repository(&new_module.template, &new_module.root)?;
     println!("Adding module {} to config", &new_module.name);
 
     config.add_module(new_module)?;

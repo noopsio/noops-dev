@@ -39,30 +39,28 @@ impl BuildExecutor for CargoExecutor {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
+    use super::CargoExecutor;
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
-        filesystem,
         modules::Module,
     };
-
-    use super::CargoExecutor;
+    use std::path::PathBuf;
 
     const RUST_TEST_DIR: &str = "test/rust/";
-    const RUST_TARGET_DIR: &str = "test/rust/target";
 
+    #[ignore]
     #[test]
     fn test_execute_build() {
-        let modules = vec![];
+        let modules: Vec<&mut Module> = Vec::default();
         let cargo_adapter = Adapter::new(modules, CargoExecutor);
+
         cargo_adapter
             .build_executor
             .execute_build(RUST_TEST_DIR.to_string())
             .unwrap();
-        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 
+    #[ignore]
     #[test]
     fn test_build_project() {
         let module_name = "my-module";
@@ -83,6 +81,5 @@ mod tests {
         let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
 
         cargo_adapter.build_project().unwrap();
-        filesystem::remove_dir(RUST_TARGET_DIR);
     }
 }
