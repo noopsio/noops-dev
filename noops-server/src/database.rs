@@ -146,59 +146,62 @@ mod tests {
     }
 
     #[test]
-    fn new() {
-        let temp_dir = tempdir().unwrap();
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
-        let tx = db.database.tx(false).unwrap();
-        let _ = tx.get_bucket(PROJECT_BUCKET).unwrap();
+    fn new() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let tx = db.database.tx(false)?;
+        let _ = tx.get_bucket(PROJECT_BUCKET)?;
+        Ok(())
     }
 
     #[test]
-    fn project_create() {
-        let temp_dir = tempdir().unwrap();
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+    fn project_create() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
-        db.project_create(PROJECT_NAME).unwrap();
-        assert!(db.project_exists(PROJECT_NAME).unwrap());
+        db.project_create(PROJECT_NAME)?;
+        assert!(db.project_exists(PROJECT_NAME)?);
+        Ok(())
     }
 
     #[test]
-    fn project_delete() {
-        let temp_dir = tempdir().unwrap();
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+    fn project_delete() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
-        db.project_create(PROJECT_NAME).unwrap();
-        assert!(db.project_exists(PROJECT_NAME).unwrap());
+        db.project_create(PROJECT_NAME)?;
+        assert!(db.project_exists(PROJECT_NAME)?);
 
-        db.project_delete(PROJECT_NAME).unwrap();
-        assert!(!db.project_exists(PROJECT_NAME).unwrap());
+        db.project_delete(PROJECT_NAME)?;
+        assert!(!db.project_exists(PROJECT_NAME)?);
+        Ok(())
     }
 
     #[test]
-    fn function_create() {
-        let temp_dir = tempdir().unwrap();
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+    fn function_create() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
-        db.project_create(PROJECT_NAME).unwrap();
-        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)
-            .unwrap();
-        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
+        db.project_create(PROJECT_NAME)?;
+        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)?;
+        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
 
-        let function = db.function_get(PROJECT_NAME, FUNCTION_NAME).unwrap();
+        let function = db.function_get(PROJECT_NAME, FUNCTION_NAME)?;
         assert_eq!(*FUNCTION_SCHEMA, function);
+        Ok(())
     }
 
     #[test]
-    fn function_delete() {
-        let temp_dir = tempdir().unwrap();
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME)).unwrap();
+    fn function_delete() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
-        db.project_create(PROJECT_NAME).unwrap();
-        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)
-            .unwrap();
-        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
+        db.project_create(PROJECT_NAME)?;
+        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)?;
+        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
 
-        db.function_delete(PROJECT_NAME, FUNCTION_NAME).unwrap();
-        assert!(!db.function_exists(PROJECT_NAME, FUNCTION_NAME).unwrap());
+        db.function_delete(PROJECT_NAME, FUNCTION_NAME)?;
+        assert!(!db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
+        Ok(())
     }
 }
