@@ -1,24 +1,34 @@
-use crate::{client, modules::templates, print};
+use crate::{
+    adapter::git,
+    client::NoopsClient,
+    config::Config,
+    modules::{templates::TEMPLATES, Module},
+    terminal::Terminal,
+};
 
-use super::{load_config, print_modules};
-
-pub async fn module_delete() -> anyhow::Result<()> {
-    let mut config = load_config();
-    print_modules(&config);
-    let module_index =
-        print::Color::prompt_number(&crate::print::Color::White, "--- \nEnter index \n---");
-
-    let module = config.get_module(module_index);
-    client::NoopsClient::from_config(&config)
-        .delete_module(module)
-        .await?;
-    config.delete_module(module_index)?;
+pub async fn module_delete(
+    term: &Terminal,
+    mut config: Config,
+    client: NoopsClient,
+) -> anyhow::Result<()> {
+    let index = term.select_prompt("Select a module to delete", &config.modules)?;
+    let module = config.get_module(index);
+    client.delete_module(module).await?;
+    config.delete_module(index)?;
     Ok(())
 }
 
-pub fn module_add() -> anyhow::Result<()> {
-    let config = load_config();
-    println!("Creating new module");
-    templates::create(config)?;
+pub fn module_add(term: &Terminal, mut config: Config) -> anyhow::Result<()> {
+    term.writeln("Creating new module")?;
+
+    let index = term.select_prompt("Select a template", &TEMPLATES)?;
+    let mut template = TEMPLATES[index].clone();
+    template.name = term.text_prompt("Enter new module name")?;
+    let module = Module::from_template(template);
+
+    git::clone_repository(&module.template, &module.root)?;
+    config.add_module(module)?;
+
+    term.writeln("Added module to config!")?;
     Ok(())
 }

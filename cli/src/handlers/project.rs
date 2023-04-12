@@ -1,31 +1,34 @@
 use std::collections::HashMap;
 
-use super::load_config;
 use crate::{
     adapter::{cargo::CargoExecutor, golang::GolangExecutor, Adapter, Toolchain},
-    client, config,
+    client::{self, NoopsClient},
+    config::Config,
     modules::{Language, Module},
-    print,
+    terminal::Terminal,
 };
 
-pub async fn project_init() -> anyhow::Result<()> {
-    println!("Initializing Project");
-    let config = config::Config::init();
-    println!("Project Initialized");
-    println!("Uploading Project to Server");
+pub async fn project_init(term: &Terminal) -> anyhow::Result<()> {
+    term.writeln("Initializing Project")?;
+    let project_name = term.text_prompt("Name your Project")?;
+    let config = Config::new(&project_name);
+    config.save()?;
+
+    term.writeln("Project Initialized")?;
+    term.writeln("Uploading Project to Server")?;
+
     client::NoopsClient::from_config(&config)
         .create_project()
         .await?;
     Ok(())
 }
 
-pub async fn project_build() -> anyhow::Result<()> {
-    let mut config = load_config();
-    println!("Building modules");
+pub async fn project_build(term: &Terminal, mut config: Config) -> anyhow::Result<()> {
+    term.writeln("Building modules")?;
 
     // Group modules based on their language
     let mut grouped_modules: HashMap<Language, Vec<&mut Module>> = HashMap::new();
-    for module in &mut config.modules {
+    for module in config.modules.iter_mut() {
         grouped_modules
             .entry(module.language)
             .or_default()
@@ -50,38 +53,29 @@ pub async fn project_build() -> anyhow::Result<()> {
     }
 
     config.save()?;
-    println!("Done");
+    term.writeln("Done")?;
     Ok(())
 }
 
-pub async fn project_deploy() {
-    let config = load_config();
-    println!("Deploying project");
-    client::NoopsClient::from_config(&config)
-        .upload_modules(config.modules)
-        .await;
+pub async fn project_deploy(
+    term: &Terminal,
+    config: Config,
+    client: NoopsClient,
+) -> anyhow::Result<()> {
+    term.writeln("Deploying project")?;
+    client.upload_modules(config.modules).await;
+    Ok(())
 }
 
-pub async fn project_destroy() -> anyhow::Result<()> {
-    let mut answer = print::Color::prompt_text(
-        &print::Color::Red,
-        "--- \nDestroying the Project! Are you sure? \nYes/ No \n---",
-    );
-    answer = answer.to_lowercase();
-
-    match &answer[..] {
-        "yes" => {
-            print::Color::print_colorful(&print::Color::Red, "Destroying...");
-            let config = load_config();
-            client::NoopsClient::from_config(&config)
-                .delete_project()
-                .await?;
-            print::Color::print_colorful(&print::Color::Green, "Successfully destroyed project...");
-            Ok(())
-        }
-        _ => {
-            print::Color::print_colorful(&print::Color::Green, "Aborting...");
-            Ok(())
-        }
+pub async fn project_destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
+    let response = term.confirm_prompt("Destroying the Project")?;
+    if !response {
+        term.writeln("Aborting...")?;
+        Ok(())
+    } else {
+        term.writeln("Destroying...")?;
+        client.delete_project().await?;
+        term.writeln("Successfully destroyed project...")?;
+        Ok(())
     }
 }

@@ -44,42 +44,38 @@ mod tests {
         adapter::{Adapter, BuildExecutor, Toolchain},
         modules::Module,
     };
-    use std::path::PathBuf;
+    use std::{path::PathBuf, str::FromStr};
 
     const RUST_TEST_DIR: &str = "test/rust/";
 
     #[ignore]
     #[test]
-    fn test_execute_build() {
-        let modules: Vec<&mut Module> = Vec::default();
+    fn test_execute_build() -> anyhow::Result<()> {
+        let modules: Vec<&mut Module> = Default::default();
         let cargo_adapter = Adapter::new(modules, CargoExecutor);
 
         cargo_adapter
             .build_executor
-            .execute_build(RUST_TEST_DIR.to_string())
-            .unwrap();
+            .execute_build(RUST_TEST_DIR.to_string())?;
+        Ok(())
     }
 
     #[ignore]
     #[test]
-    fn test_build_project() {
-        let module_name = "my-module";
-        let module_description = "my super duper module";
-        let template_name = "dummy";
-        let module_lang = crate::modules::Language::Rust;
-        let module_default_path = PathBuf::default();
+    fn test_build_project() -> anyhow::Result<()> {
+        let mut example_module = Module {
+            name: "my-module".to_string(),
+            root: PathBuf::from_str("test/")?,
+            description: "my super duper module".to_string(),
+            template: "dummy".to_string(),
+            language: crate::modules::Language::Rust,
+            target_dir: PathBuf::default(),
+        };
 
-        let mut example_module = Module::new(
-            module_name,
-            RUST_TEST_DIR,
-            module_description,
-            template_name,
-            module_lang,
-            module_default_path,
-        );
         let modules = vec![&mut example_module];
         let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
 
-        cargo_adapter.build_project().unwrap();
+        cargo_adapter.build_project()?;
+        Ok(())
     }
 }

@@ -1,4 +1,4 @@
-use crate::{modules::Module, print};
+use crate::modules::Module;
 use anyhow;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -12,13 +12,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn init() -> Self {
-        let config_name = print::Color::prompt_text(&print::Color::White, "Name your Project");
-        let config = Config::new(&config_name);
-        config.save().unwrap();
-        config
-    }
-
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -41,8 +34,8 @@ impl Config {
         self.modules.get(index).unwrap()
     }
 
-    pub fn delete_module(&mut self, module: usize) -> anyhow::Result<()> {
-        self.modules.remove(module);
+    pub fn delete_module(&mut self, index: usize) -> anyhow::Result<()> {
+        self.modules.remove(index);
         self.save()?;
         Ok(())
     }
@@ -68,7 +61,7 @@ impl Config {
 mod tests {
     use super::*;
     use crate::modules::Module;
-    use std::path::PathBuf;
+    use std::{path::PathBuf, str::FromStr};
     use tempfile::tempdir;
 
     const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
@@ -77,14 +70,14 @@ mod tests {
     fn test_from_yaml() -> anyhow::Result<()> {
         let mut wanted_config = Config::new("noops-example");
 
-        let example_module = Module::new(
-            "my-module",
-            "test/",
-            "my super duper module",
-            "dummy",
-            crate::modules::Language::Rust,
-            PathBuf::default(),
-        );
+        let example_module = Module {
+            name: "my-module".to_string(),
+            root: PathBuf::from_str("test/")?,
+            description: "my super duper module".to_string(),
+            template: "dummy".to_string(),
+            language: crate::modules::Language::Rust,
+            target_dir: PathBuf::default(),
+        };
         wanted_config.add_module(example_module)?;
 
         let parsed_config = Config::from_yaml(TEST_CONFIG_PATH)?;

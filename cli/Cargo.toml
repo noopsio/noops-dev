@@ -8,11 +8,9 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.1.8", features = ["cargo"] }
-colored = "2.0.0"
 env_logger = "0.10.0"
 futures = "0.3.27"
 log = "0.4.17"
-prettytable-rs = "0.10.0"
 reqwest = { version = "0.11.14", features = ["json"] }
 serde = { version = "1.0.154", features= ["derive"] }
 serde_json = "1.0.94"
@@ -21,6 +19,10 @@ text_io = "0.1.12"
 tokio = { version = "1.26.0", features= ["full"] }
 anyhow = "1.0.69"
 walkdir = "2.3.3"
+console = "0.15.5"
+dialoguer = "0.10.4"
+lazy_static.workspace = true
+
 
 
 [dev-dependencies]
