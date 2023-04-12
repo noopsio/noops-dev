@@ -23,16 +23,14 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 async fn create_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
-    Json(body): Json<schemas::CreateFunctionSchema>,
+    Json(mut function): Json<schemas::CreateFunctionSchema>,
 ) -> Result<StatusCode, AppError> {
     if !database.project_exists(&project_name).unwrap() {
         return Ok(StatusCode::NOT_FOUND);
     }
 
-    let mut function = body;
     function.wasm = bindgen::create_component(&function.wasm)?;
     database.function_create(&project_name, &function_name, &function)?;
-
     Ok(StatusCode::OK)
 }
 

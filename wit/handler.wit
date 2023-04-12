@@ -5,7 +5,7 @@ default world handler {
     }
 
     record response {
-        status: u32,
+        status: u16,
         body: string
     }
 
