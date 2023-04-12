@@ -9,3 +9,4 @@ members = [
 
 [workspace.dependencies]
 tempfile = "3.4.0"
+lazy_static = "1.4.0"

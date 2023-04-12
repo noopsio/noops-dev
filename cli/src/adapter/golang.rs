@@ -34,50 +34,43 @@ impl BuildExecutor for GolangExecutor {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
+    use super::GolangExecutor;
     use crate::{
         adapter::{Adapter, BuildExecutor, Toolchain},
-        filesystem,
         modules::Module,
     };
-
-    use super::GolangExecutor;
+    use std::{path::PathBuf, str::FromStr};
 
     const GOLANG_TEST_DIR: &str = "test/golang/";
     const GOLANG_TARGET_FILE: &str = "test/golang/target/main.wasm";
 
     #[ignore]
     #[test]
-    fn test_execute_build() {
+    fn test_execute_build() -> anyhow::Result<()> {
         let modules = vec![];
         let go_adapter = Adapter::new(modules, GolangExecutor);
         go_adapter
             .build_executor
-            .execute_build(GOLANG_TEST_DIR.to_string())
-            .unwrap();
+            .execute_build(GOLANG_TEST_DIR.to_string())?;
+        Ok(())
     }
 
     #[ignore]
     #[test]
-    fn test_build_project() {
-        let module_name = "my-module";
-        let module_description = "my super duper module";
-        let template_name = "dummy";
-        let module_lang = crate::modules::Language::Golang;
-        let module_target_path = PathBuf::default();
+    fn test_build_project() -> anyhow::Result<()> {
+        let mut example_module = Module {
+            name: "my-module".to_string(),
+            root: PathBuf::from_str("test/")?,
+            description: "my super duper module".to_string(),
+            template: "dummy".to_string(),
+            language: crate::modules::Language::Rust,
+            target_dir: PathBuf::default(),
+        };
 
-        let mut example_module = Module::new(
-            module_name,
-            GOLANG_TEST_DIR,
-            module_description,
-            template_name,
-            module_lang,
-            module_target_path,
-        );
         let modules = vec![&mut example_module];
         let mut go_adapter = Adapter::new(modules, GolangExecutor);
 
         go_adapter.build_project().unwrap();
+        Ok(())
     }
 }
