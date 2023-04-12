@@ -10,7 +10,7 @@ use crate::{
 
 pub async fn project_init() -> anyhow::Result<()> {
     println!("Initializing Project");
-    let config = config::init();
+    let config = config::Config::init();
     println!("Project Initialized");
     println!("Uploading Project to Server");
     client::NoopsClient::from_config(&config)
@@ -43,14 +43,13 @@ pub async fn project_build() -> anyhow::Result<()> {
                 let executor = GolangExecutor;
                 let adapter = Adapter::new(modules, executor);
                 Box::new(adapter)
-            }
-            // Add more languages and their corresponding adapter creators here
+            } // Add more languages and their corresponding adapter creators here
         };
-    
+
         adapter.build_project()?;
     }
 
-    config.to_yaml(None)?;
+    config.save()?;
     println!("Done");
     Ok(())
 }

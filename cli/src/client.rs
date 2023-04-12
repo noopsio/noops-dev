@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::Config,
-    filesystem::{find_binary, read_binary},
+    filesystem::{find_wasm, read_wasm},
     modules::Module,
 };
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct ModuleDTO {
     name: String,
     wasm: Vec<u8>,
@@ -18,13 +18,12 @@ pub struct ModuleDTO {
 
 impl From<Module> for ModuleDTO {
     fn from(module: Module) -> Self {
-        let binary_location = find_binary(module.target_dir).unwrap();
-        let binary_buffer = read_binary(binary_location).unwrap();
+        let path = find_wasm(module.target_dir).unwrap();
+        let wasm = read_wasm(path).unwrap();
         ModuleDTO {
-            wasm: binary_buffer,
+            wasm,
             name: module.name,
-            params: vec![],
-            project: String::new(),
+            ..Default::default()
         }
     }
 }
@@ -33,16 +32,6 @@ pub struct NoopsClient {
     pub project: String,
     server_url: String,
     client: Client,
-}
-
-impl From<&mut Config> for NoopsClient {
-    fn from(config: &mut Config) -> Self {
-        NoopsClient {
-            project: config.name.clone(),
-            server_url: "http://localhost:3000/api/".to_string(),
-            client: Client::new(),
-        }
-    }
 }
 
 impl NoopsClient {
@@ -81,6 +70,7 @@ impl NoopsClient {
         Self::handle_response(response).await?;
         Ok(())
     }
+
     async fn upload_module(&self, module: Module) -> anyhow::Result<()> {
         let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
 
@@ -116,15 +106,14 @@ impl NoopsClient {
     async fn handle_response(response: Response) -> anyhow::Result<()> {
         log::debug!("Response status: {}", response.status());
 
-        if response.status().is_success() {
-            Ok(())
-        } else {
+        if !response.status().is_success() {
             let error_message = format!(
                 "Request failed with status code {}: {}",
                 response.status(),
                 response.text().await?
             );
-            Err(anyhow::anyhow!(error_message))
+            anyhow::bail!(error_message);
         }
+        Ok(())
     }
 }

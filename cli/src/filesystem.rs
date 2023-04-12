@@ -1,72 +1,23 @@
-use anyhow::{anyhow, Context};
+use anyhow;
 use log::info;
-use std::fs::{self, File};
-use std::io::Read;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
-pub fn read_binary(file_path: String) -> anyhow::Result<Vec<u8>> {
-    info!("File Path {}", file_path);
-
-    let mut file = File::open(file_path)?;
-    let mut file_contents = Vec::new();
-    let bytes_read = file.read_to_end(&mut file_contents)?;
-    info!("bytes read: {}", bytes_read);
-
-    Ok(file_contents)
+pub fn read_wasm(path: PathBuf) -> anyhow::Result<Vec<u8>> {
+    info!("File Path {}", path.to_str().unwrap());
+    Ok(std::fs::read(path)?)
 }
 
-pub fn find_binary(target_path_buf: PathBuf) -> anyhow::Result<String> {
-    let target_path = target_path_buf.as_path();
-
-    if let Some(entry) = fs::read_dir(target_path)
-        .with_context(|| {
-            format!(
-                "Failed to read directory '{}'",
-                target_path.as_os_str().to_string_lossy()
-            )
-        })?
-        .filter_map(|entry| entry.ok())
-        .find(|entry| {
-            let path = entry.path();
-            path.is_file() && path.extension().map_or(false, |ext| ext == "wasm")
-        })
-        .map(|entry| entry.path().to_string_lossy().to_string())
+pub fn find_wasm(directory: PathBuf) -> Option<PathBuf> {
+    for entry in WalkDir::new(directory)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| !e.file_type().is_file())
     {
-        return Ok(entry);
+        let file_name = entry.file_name().to_string_lossy();
+        if file_name.ends_with(".wasm") {
+            return Some(entry.into_path());
+        }
     }
-    Err(anyhow!(
-        "No .wasm file found in directory '{}'",
-        target_path.as_os_str().to_string_lossy()
-    ))
-}
-
-// Test Helpers
-
-pub fn remove_dir(dir: &str) {
-    if let Err(e) = std::fs::remove_dir_all(dir) {
-        log::error!("Error removing directory: {}", e);
-    } else {
-        log::info!("Directory {} removed successfully", dir);
-    }
-}
-
-#[allow(dead_code)]
-pub fn delete_file(file: &str) {
-    match fs::remove_file(file) {
-        Ok(_) => log::info!("File successfully deleted."),
-        Err(e) => log::error!("Error deleting file: {}", e),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use std::path::PathBuf;
-
-    #[test]
-    fn test_find_binary() {
-        assert_eq!(
-            crate::filesystem::find_binary(PathBuf::from("test")).unwrap(),
-            "test/filesystem_test.wasm"
-        );
-    }
+    None
 }

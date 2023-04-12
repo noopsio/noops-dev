@@ -7,4 +7,5 @@ members = [
     "server",
 ]
 
-
+[workspace.dependencies]
+tempfile = "3.4.0"

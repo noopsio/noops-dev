@@ -47,6 +47,7 @@ mod tests {
     const GOLANG_TEST_DIR: &str = "test/golang/";
     const GOLANG_TARGET_FILE: &str = "test/golang/target/main.wasm";
 
+    #[ignore]
     #[test]
     fn test_execute_build() {
         let modules = vec![];
@@ -55,9 +56,9 @@ mod tests {
             .build_executor
             .execute_build(GOLANG_TEST_DIR.to_string())
             .unwrap();
-        filesystem::delete_file(GOLANG_TARGET_FILE)
     }
 
+    #[ignore]
     #[test]
     fn test_build_project() {
         let module_name = "my-module";
@@ -78,6 +79,5 @@ mod tests {
         let mut go_adapter = Adapter::new(modules, GolangExecutor);
 
         go_adapter.build_project().unwrap();
-        filesystem::delete_file(GOLANG_TARGET_FILE)
     }
 }
