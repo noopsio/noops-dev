@@ -48,19 +48,20 @@ mod tests {
     use crate::executor;
 
     #[tokio::test]
-    async fn return_status_code() {
+    async fn return_status_code() -> anyhow::Result<()> {
         let path = env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200");
         let module = std::fs::read(path).expect("Unable to read module");
         let component =
             bindgen::create_component(&module).expect("Unable to create component from module");
         let request = bindgen::Request::default();
-        let response = executor::execute(component, request).await.unwrap();
+        let response = executor::execute(component, request).await?;
 
         assert_eq!(200, response.status);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn return_params() {
+    async fn return_params() -> anyhow::Result<()> {
         let path = env!("CARGO_CDYLIB_FILE_RETURN_PARAMS");
         let module = std::fs::read(path).expect("Unable to read module");
         let component =
@@ -68,11 +69,12 @@ mod tests {
         let request = bindgen::Request {
             query_params: &[("key1", "value1"), ("key2", "value2"), ("key3", "value3")],
         };
-        let response = executor::execute(component, request).await.unwrap();
+        let response = executor::execute(component, request).await?;
         assert_eq!(200, response.status);
         assert_eq!(
             format!("key1=value1\nkey2=value2\nkey3=value3\n"),
             response.body
         );
+        Ok(())
     }
 }
