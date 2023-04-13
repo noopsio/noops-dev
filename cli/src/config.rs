@@ -30,8 +30,8 @@ impl Config {
         Ok(())
     }
 
-    pub fn get_module(&self, index: usize) -> &Module {
-        self.modules.get(index).unwrap()
+    pub fn get_module(&self, index: usize) -> Module {
+        self.modules.get(index).unwrap().to_owned()
     }
 
     pub fn delete_module(&mut self, index: usize) -> anyhow::Result<()> {
@@ -49,6 +49,7 @@ impl Config {
         let writer = std::fs::OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(true)
             .open(path)?;
 
         serde_yaml::to_writer(writer, &self)?;
@@ -61,7 +62,7 @@ impl Config {
 mod tests {
     use super::*;
     use crate::modules::Module;
-    use std::{path::PathBuf, str::FromStr};
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
     const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
@@ -72,9 +73,7 @@ mod tests {
 
         let example_module = Module {
             name: "my-module".to_string(),
-            root: PathBuf::from_str("test/")?,
             description: "my super duper module".to_string(),
-            template: "dummy".to_string(),
             language: crate::modules::Language::Rust,
             target_dir: PathBuf::default(),
         };

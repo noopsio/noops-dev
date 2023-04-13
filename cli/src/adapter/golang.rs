@@ -1,19 +1,20 @@
 use super::execute_command;
 use super::BuildExecutor;
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 
 pub struct GolangExecutor;
 
 impl BuildExecutor for GolangExecutor {
-    fn execute_build(&self, source_dir: String) -> anyhow::Result<std::path::PathBuf> {
+    fn execute_build(&self, source_dir: &Path) -> anyhow::Result<std::path::PathBuf> {
         //tinygo build -o target/main.wasm -target wasi main.go
         let build_arg = "build";
         let target_arch_flag = "-target";
         let wasi_arg = "wasi";
-        let location_main_go = source_dir.clone() + "src/main.go";
+        let location_main_go = source_dir.join("src/main.go");
         let output_flag = "-o";
-        let output_file = source_dir.clone() + "target/main.wasm";
+        let output_file = source_dir.join("target/main.wasm");
 
         let mut tinygo = Command::new("tinygo");
         let tinygo_build = tinygo
@@ -39,7 +40,7 @@ mod tests {
         adapter::{Adapter, BuildExecutor, Toolchain},
         modules::Module,
     };
-    use std::{path::PathBuf, str::FromStr};
+    use std::path::{Path, PathBuf};
 
     const GOLANG_TEST_DIR: &str = "test/golang/";
     const GOLANG_TARGET_FILE: &str = "test/golang/target/main.wasm";
@@ -51,7 +52,7 @@ mod tests {
         let go_adapter = Adapter::new(modules, GolangExecutor);
         go_adapter
             .build_executor
-            .execute_build(GOLANG_TEST_DIR.to_string())?;
+            .execute_build(Path::new(GOLANG_TEST_DIR))?;
         Ok(())
     }
 
@@ -60,9 +61,7 @@ mod tests {
     fn test_build_project() -> anyhow::Result<()> {
         let mut example_module = Module {
             name: "my-module".to_string(),
-            root: PathBuf::from_str("test/")?,
             description: "my super duper module".to_string(),
-            template: "dummy".to_string(),
             language: crate::modules::Language::Rust,
             target_dir: PathBuf::default(),
         };

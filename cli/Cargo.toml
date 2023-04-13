@@ -22,8 +22,4 @@ walkdir = "2.3.3"
 console = "0.15.5"
 dialoguer = "0.10.4"
 lazy_static.workspace = true
-
-
-
-[dev-dependencies]
 tempfile.workspace = true

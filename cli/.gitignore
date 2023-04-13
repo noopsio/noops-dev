@@ -12,8 +12,7 @@ Cargo.lock
 
 # Added by cargo
 
-/target
 test/target/
 playground/
 test/noops-cli
-.vscode/
+*.yaml
