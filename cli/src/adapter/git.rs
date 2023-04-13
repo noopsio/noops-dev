@@ -1,17 +1,17 @@
-use super::Adapter2;
+use super::BaseAdapter;
 use std::path::Path;
 
 const PROGRAM: &str = "git";
 const REPOSITORY: &str = "https://github.com/JFComputing/noops-templates.git";
 
 pub struct GitAdapter {
-    adapter: Adapter2,
+    adapter: BaseAdapter,
 }
 
 impl GitAdapter {
     pub fn new() -> Self {
         GitAdapter {
-            adapter: Adapter2::new(PROGRAM),
+            adapter: BaseAdapter::new(PROGRAM),
         }
     }
 

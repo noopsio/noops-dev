@@ -1,9 +1,8 @@
 use crate::modules::Module;
-use anyhow;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-const CONFIG_FILE_NAME: &str = "noops-config.yaml";
+pub const CONFIG_FILE_NAME: &str = "noops.yaml";
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct Config {
@@ -20,6 +19,9 @@ impl Config {
     }
 
     pub fn from_yaml(path: impl AsRef<Path>) -> anyhow::Result<Config> {
+        if !Path::exists(path.as_ref()) {
+            anyhow::bail!("Config not found at {}", path.as_ref().to_string_lossy());
+        }
         let file = std::fs::File::open(path)?;
         Ok(serde_yaml::from_reader(file)?)
     }

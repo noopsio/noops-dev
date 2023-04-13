@@ -16,13 +16,13 @@ pub struct ModuleDTO {
     project: String,
 }
 
-impl From<Module> for ModuleDTO {
-    fn from(module: Module) -> Self {
-        let path = find_wasm(module.target_dir).unwrap();
+impl From<&Module> for ModuleDTO {
+    fn from(module: &Module) -> Self {
+        let path = find_wasm(module.target_dir.clone()).unwrap();
         let wasm = read_wasm(path).unwrap();
         ModuleDTO {
             wasm,
-            name: module.name,
+            name: module.name.clone(),
             ..Default::default()
         }
     }
@@ -42,7 +42,7 @@ impl NoopsClient {
             client: Client::new(),
         }
     }
-    pub async fn upload_modules(&self, modules: Vec<Module>) {
+    pub async fn upload_modules(&self, modules: &[Module]) {
         let mut uploads = vec![];
         for module in modules {
             uploads.push(self.upload_module(module));
@@ -71,7 +71,7 @@ impl NoopsClient {
         Ok(())
     }
 
-    async fn upload_module(&self, module: Module) -> anyhow::Result<()> {
+    async fn upload_module(&self, module: &Module) -> anyhow::Result<()> {
         let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
 
         log::debug!("Uploading module {} / {}", &self.project, &module.name);

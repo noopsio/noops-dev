@@ -1,81 +1,36 @@
-use super::BuildExecutor;
-use std::{
-    path::{Path, PathBuf},
-    process::Command,
-};
+use super::BaseAdapter;
+use std::path::Path;
 
-pub struct CargoExecutor;
+const PROGRAM: &str = "cargo";
 
-impl BuildExecutor for CargoExecutor {
-    fn execute_build(&self, source_dir: &Path) -> anyhow::Result<PathBuf> {
-        let build_arg = "build";
-        let release_flag = "--release";
-        let target_flag = "--target";
-        let target_arch = "wasm32-wasi";
-        let manifest_flag = "--manifest-path";
-        let cargo_toml_path = source_dir.join("Cargo.toml");
-
-        let mut cargo = Command::new("cargo");
-        let cargo_build = cargo
-            .arg(build_arg)
-            .arg(release_flag)
-            .arg(target_flag)
-            .arg(target_arch)
-            .arg(manifest_flag)
-            .arg(cargo_toml_path);
-        super::execute_command(cargo_build)?;
-
-        let target_dir = "target";
-        let release_dir = "release";
-
-        let mut binary_location = PathBuf::from(source_dir);
-        binary_location.push(target_dir);
-        binary_location.push(target_arch);
-        binary_location.push(release_dir);
-
-        log::info!("Output Path {}", binary_location.to_string_lossy());
-
-        Ok(binary_location)
-    }
+pub struct CargoAdapter {
+    adapter: BaseAdapter,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::CargoExecutor;
-    use crate::{
-        adapter::{Adapter, BuildExecutor, Toolchain},
-        modules::Module,
-    };
-    use std::path::{Path, PathBuf};
-
-    const RUST_TEST_DIR: &str = "test/rust/";
-
-    #[ignore]
-    #[test]
-    fn test_execute_build() -> anyhow::Result<()> {
-        let modules: Vec<&mut Module> = Default::default();
-        let cargo_adapter = Adapter::new(modules, CargoExecutor);
-
-        cargo_adapter
-            .build_executor
-            .execute_build(Path::new(RUST_TEST_DIR))?;
-        Ok(())
+impl CargoAdapter {
+    pub fn new() -> Self {
+        CargoAdapter {
+            adapter: BaseAdapter {
+                program: PROGRAM.to_string(),
+            },
+        }
     }
 
-    #[ignore]
-    #[test]
-    fn test_build_project() -> anyhow::Result<()> {
-        let mut example_module = Module {
-            name: "my-module".to_string(),
-            description: "my super duper module".to_string(),
-            language: crate::modules::Language::Rust,
-            target_dir: PathBuf::default(),
-        };
-
-        let modules = vec![&mut example_module];
-        let mut cargo_adapter = Adapter::new(modules, CargoExecutor);
-
-        cargo_adapter.build_project()?;
+    pub fn build(&self, work_dir: &Path) -> anyhow::Result<()> {
+        let command = self.adapter.build_command(
+            work_dir,
+            &[
+                "build",
+                "-Z",
+                "unstable-options",
+                "--release",
+                "--target",
+                "wasm32-wasi",
+                "--out-dir",
+                "./out",
+            ],
+        );
+        self.adapter.execute(command)?;
         Ok(())
     }
 }
