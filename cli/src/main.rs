@@ -8,8 +8,7 @@ mod templates;
 mod terminal;
 
 use adapter::git::GitAdapter;
-use anyhow::anyhow;
-use clap::{command, ArgMatches, Command};
+use clap::{command, Command};
 use client::NoopsClient;
 use config::Config;
 use terminal::Terminal;
@@ -18,44 +17,48 @@ use terminal::Terminal;
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
     let terminal = Terminal::new();
-    let config = Config::from_yaml("noops-config.yaml")?;
-    let client = NoopsClient::from_config(&config);
-    let git = GitAdapter::new();
 
-    let matches = create_arg_matches();
-    match matches.subcommand() {
+    let mut commands = create_commands();
+    match commands.clone().get_matches().subcommand() {
         Some(("init", _)) => {
-            handlers::project::project_init(&terminal).await?;
-            Ok(())
-        }
-
-        Some(("add", _)) => {
-            handlers::modules::add(&terminal, config, &git)?;
-            Ok(())
+            handlers::project::init(&terminal).await?;
         }
 
         Some(("build", _)) => {
-            handlers::project::project_build(&terminal, config).await?;
-            Ok(())
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            handlers::project::build(&terminal, &config.modules).await?;
         }
 
         Some(("deploy", _)) => {
-            handlers::project::project_deploy(&terminal, config, client).await?;
-            Ok(())
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            let client = NoopsClient::from_config(&config);
+            handlers::project::deploy(&terminal, &config.modules, client).await?;
         }
+
+        Some(("add", _)) => {
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            let git = GitAdapter::new();
+            handlers::modules::add(&terminal, config, &git)?;
+        }
+
         Some(("remove", _)) => {
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
             handlers::modules::delete(&terminal, config)?;
-            Ok(())
         }
+
         Some(("destroy", _)) => {
-            handlers::project::project_destroy(&terminal, client).await?;
-            Ok(())
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            let client = NoopsClient::from_config(&config);
+            handlers::project::destroy(&terminal, client).await?;
         }
-        _ => Err(anyhow!("No command provided")),
+
+        _ => commands.print_help()?,
     }
+
+    Ok(())
 }
 
-fn create_arg_matches() -> ArgMatches {
+fn create_commands() -> Command {
     command!()
         .subcommand(Command::new("init").about("Create a new project"))
         .subcommand(Command::new("add").about("Add a new module"))
@@ -63,5 +66,4 @@ fn create_arg_matches() -> ArgMatches {
         .subcommand(Command::new("deploy").about("Deploy the project"))
         .subcommand(Command::new("remove").about("Remove a module"))
         .subcommand(Command::new("destroy").about("Destroy the project"))
-        .get_matches()
 }
