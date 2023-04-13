@@ -4,8 +4,10 @@ mod config;
 mod filesystem;
 mod handlers;
 mod modules;
+mod templates;
 mod terminal;
 
+use adapter::git::GitAdapter;
 use anyhow::anyhow;
 use clap::{command, ArgMatches, Command};
 use client::NoopsClient;
@@ -18,6 +20,7 @@ async fn main() -> anyhow::Result<()> {
     let terminal = Terminal::new();
     let config = Config::from_yaml("noops-config.yaml")?;
     let client = NoopsClient::from_config(&config);
+    let git = GitAdapter::new();
 
     let matches = create_arg_matches();
     match matches.subcommand() {
@@ -27,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         Some(("add", _)) => {
-            handlers::modules::module_add(&terminal, config)?;
+            handlers::modules::add(&terminal, config, &git)?;
             Ok(())
         }
 
@@ -41,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Some(("remove", _)) => {
-            handlers::modules::module_delete(&terminal, config, client).await?;
+            handlers::modules::delete(&terminal, config)?;
             Ok(())
         }
         Some(("destroy", _)) => {

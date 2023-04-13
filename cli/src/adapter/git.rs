@@ -1,32 +1,60 @@
-use std::process::Command;
-
+use super::Adapter2;
 use std::path::Path;
 
-pub fn clone_repository(repository: &str, directory: &Path) -> anyhow::Result<()> {
-    let mut git = Command::new("git");
-    let git_clone = git
-        .arg("clone")
-        .arg("git@github.com:".to_string() + repository + ".git")
-        .arg(directory.to_str().unwrap());
+const PROGRAM: &str = "git";
+const REPOSITORY: &str = "https://github.com/JFComputing/noops-templates.git";
 
-    super::execute_command(git_clone)?;
-    std::fs::remove_dir(directory.join(".git"))?;
-    Ok(())
+pub struct GitAdapter {
+    adapter: Adapter2,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
+impl GitAdapter {
+    pub fn new() -> Self {
+        GitAdapter {
+            adapter: Adapter2::new(PROGRAM),
+        }
+    }
 
-    #[test]
-    fn test_git_clone() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        clone_repository("JFcomputing/templates-rust-hello-world", temp_dir.path()).unwrap();
-        assert!(
-            std::fs::metadata(temp_dir.path()).unwrap().is_dir(),
-            "dir exists"
+    pub fn get_template(&self, working_dir: &Path, path: &Path) -> anyhow::Result<()> {
+        self.clone_no_checkout(working_dir, working_dir)?;
+        self.sparse_checkout(working_dir, path)?;
+        self.checkout(working_dir)?;
+        Ok(())
+    }
+
+    fn clone_no_checkout(&self, working_dir: &Path, path: &Path) -> anyhow::Result<()> {
+        let command = self.adapter.build_command(
+            working_dir,
+            &[
+                "clone",
+                "--no-checkout",
+                REPOSITORY,
+                path.to_string_lossy().as_ref(),
+            ],
         );
+        self.adapter.execute(command)?;
+        Ok(())
+    }
+
+    fn sparse_checkout(&self, working_dir: &Path, subpath: &Path) -> anyhow::Result<()> {
+        let command = self
+            .adapter
+            .build_command(working_dir, &["sparse-checkout", "init", "cone"]);
+        self.adapter.execute(command)?;
+
+        let command = self.adapter.build_command(
+            working_dir,
+            &["sparse-checkout", "set", subpath.to_string_lossy().as_ref()],
+        );
+        self.adapter.execute(command)?;
+        Ok(())
+    }
+
+    fn checkout(&self, working_dir: &Path) -> anyhow::Result<()> {
+        let command = self
+            .adapter
+            .build_command(working_dir, &["checkout", "main"]);
+        self.adapter.execute(command)?;
         Ok(())
     }
 }

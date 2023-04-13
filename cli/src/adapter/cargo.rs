@@ -1,18 +1,20 @@
 use super::BuildExecutor;
-use std::{path::PathBuf, process::Command};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 pub struct CargoExecutor;
 
 impl BuildExecutor for CargoExecutor {
-    fn execute_build(&self, source_dir: String) -> anyhow::Result<PathBuf> {
+    fn execute_build(&self, source_dir: &Path) -> anyhow::Result<PathBuf> {
         let build_arg = "build";
         let release_flag = "--release";
         let target_flag = "--target";
         let target_arch = "wasm32-wasi";
         let manifest_flag = "--manifest-path";
-        let cargo_toml_path = source_dir.clone() + "Cargo.toml";
+        let cargo_toml_path = source_dir.join("Cargo.toml");
 
-        log::debug!("Cargo Toml path: {}", cargo_toml_path);
         let mut cargo = Command::new("cargo");
         let cargo_build = cargo
             .arg(build_arg)
@@ -44,7 +46,7 @@ mod tests {
         adapter::{Adapter, BuildExecutor, Toolchain},
         modules::Module,
     };
-    use std::{path::PathBuf, str::FromStr};
+    use std::path::{Path, PathBuf};
 
     const RUST_TEST_DIR: &str = "test/rust/";
 
@@ -56,7 +58,7 @@ mod tests {
 
         cargo_adapter
             .build_executor
-            .execute_build(RUST_TEST_DIR.to_string())?;
+            .execute_build(Path::new(RUST_TEST_DIR))?;
         Ok(())
     }
 
@@ -65,9 +67,7 @@ mod tests {
     fn test_build_project() -> anyhow::Result<()> {
         let mut example_module = Module {
             name: "my-module".to_string(),
-            root: PathBuf::from_str("test/")?,
             description: "my super duper module".to_string(),
-            template: "dummy".to_string(),
             language: crate::modules::Language::Rust,
             target_dir: PathBuf::default(),
         };
