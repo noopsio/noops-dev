@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::{
-    adapter::cargo::CargoAdapter,
+    adapter::{cargo::CargoAdapter, golang::GolangAdapter},
     client::NoopsClient,
     config::Config,
     modules::{Language, Module},
@@ -9,13 +9,11 @@ use crate::{
 };
 
 pub async fn init(term: &Terminal) -> anyhow::Result<()> {
-    term.writeln("Initializing Project")?;
     let project_name = term.text_prompt("Name your Project")?;
     let config = Config::new(&project_name);
     config.save()?;
 
-    term.writeln("Project Initialized")?;
-    term.writeln("Uploading Project to Server")?;
+    term.writeln(&format!("Project {} Initialized", &project_name))?;
     Ok(())
 }
 
@@ -28,7 +26,10 @@ pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
                 let cargo = CargoAdapter::new();
                 cargo.build(Path::new(&module.name))?;
             }
-            Language::Golang => {}
+            Language::Golang => {
+                let go = GolangAdapter::new();
+                go.build(Path::new(&module.name))?;
+            }
         }
     }
     Ok(())

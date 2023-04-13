@@ -1,24 +1,24 @@
-use super::Adapter2;
-use std::path::{Path, PathBuf};
+use super::BaseAdapter;
+use std::path::Path;
 
 const PROGRAM: &str = "cargo";
 
 pub struct CargoAdapter {
-    adapter: Adapter2,
+    adapter: BaseAdapter,
 }
 
 impl CargoAdapter {
     pub fn new() -> Self {
         CargoAdapter {
-            adapter: Adapter2 {
+            adapter: BaseAdapter {
                 program: PROGRAM.to_string(),
             },
         }
     }
 
-    pub fn build(&self, source_dir: &Path) -> anyhow::Result<PathBuf> {
+    pub fn build(&self, work_dir: &Path) -> anyhow::Result<()> {
         let command = self.adapter.build_command(
-            source_dir,
+            work_dir,
             &[
                 "build",
                 "-Z",
@@ -31,7 +31,6 @@ impl CargoAdapter {
             ],
         );
         self.adapter.execute(command)?;
-        let binary = source_dir.join("target").join("release");
-        Ok(binary)
+        Ok(())
     }
 }
