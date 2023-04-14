@@ -1,5 +1,5 @@
 use super::BaseAdapter;
-use std::path::Path;
+use std::{fs, path::Path};
 
 const PROGRAM: &str = "tinygo";
 
@@ -17,9 +17,10 @@ impl GolangAdapter {
     }
 
     pub fn build(&self, work_dir: &Path) -> anyhow::Result<()> {
+        fs::create_dir(work_dir.join("out"))?;
         let command = self.adapter.build_command(
             work_dir,
-            &["build", "-target", "wasi", "-o", "./out/main.wasm"],
+            &["build", "-target", "wasi", "-o", "./out/handler.wasm"],
         );
         self.adapter.execute(command)?;
         Ok(())

@@ -12,8 +12,8 @@ impl Terminal {
         }
     }
 
-    pub fn writeln(&self, line: &str) -> anyhow::Result<()> {
-        self.term.write_line(line)?;
+    pub fn writeln(&self, line: impl AsRef<str>) -> anyhow::Result<()> {
+        self.term.write_line(line.as_ref())?;
         Ok(())
     }
 

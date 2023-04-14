@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use crate::{
     adapter::{cargo::CargoAdapter, golang::GolangAdapter},
     client::NoopsClient,
@@ -7,6 +5,7 @@ use crate::{
     modules::{Language, Module},
     terminal::Terminal,
 };
+use std::path::Path;
 
 pub async fn init(term: &Terminal) -> anyhow::Result<()> {
     let project_name = term.text_prompt("Name your Project")?;
@@ -18,9 +17,10 @@ pub async fn init(term: &Terminal) -> anyhow::Result<()> {
 }
 
 pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
-    term.writeln("Building modules")?;
+    term.writeln(format!("Building {} modules", modules.len()))?;
 
     for module in modules.iter() {
+        term.writeln(format!("Building module {}", &module.name))?;
         match module.language {
             Language::Rust => {
                 let cargo = CargoAdapter::new();

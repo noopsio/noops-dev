@@ -2,7 +2,7 @@ use crate::modules::Module;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-pub const CONFIG_FILE_NAME: &str = "noops.yaml";
+pub const CONFIG_FILE_NAME: &str = "./noops.yaml";
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct Config {
@@ -64,7 +64,6 @@ impl Config {
 mod tests {
     use super::*;
     use crate::modules::Module;
-    use std::path::PathBuf;
     use tempfile::tempdir;
 
     const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
@@ -77,7 +76,6 @@ mod tests {
             name: "my-module".to_string(),
             description: "my super duper module".to_string(),
             language: crate::modules::Language::Rust,
-            target_dir: PathBuf::default(),
         };
         wanted_config.add_module(example_module)?;
 

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use futures::future::join_all;
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
@@ -18,7 +20,7 @@ pub struct ModuleDTO {
 
 impl From<&Module> for ModuleDTO {
     fn from(module: &Module) -> Self {
-        let path = find_wasm(module.target_dir.clone()).unwrap();
+        let path = find_wasm(Path::new(&module.name).join("out")).unwrap();
         let wasm = read_wasm(path).unwrap();
         ModuleDTO {
             wasm,

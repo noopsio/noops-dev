@@ -11,7 +11,7 @@ pub fn read_wasm(path: PathBuf) -> anyhow::Result<Vec<u8>> {
     Ok(std::fs::read(path)?)
 }
 
-pub fn find_wasm(directory: PathBuf) -> Option<PathBuf> {
+pub fn find_wasm(directory: impl AsRef<Path>) -> Option<PathBuf> {
     for entry in WalkDir::new(directory)
         .into_iter()
         .filter_map(Result::ok)
