@@ -3,12 +3,20 @@ use lazy_static::lazy_static;
 use std::{fmt::Display, path::PathBuf};
 
 lazy_static! {
-    pub static ref TEMPLATES: Vec<Template> = vec![Template {
-        name: "Rust Hello World".to_string(),
-        description: "A hello world function in Rust".to_string(),
-        subpath: PathBuf::from("rust/hello-world"),
-        language: Language::Rust,
-    },];
+    pub static ref TEMPLATES: Vec<Template> = vec![
+        Template {
+            name: "Rust Hello World".to_string(),
+            description: "A hello world function in Rust".to_string(),
+            subpath: PathBuf::from("rust/hello-world"),
+            language: Language::Rust,
+        },
+        Template {
+            name: "Golang Hello World".to_string(),
+            description: "A hello world function in Go".to_string(),
+            subpath: PathBuf::from("golang/hello-world"),
+            language: Language::Golang,
+        }
+    ];
 }
 
 #[derive(Default, Clone, Debug)]
