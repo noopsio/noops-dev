@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
             let client = NoopsClient::new(base_url, &config.name);
-            handlers::project::deploy(&terminal, &config.modules, client)?;
+            handlers::project::deploy(&terminal, &config, client)?;
         }
 
         Some(("destroy", _)) => {
