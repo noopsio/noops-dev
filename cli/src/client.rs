@@ -2,7 +2,6 @@ use crate::{
     filesystem::{find_wasm, read_wasm},
     modules::Module,
 };
-use futures::future::join_all;
 use reqwest::blocking::{Client, Response};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
@@ -43,38 +42,43 @@ impl NoopsClient {
         }
     }
 
+    fn get_project_path(&self) -> anyhow::Result<Url> {
+        Ok(self.base_url.join(&self.project)?)
+    }
+
+    fn get_module_path(&self, module_name: &str) -> anyhow::Result<Url> {
+        Ok(self
+            .base_url
+            .join(&format!("{}/", self.project))?
+            .join(module_name)?)
+    }
+
     pub fn project_exists(&self) -> anyhow::Result<bool> {
-        let response = reqwest::blocking::get(self.base_url.as_ref())?;
+        let url = self.get_project_path()?;
+        let response = reqwest::blocking::get(url)?;
         Ok(response.status().is_success())
     }
 
-    pub fn upload_modules(&self, modules: &[Module]) -> anyhow::Result<()> {
-        for module in modules {
-            self.upload_module(module)?;
-        }
-        Ok(())
-    }
-
-    fn upload_module(&self, module: &Module) -> anyhow::Result<()> {
-        let module_endpoint = self.base_url.join(&self.project)?.join(&module.name)?;
-        let mut payload = ModuleDTO::from(module);
-        payload.project = self.project.clone();
-
-        let response = self.client.post(module_endpoint).json(&payload).send()?;
-        Self::handle_response(response)?;
-        Ok(())
-    }
-
     pub fn create_project(&self) -> anyhow::Result<()> {
-        let project_endpoint = self.base_url.join(&self.project)?;
-        let response = self.client.post(project_endpoint).send()?;
+        let url = self.get_project_path()?;
+        let response = self.client.post(url).send()?;
         Self::handle_response(response)?;
         Ok(())
     }
 
     pub fn delete_project(&self) -> anyhow::Result<()> {
-        let project_endpoint = self.base_url.join(&self.project)?;
-        let response = self.client.delete(project_endpoint).send()?;
+        let url = self.get_project_path()?;
+        let response = self.client.delete(url).send()?;
+        Self::handle_response(response)?;
+        Ok(())
+    }
+
+    pub fn create_module(&self, module: &Module) -> anyhow::Result<()> {
+        let url = self.get_module_path(&module.name)?;
+        let mut payload = ModuleDTO::from(module);
+        payload.project = self.project.clone();
+
+        let response = self.client.post(url).json(&payload).send()?;
         Self::handle_response(response)?;
         Ok(())
     }

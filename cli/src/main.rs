@@ -14,7 +14,7 @@ use config::Config;
 use reqwest::Url;
 use terminal::Terminal;
 
-const BASE_URL: &str = "https://localhost:3000/api";
+const BASE_URL: &str = "http://localhost:3000/api/";
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();

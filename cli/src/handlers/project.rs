@@ -35,25 +35,33 @@ pub fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn deploy(term: &Terminal, modules: &[Module], client: NoopsClient) -> anyhow::Result<()> {
-    term.writeln("Deploying project")?;
+pub fn deploy(term: &Terminal, config: &Config, client: NoopsClient) -> anyhow::Result<()> {
+    if !term.confirm_prompt("This will create the project if necessary and upload all modules")? {
+        term.writeln("Aborting")?;
+        return Ok(());
+    }
+
     if !client.project_exists()? {
         term.writeln("Creating project")?;
         client.create_project()?;
     }
-    client.upload_modules(modules)?;
+
+    term.writeln(format!("Uploading {} modules", config.modules.len()))?;
+    for module in config.modules.iter() {
+        term.writeln(format!("Uploading module {}", module.name))?;
+        client.create_module(module)?;
+    }
+
     Ok(())
 }
 
 pub fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
-    let response = term.confirm_prompt("Destroying the Project")?;
-    if !response {
-        term.writeln("Aborting...")?;
+    if !term.confirm_prompt("Destroying the Project")? {
+        term.writeln("Aborting")?;
         Ok(())
     } else {
-        term.writeln("Destroying...")?;
         client.delete_project()?;
-        term.writeln("Successfully destroyed project...")?;
+        term.writeln("Successfully destroyed project")?;
         Ok(())
     }
 }
