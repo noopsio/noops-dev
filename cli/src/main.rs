@@ -11,28 +11,37 @@ use adapter::git::GitAdapter;
 use clap::{command, Command};
 use client::NoopsClient;
 use config::Config;
+use reqwest::Url;
 use terminal::Terminal;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+const BASE_URL: &str = "http://localhost:3000/api/";
+
+fn main() -> anyhow::Result<()> {
     env_logger::init();
     let terminal = Terminal::new();
-
     let mut commands = create_commands();
     match commands.clone().get_matches().subcommand() {
         Some(("init", _)) => {
-            handlers::project::init(&terminal).await?;
+            handlers::project::init(&terminal)?;
         }
 
         Some(("build", _)) => {
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            handlers::project::build(&terminal, &config.modules).await?;
+            handlers::project::build(&terminal, &config.modules)?;
         }
 
         Some(("deploy", _)) => {
+            let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::from_config(&config);
-            handlers::project::deploy(&terminal, &config.modules, client).await?;
+            let client = NoopsClient::new(base_url, &config.name);
+            handlers::project::deploy(&terminal, &config.modules, client)?;
+        }
+
+        Some(("destroy", _)) => {
+            let base_url = Url::parse(BASE_URL)?;
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            let client = NoopsClient::new(base_url, &config.name);
+            handlers::project::destroy(&terminal, client)?;
         }
 
         Some(("add", _)) => {
@@ -44,12 +53,6 @@ async fn main() -> anyhow::Result<()> {
         Some(("remove", _)) => {
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
             handlers::modules::delete(&terminal, config)?;
-        }
-
-        Some(("destroy", _)) => {
-            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::from_config(&config);
-            handlers::project::destroy(&terminal, client).await?;
         }
 
         _ => commands.print_help()?,

@@ -7,7 +7,7 @@ use crate::{
 };
 use std::path::Path;
 
-pub async fn init(term: &Terminal) -> anyhow::Result<()> {
+pub fn init(term: &Terminal) -> anyhow::Result<()> {
     let project_name = term.text_prompt("Name your Project")?;
     let config = Config::new(&project_name);
     config.save()?;
@@ -16,7 +16,7 @@ pub async fn init(term: &Terminal) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
+pub fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     term.writeln(format!("Building {} modules", modules.len()))?;
 
     for module in modules.iter() {
@@ -35,25 +35,33 @@ pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn deploy(
-    term: &Terminal,
-    modules: &[Module],
-    client: NoopsClient,
-) -> anyhow::Result<()> {
-    term.writeln("Deploying project")?;
-    client.upload_modules(modules).await;
+pub fn deploy(term: &Terminal, config: &Config, client: NoopsClient) -> anyhow::Result<()> {
+    if !term.confirm_prompt("This will create the project if necessary and upload all modules")? {
+        term.writeln("Aborting")?;
+        return Ok(());
+    }
+
+    if !client.project_exists()? {
+        term.writeln("Creating project")?;
+        client.create_project()?;
+    }
+
+    term.writeln(format!("Uploading {} modules", config.modules.len()))?;
+    for module in config.modules.iter() {
+        term.writeln(format!("Uploading module {}", module.name))?;
+        client.create_module(module)?;
+    }
+
     Ok(())
 }
 
-pub async fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
-    let response = term.confirm_prompt("Destroying the Project")?;
-    if !response {
-        term.writeln("Aborting...")?;
+pub fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
+    if !term.confirm_prompt("Destroying the Project")? {
+        term.writeln("Aborting")?;
         Ok(())
     } else {
-        term.writeln("Destroying...")?;
-        client.delete_project().await?;
-        term.writeln("Successfully destroyed project...")?;
+        client.delete_project()?;
+        term.writeln("Successfully destroyed project")?;
         Ok(())
     }
 }
