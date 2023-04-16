@@ -7,7 +7,7 @@ use crate::{
 };
 use std::path::Path;
 
-pub async fn init(term: &Terminal) -> anyhow::Result<()> {
+pub fn init(term: &Terminal) -> anyhow::Result<()> {
     let project_name = term.text_prompt("Name your Project")?;
     let config = Config::new(&project_name);
     config.save()?;
@@ -16,7 +16,7 @@ pub async fn init(term: &Terminal) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
+pub fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     term.writeln(format!("Building {} modules", modules.len()))?;
 
     for module in modules.iter() {
@@ -35,24 +35,24 @@ pub async fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn deploy(
-    term: &Terminal,
-    modules: &[Module],
-    client: NoopsClient,
-) -> anyhow::Result<()> {
+pub fn deploy(term: &Terminal, modules: &[Module], client: NoopsClient) -> anyhow::Result<()> {
     term.writeln("Deploying project")?;
-    client.upload_modules(modules).await;
+    if !client.project_exists()? {
+        term.writeln("Creating project")?;
+        client.create_project()?;
+    }
+    client.upload_modules(modules)?;
     Ok(())
 }
 
-pub async fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
+pub fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
     let response = term.confirm_prompt("Destroying the Project")?;
     if !response {
         term.writeln("Aborting...")?;
         Ok(())
     } else {
         term.writeln("Destroying...")?;
-        client.delete_project().await?;
+        client.delete_project()?;
         term.writeln("Successfully destroyed project...")?;
         Ok(())
     }

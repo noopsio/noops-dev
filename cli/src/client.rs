@@ -1,14 +1,12 @@
-use std::path::Path;
-
-use futures::future::join_all;
-use reqwest::{Client, Response};
-use serde::{Deserialize, Serialize};
-
 use crate::{
-    config::Config,
     filesystem::{find_wasm, read_wasm},
     modules::Module,
 };
+use futures::future::join_all;
+use reqwest::blocking::{Client, Response};
+use reqwest::Url;
+use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct ModuleDTO {
@@ -32,87 +30,68 @@ impl From<&Module> for ModuleDTO {
 
 pub struct NoopsClient {
     pub project: String,
-    server_url: String,
+    base_url: Url,
     client: Client,
 }
 
 impl NoopsClient {
-    pub fn from_config(config: &Config) -> Self {
+    pub fn new(base_url: Url, project: &str) -> Self {
         NoopsClient {
-            project: config.name.clone(),
-            server_url: "http://localhost:3000/api/".to_string(),
+            project: project.to_string(),
+            base_url: base_url,
             client: Client::new(),
         }
     }
-    pub async fn upload_modules(&self, modules: &[Module]) {
-        let mut uploads = vec![];
+
+    pub fn project_exists(&self) -> anyhow::Result<bool> {
+        let response = reqwest::blocking::get(self.base_url.as_ref())?;
+        Ok(response.status().is_success())
+    }
+
+    pub fn upload_modules(&self, modules: &[Module]) -> anyhow::Result<()> {
         for module in modules {
-            uploads.push(self.upload_module(module));
+            self.upload_module(module)?;
         }
-        join_all(uploads).await;
-    }
-
-    pub async fn create_project(&self) -> anyhow::Result<()> {
-        let project_endpoint = self.server_url.clone() + &self.project;
-
-        log::debug!("Creating project {}", &self.project);
-
-        let response = self.client.post(project_endpoint).send().await?;
-
-        Self::handle_response(response).await?;
         Ok(())
     }
 
-    pub async fn delete_project(&self) -> anyhow::Result<()> {
-        let project_endpoint = self.server_url.clone() + &self.project;
-        log::debug!("Deleting project {}", &self.project);
-
-        let response = self.client.delete(project_endpoint).send().await?;
-
-        Self::handle_response(response).await?;
-        Ok(())
-    }
-
-    async fn upload_module(&self, module: &Module) -> anyhow::Result<()> {
-        let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
-
-        log::debug!("Uploading module {} / {}", &self.project, &module.name);
-        log::debug!("Module endpoint {}", module_endpoint);
-
+    fn upload_module(&self, module: &Module) -> anyhow::Result<()> {
+        let module_endpoint = self.base_url.join(&self.project)?.join(&module.name)?;
         let mut payload = ModuleDTO::from(module);
         payload.project = self.project.clone();
 
-        let response = self
-            .client
-            .post(module_endpoint)
-            .json(&payload)
-            .send()
-            .await?;
-
-        Self::handle_response(response).await?;
+        let response = self.client.post(module_endpoint).json(&payload).send()?;
+        Self::handle_response(response)?;
         Ok(())
     }
 
-    pub async fn delete_module(&self, module: &Module) -> anyhow::Result<()> {
-        let module_endpoint = self.server_url.clone() + &self.project + "/" + &module.name;
-
-        log::debug!("Deleting module {} / {}", &self.project, &module.name);
-        log::debug!("Deleting module with endpoint {} ", module_endpoint);
-
-        let response = self.client.delete(module_endpoint).send().await?;
-
-        Self::handle_response(response).await?;
+    pub fn create_project(&self) -> anyhow::Result<()> {
+        let project_endpoint = self.base_url.join(&self.project)?;
+        let response = self.client.post(project_endpoint).send()?;
+        Self::handle_response(response)?;
         Ok(())
     }
 
-    async fn handle_response(response: Response) -> anyhow::Result<()> {
-        log::debug!("Response status: {}", response.status());
+    pub fn delete_project(&self) -> anyhow::Result<()> {
+        let project_endpoint = self.base_url.join(&self.project)?;
+        let response = self.client.delete(project_endpoint).send()?;
+        Self::handle_response(response)?;
+        Ok(())
+    }
 
+    pub fn delete_module(&self, module: &Module) -> anyhow::Result<()> {
+        let module_endpoint = self.base_url.join(&self.project)?.join(&module.name)?;
+        let response = self.client.delete(module_endpoint).send()?;
+        Self::handle_response(response)?;
+        Ok(())
+    }
+
+    fn handle_response(response: Response) -> anyhow::Result<()> {
         if !response.status().is_success() {
             let error_message = format!(
                 "Request failed with status code {}: {}",
                 response.status(),
-                response.text().await?
+                response.text()?
             );
             anyhow::bail!(error_message);
         }

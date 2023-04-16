@@ -1366,7 +1366,6 @@ dependencies = [
  "serde_yaml",
  "tempfile",
  "text_io",
- "tokio",
  "walkdir",
 ]
 
