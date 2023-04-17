@@ -51,8 +51,8 @@ impl Database {
 
     pub fn project_exists(&self, project_name: &str) -> anyhow::Result<bool> {
         let tx = self.database.tx(false)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        match root.get_bucket(project_name) {
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        match projects.get_bucket(project_name) {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
@@ -60,8 +60,8 @@ impl Database {
 
     pub fn project_create(&self, project_name: &str) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        let _ = root.create_bucket(project_name)?;
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        let _ = projects.create_bucket(project_name)?;
         tx.commit()?;
         Ok(())
     }
@@ -74,20 +74,16 @@ impl Database {
         Ok(())
     }
 
-    pub fn project_list(&self, project_name: &str) -> anyhow::Result<Vec<dtos::GetFunctionDTO>> {
+    pub fn project_get(&self, project_name: &str) -> anyhow::Result<Vec<Function>> {
         let tx = self.database.tx(false)?;
-        let bucket = tx.get_bucket(PROJECT_BUCKET)?;
-        let projects = bucket.get_bucket(project_name)?;
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        let all_functions = projects.get_bucket(project_name)?;
 
-        let mut functions = Vec::new();
-        for data in projects.cursor() {
+        let mut functions: Vec<Function> = Vec::new();
+        for data in all_functions.into_iter() {
             if let Data::KeyValue(kv) = data {
-                let dao: Function = bincode::deserialize(kv.value())?;
-                functions.push(dtos::GetFunctionDTO {
-                    name: dao.name,
-                    project: dao.project,
-                    hash: dao.hash,
-                });
+                let function: Function = bincode::deserialize(kv.value())?;
+                functions.push(function);
             }
         }
         Ok(functions)
@@ -95,8 +91,8 @@ impl Database {
 
     pub fn function_exists(&self, project_name: &str, function_name: &str) -> anyhow::Result<bool> {
         let tx = self.database.tx(false)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        return if let Ok(project) = root.get_bucket(project_name) {
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        return if let Ok(project) = projects.get_bucket(project_name) {
             return if let Some(_) = project.get(function_name) {
                 Ok(true)
             } else {
@@ -109,8 +105,8 @@ impl Database {
 
     pub fn function_create(&self, function: &Function) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
-        let bucket = tx.get_bucket(PROJECT_BUCKET)?;
-        let project = bucket.get_bucket(function.project.clone())?;
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        let project = projects.get_bucket(function.project.clone())?;
         project.put(function.name.clone(), bincode::serialize(&function)?)?;
         tx.commit()?;
         Ok(())
@@ -122,19 +118,19 @@ impl Database {
         function_name: &str,
     ) -> anyhow::Result<Function> {
         let tx = self.database.tx(false)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        let projects = root.get_bucket(project_name)?;
-        let kv = projects.get_kv(function_name).unwrap();
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        let functions = projects.get_bucket(project_name)?;
+        let kv = functions.get_kv(function_name).unwrap();
         let data = kv.value();
         Ok(bincode::deserialize(data)?)
     }
 
     pub fn function_delete(&self, project_name: &str, function_name: &str) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        let project = root.get_bucket(project_name)?;
+        let projects = tx.get_bucket(PROJECT_BUCKET)?;
+        let functions = projects.get_bucket(project_name)?;
 
-        project.delete(function_name)?;
+        functions.delete(function_name)?;
         tx.commit()?;
         Ok(())
     }
@@ -188,6 +184,18 @@ mod tests {
 
         db.project_delete(PROJECT_NAME)?;
         assert!(!db.project_exists(PROJECT_NAME)?);
+        Ok(())
+    }
+
+    #[test]
+    fn project_get() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+
+        db.project_create(PROJECT_NAME)?;
+        db.function_create(&FUNCTION)?;
+        let functions = db.project_get(PROJECT_NAME)?;
+        assert_eq!(vec![FUNCTION.clone()], functions);
         Ok(())
     }
 

@@ -5,6 +5,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use dtos::GetFunctionDTO;
 use std::sync::Arc;
 
 use super::errors::AppError;
@@ -14,9 +15,7 @@ pub fn create_routes(database: Arc<Database>) -> Router {
     Router::new()
         .route(
             "/api/:project_name",
-            get(list_project)
-                .post(create_project)
-                .delete(delete_project),
+            get(get_project).post(create_project).delete(delete_project),
         )
         .with_state(database)
 }
@@ -32,15 +31,23 @@ async fn create_project(
     database.project_create(&project_name)?;
     Ok(StatusCode::OK)
 }
-//axum::Json<Vec<schemas::GetFunctionSchema>
-async fn list_project(
+async fn get_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
 ) -> Result<Response, AppError> {
     if !database.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
-    let functions = database.project_list(&project_name)?;
+    let functions = database.project_get(&project_name)?;
+    let functions: Vec<GetFunctionDTO> = functions
+        .iter()
+        .map(|function| dtos::GetFunctionDTO {
+            name: function.name.to_string(),
+            project: function.project.to_string(),
+            hash: function.hash,
+        })
+        .collect();
+
     Ok((StatusCode::OK, Json(functions)).into_response())
 }
 
@@ -67,13 +74,22 @@ mod tests {
     };
     use dtos::GetFunctionDTO;
     use hyper;
+    use lazy_static::lazy_static;
     use serde_json;
     use tempfile::tempdir;
-    use tower::ServiceExt; // for `oneshot nad ready`
+    use tower::ServiceExt; // for `oneshot and ready`
 
     const DATABASE_NAME: &str = "noops.test_db";
     const PROJECT_NAME: &str = "test_project";
     const FUNCTION_NAME: &str = "test_function";
+
+    lazy_static! {
+        static ref FUNCTION: Function = Function {
+            name: FUNCTION_NAME.to_string(),
+            project: PROJECT_NAME.to_string(),
+            ..Default::default()
+        };
+    }
 
     #[tokio::test]
     async fn create_project_ok() -> anyhow::Result<()> {
@@ -96,9 +112,9 @@ mod tests {
     async fn create_project_conflict() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
-        let app = create_routes(database.clone());
-
         database.project_create(PROJECT_NAME)?;
+        let app = create_routes(database);
+
         let uri = format!("/api/{}", PROJECT_NAME);
 
         let request = Request::builder()
@@ -116,6 +132,7 @@ mod tests {
     async fn get_project_empty_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
         let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        database.project_create(PROJECT_NAME)?;
         let app = create_routes(database);
 
         let uri = format!("/api/{}", PROJECT_NAME);
@@ -140,11 +157,7 @@ mod tests {
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
-        database.function_create(&Function::new(
-            PROJECT_NAME,
-            FUNCTION_NAME,
-            Default::default(),
-        ))?;
+        database.function_create(&FUNCTION)?;
 
         let uri = format!("/api/{}", PROJECT_NAME);
         let request = Request::builder()
