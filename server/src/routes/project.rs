@@ -58,13 +58,14 @@ async fn delete_project(
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use crate::database::Function;
 
-    use crate::schemas;
+    use super::*;
     use axum::{
         body::Body,
         http::{method::Method, Request},
     };
+    use dtos::GetFunctionDTO;
     use hyper;
     use serde_json;
     use tempfile::tempdir;
@@ -123,12 +124,11 @@ mod tests {
             .method(Method::GET)
             .body(Body::empty())?;
 
+        let function_list: Vec<dtos::GetFunctionDTO> = Default::default();
         let response = app.oneshot(request).await?;
-        let function_list: Vec<schemas::GetFunctionSchema> = Default::default();
-
+        assert_eq!(StatusCode::OK, response.status());
         let body = hyper::body::to_bytes(response.into_body()).await?;
-        let body: Vec<schemas::GetFunctionSchema> = serde_json::from_slice(&body)?;
-        // Check status
+        let body: Vec<dtos::GetFunctionDTO> = serde_json::from_slice(&body)?;
         assert_eq!(function_list, body);
         Ok(())
     }
@@ -140,15 +140,11 @@ mod tests {
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
-        database.function_create(
+        database.function_create(&Function::new(
             PROJECT_NAME,
             FUNCTION_NAME,
-            &schemas::CreateFunctionSchema {
-                name: FUNCTION_NAME.to_string(),
-                project: PROJECT_NAME.to_string(),
-                ..Default::default()
-            },
-        )?;
+            Default::default(),
+        ))?;
 
         let uri = format!("/api/{}", PROJECT_NAME);
         let request = Request::builder()
@@ -156,16 +152,15 @@ mod tests {
             .method(Method::GET)
             .body(Body::empty())?;
 
-        let function_list: Vec<schemas::GetFunctionSchema> = vec![schemas::GetFunctionSchema {
+        let function_list: Vec<GetFunctionDTO> = vec![GetFunctionDTO {
             name: FUNCTION_NAME.to_string(),
             project: PROJECT_NAME.to_string(),
             ..Default::default()
         }];
 
         let response = app.oneshot(request).await?;
-
         let body = hyper::body::to_bytes(response.into_body()).await?;
-        let body: Vec<schemas::GetFunctionSchema> = serde_json::from_slice(&body)?;
+        let body: Vec<GetFunctionDTO> = serde_json::from_slice(&body)?;
         assert_eq!(function_list, body);
         Ok(())
     }

@@ -2,6 +2,7 @@ use crate::{
     adapter::{cargo::CargoAdapter, golang::GolangAdapter},
     client::NoopsClient,
     config::Config,
+    filesystem,
     modules::{Language, Module},
     terminal::Terminal,
 };
@@ -49,7 +50,10 @@ pub fn deploy(term: &Terminal, config: &Config, client: NoopsClient) -> anyhow::
     term.writeln(format!("Uploading {} modules", config.modules.len()))?;
     for module in config.modules.iter() {
         term.writeln(format!("Uploading module {}", module.name))?;
-        client.create_module(module)?;
+        let out_path = Path::new(&module.name).join("out");
+        let module_path = filesystem::find_wasm(out_path).unwrap();
+        let wasm = filesystem::read_wasm(&module_path)?;
+        client.create_module(&module.name, &wasm)?;
     }
 
     Ok(())

@@ -6,7 +6,7 @@ use std::{
 };
 use walkdir::WalkDir;
 
-pub fn read_wasm(path: PathBuf) -> anyhow::Result<Vec<u8>> {
+pub fn read_wasm(path: &Path) -> anyhow::Result<Vec<u8>> {
     info!("File Path {}", path.to_str().unwrap());
     Ok(std::fs::read(path)?)
 }

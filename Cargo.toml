@@ -5,8 +5,10 @@ authors = ["Giom-fm <giom@jfcomputing.io", "Falumpaset <marc@jfcomputing.io"]
 members = [
     "cli",
     "server",
+    "dtos"
 ]
 
 [workspace.dependencies]
 tempfile = "3.4.0"
 lazy_static = "1.4.0"
+serde = { version = "1.0.154", features = ["derive"] }

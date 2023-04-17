@@ -1,10 +1,36 @@
 use anyhow;
 use jammdb::{Data, DB};
-use std::path::Path;
-
-use crate::schemas;
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    path::Path,
+};
 
 const PROJECT_BUCKET: &str = "PROJECTS";
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
+pub struct Function {
+    pub name: String,
+    pub project: String,
+    pub wasm: Vec<u8>,
+    pub hash: u64,
+}
+
+impl Function {
+    pub fn new(project_name: &str, function_name: &str, wasm: &[u8]) -> Self {
+        let mut hasher = DefaultHasher::new();
+        function_name.hash(&mut hasher);
+        project_name.hash(&mut hasher);
+        wasm.hash(&mut hasher);
+        Self {
+            name: function_name.to_string(),
+            project: project_name.to_string(),
+            wasm: wasm.to_owned(),
+            hash: hasher.finish(),
+        }
+    }
+}
 
 pub struct Database {
     database: DB,
@@ -48,10 +74,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn project_list(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Vec<schemas::GetFunctionSchema>> {
+    pub fn project_list(&self, project_name: &str) -> anyhow::Result<Vec<dtos::GetFunctionDTO>> {
         let tx = self.database.tx(false)?;
         let bucket = tx.get_bucket(PROJECT_BUCKET)?;
         let projects = bucket.get_bucket(project_name)?;
@@ -59,11 +82,11 @@ impl Database {
         let mut functions = Vec::new();
         for data in projects.cursor() {
             if let Data::KeyValue(kv) = data {
-                let function: schemas::CreateFunctionSchema = bincode::deserialize(kv.value())?;
-                functions.push(schemas::GetFunctionSchema {
-                    name: function.name,
-                    project: function.project,
-                    params: function.params,
+                let dao: Function = bincode::deserialize(kv.value())?;
+                functions.push(dtos::GetFunctionDTO {
+                    name: dao.name,
+                    project: dao.project,
+                    hash: dao.hash,
                 });
             }
         }
@@ -84,19 +107,12 @@ impl Database {
         };
     }
 
-    pub fn function_create(
-        &self,
-        project_name: &str,
-        function_name: &str,
-        function: &schemas::CreateFunctionSchema,
-    ) -> anyhow::Result<()> {
+    pub fn function_create(&self, function: &Function) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
         let bucket = tx.get_bucket(PROJECT_BUCKET)?;
-        let project = bucket.get_bucket(project_name)?;
-
-        project.put(function_name, bincode::serialize(&function)?)?;
+        let project = bucket.get_bucket(function.project.clone())?;
+        project.put(function.name.clone(), bincode::serialize(&function)?)?;
         tx.commit()?;
-
         Ok(())
     }
 
@@ -104,7 +120,7 @@ impl Database {
         &self,
         project_name: &str,
         function_name: &str,
-    ) -> anyhow::Result<schemas::CreateFunctionSchema> {
+    ) -> anyhow::Result<Function> {
         let tx = self.database.tx(false)?;
         let root = tx.get_bucket(PROJECT_BUCKET)?;
         let projects = root.get_bucket(project_name)?;
@@ -127,8 +143,6 @@ impl Database {
 #[cfg(test)]
 mod tests {
 
-    use crate::schemas::CreateFunctionSchema;
-
     use super::*;
     use lazy_static::lazy_static;
     use tempfile::tempdir;
@@ -138,9 +152,9 @@ mod tests {
     const FUNCTION_NAME: &str = "test_function";
 
     lazy_static! {
-        static ref FUNCTION_SCHEMA: CreateFunctionSchema = CreateFunctionSchema {
-            project: PROJECT_NAME.to_string(),
+        static ref FUNCTION: Function = Function {
             name: FUNCTION_NAME.to_string(),
+            project: PROJECT_NAME.to_string(),
             ..Default::default()
         };
     }
@@ -183,11 +197,8 @@ mod tests {
         let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
-        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)?;
+        db.function_create(&FUNCTION)?;
         assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
-
-        let function = db.function_get(PROJECT_NAME, FUNCTION_NAME)?;
-        assert_eq!(*FUNCTION_SCHEMA, function);
         Ok(())
     }
 
@@ -197,7 +208,7 @@ mod tests {
         let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
-        db.function_create(PROJECT_NAME, FUNCTION_NAME, &FUNCTION_SCHEMA)?;
+        db.function_create(&FUNCTION)?;
         assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
 
         db.function_delete(PROJECT_NAME, FUNCTION_NAME)?;
