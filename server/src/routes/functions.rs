@@ -9,7 +9,11 @@ use axum::{
     routing::post,
     Router,
 };
-use std::sync::Arc;
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    sync::Arc,
+};
 
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
@@ -32,11 +36,15 @@ async fn create_function(
         return Ok(StatusCode::NOT_FOUND);
     }
 
-    let component = bindgen::create_component(&function_dto.wasm)?;
-    let function = Function::new(&project_name, &function_name, &component);
+    let function = Function {
+        name: function_name.clone(),
+        project: project_name.clone(),
+        component: bindgen::create_component(&function_dto.wasm)?,
+        hash: hash(&project_name, &function_name, &function_dto.wasm),
+    };
 
     database.function_create(&function)?;
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn delete_function(
@@ -47,7 +55,15 @@ async fn delete_function(
         return Ok(StatusCode::NOT_FOUND);
     }
     database.function_delete(&project_name, &function_name)?;
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
+}
+
+fn hash(project_name: &str, function_name: &str, wasm: &[u8]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    project_name.hash(&mut hasher);
+    function_name.hash(&mut hasher);
+    wasm.hash(&mut hasher);
+    hasher.finish()
 }
 
 #[cfg(test)]
@@ -73,11 +89,12 @@ mod tests {
     lazy_static! {
         static ref WASM: Vec<u8> =
             std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200")).unwrap();
-        static ref FUNCTION: Function = Function::new(
-            PROJECT_NAME,
-            FUNCTION_NAME,
-            &bindgen::create_component(&WASM).unwrap()
-        );
+        static ref FUNCTION: Function = Function {
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
+            component: bindgen::create_component(&WASM).unwrap(),
+            hash: Default::default()
+        };
         static ref CREATE_FUNCTION_DTO: CreateFunctionDTO = CreateFunctionDTO {
             wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
                 .expect("Unable to read test module")
@@ -101,7 +118,7 @@ mod tests {
             )?))?;
 
         let response = app.oneshot(request).await?;
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 
@@ -141,7 +158,7 @@ mod tests {
             .body(Body::empty())?;
 
         let response = app.oneshot(request).await?;
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 

@@ -1,4 +1,3 @@
-use crate::modules::Module;
 use reqwest::blocking::{Client, Response};
 use reqwest::Url;
 
@@ -34,21 +33,29 @@ impl NoopsClient {
         Ok(response.status().is_success())
     }
 
-    pub fn create_project(&self) -> anyhow::Result<()> {
+    pub fn project_get(&self) -> anyhow::Result<Vec<dtos::GetFunctionDTO>> {
+        let url = self.get_project_path()?;
+        let response = reqwest::blocking::get(url)?;
+        //FIXME
+        //Self::handle_response(response)?;
+        Ok(response.json()?)
+    }
+
+    pub fn project_create(&self) -> anyhow::Result<()> {
         let url = self.get_project_path()?;
         let response = self.client.post(url).send()?;
         Self::handle_response(response)?;
         Ok(())
     }
 
-    pub fn delete_project(&self) -> anyhow::Result<()> {
+    pub fn project_delete(&self) -> anyhow::Result<()> {
         let url = self.get_project_path()?;
         let response = self.client.delete(url).send()?;
         Self::handle_response(response)?;
         Ok(())
     }
 
-    pub fn create_module(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
+    pub fn module_create(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
         let url = self.get_module_path(&module_name)?;
 
         let payload = dtos::CreateFunctionDTO {
@@ -60,9 +67,9 @@ impl NoopsClient {
         Ok(())
     }
 
-    pub fn delete_module(&self, module: &Module) -> anyhow::Result<()> {
-        let module_endpoint = self.base_url.join(&self.project)?.join(&module.name)?;
-        let response = self.client.delete(module_endpoint).send()?;
+    pub fn module_delete(&self, module_name: &str) -> anyhow::Result<()> {
+        let url = self.get_module_path(&module_name)?;
+        let response = self.client.delete(url).send()?;
         Self::handle_response(response)?;
         Ok(())
     }

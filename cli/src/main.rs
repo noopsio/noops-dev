@@ -33,14 +33,14 @@ fn main() -> anyhow::Result<()> {
         Some(("deploy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::new(base_url, &config.name);
+            let client = NoopsClient::new(base_url, &config.project_name);
             handlers::project::deploy(&terminal, &config, client)?;
         }
 
         Some(("destroy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::new(base_url, &config.name);
+            let client = NoopsClient::new(base_url, &config.project_name);
             handlers::project::destroy(&terminal, client)?;
         }
 

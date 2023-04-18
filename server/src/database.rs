@@ -1,11 +1,7 @@
 use anyhow;
 use jammdb::{Data, DB};
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
-    path::Path,
-};
+use std::path::Path;
 
 const PROJECT_BUCKET: &str = "PROJECTS";
 
@@ -13,23 +9,8 @@ const PROJECT_BUCKET: &str = "PROJECTS";
 pub struct Function {
     pub name: String,
     pub project: String,
-    pub wasm: Vec<u8>,
+    pub component: Vec<u8>,
     pub hash: u64,
-}
-
-impl Function {
-    pub fn new(project_name: &str, function_name: &str, wasm: &[u8]) -> Self {
-        let mut hasher = DefaultHasher::new();
-        function_name.hash(&mut hasher);
-        project_name.hash(&mut hasher);
-        wasm.hash(&mut hasher);
-        Self {
-            name: function_name.to_string(),
-            project: project_name.to_string(),
-            wasm: wasm.to_owned(),
-            hash: hasher.finish(),
-        }
-    }
 }
 
 pub struct Database {

@@ -37,7 +37,7 @@ async fn execute(
     let request = bindgen::Request {
         query_params: &result[..],
     };
-    let response = executor::execute(function.wasm, request).await?;
+    let response = executor::execute(function.component, request).await?;
 
     Ok((StatusCode::from_u16(response.status)?, response.body).into_response())
 }
@@ -65,16 +65,18 @@ mod tests {
             std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200")).unwrap();
         static ref WASM_RETURN_PARAMS: Vec<u8> =
             std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_PARAMS")).unwrap();
-        static ref RETURN_STATUS_CODE: Function = Function::new(
-            PROJECT_NAME,
-            FUNCTION_NAME,
-            &bindgen::create_component(&WASM_RETURN_STATUS_CODE_200).unwrap()
-        );
-        static ref RETURN_PARAMS: Function = Function::new(
-            PROJECT_NAME,
-            FUNCTION_NAME,
-            &bindgen::create_component(&WASM_RETURN_STATUS_CODE_200).unwrap()
-        );
+        static ref RETURN_STATUS_CODE: Function = Function {
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
+            component: bindgen::create_component(&WASM_RETURN_STATUS_CODE_200).unwrap(),
+            ..Default::default()
+        };
+        static ref RETURN_PARAMS: Function = Function {
+            project: PROJECT_NAME.to_string(),
+            name: FUNCTION_NAME.to_string(),
+            component: bindgen::create_component(&WASM_RETURN_PARAMS).unwrap(),
+            ..Default::default()
+        };
     }
 
     #[tokio::test]

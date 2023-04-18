@@ -29,7 +29,7 @@ async fn create_project(
     }
 
     database.project_create(&project_name)?;
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
     Path(project_name): Path<String>,
@@ -59,7 +59,7 @@ async fn delete_project(
         return Ok(StatusCode::NOT_FOUND);
     }
     database.project_delete(&project_name)?;
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]
@@ -104,7 +104,7 @@ mod tests {
             .body(Body::empty())?;
         let response = app.oneshot(request).await?;
 
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 
@@ -211,7 +211,7 @@ mod tests {
 
         let response = app.oneshot(request).await?;
 
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 
