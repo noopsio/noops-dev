@@ -2,7 +2,6 @@ mod bindgen;
 mod database;
 mod executor;
 mod routes;
-mod schemas;
 
 use axum::Server;
 use std::net::SocketAddr;

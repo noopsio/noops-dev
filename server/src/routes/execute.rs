@@ -37,7 +37,7 @@ async fn execute(
     let request = bindgen::Request {
         query_params: &result[..],
     };
-    let response = executor::execute(function.wasm, request).await?;
+    let response = executor::execute(function.component, request).await?;
 
     Ok((StatusCode::from_u16(response.status)?, response.body).into_response())
 }
@@ -45,8 +45,9 @@ async fn execute(
 #[cfg(test)]
 mod tests {
 
+    use crate::database::Function;
+
     use super::*;
-    use crate::schemas::CreateFunctionSchema;
     use axum::{
         body::Body,
         http::{method::Method, Request},
@@ -60,19 +61,21 @@ mod tests {
     const FUNCTION_NAME: &str = "test_function";
 
     lazy_static! {
-        static ref RETURN_STATUS_CODE: CreateFunctionSchema = CreateFunctionSchema {
+        static ref WASM_RETURN_STATUS_CODE_200: Vec<u8> =
+            std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200")).unwrap();
+        static ref WASM_RETURN_PARAMS: Vec<u8> =
+            std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_PARAMS")).unwrap();
+        static ref RETURN_STATUS_CODE: Function = Function {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
-            wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
-                .expect("Unable to read test module"),
-            params: Default::default(),
+            component: bindgen::create_component(&WASM_RETURN_STATUS_CODE_200).unwrap(),
+            ..Default::default()
         };
-        static ref RETURN_PARAMS: CreateFunctionSchema = CreateFunctionSchema {
+        static ref RETURN_PARAMS: Function = Function {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
-            wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_PARAMS"))
-                .expect("Unable to read test module"),
-            params: Default::default(),
+            component: bindgen::create_component(&WASM_RETURN_PARAMS).unwrap(),
+            ..Default::default()
         };
     }
 
@@ -88,9 +91,7 @@ mod tests {
             .body(Body::empty())?;
 
         database.project_create(PROJECT_NAME)?;
-        let mut function = RETURN_STATUS_CODE.clone();
-        function.wasm = bindgen::create_component(&function.wasm)?;
-        database.function_create(PROJECT_NAME, FUNCTION_NAME, &function)?;
+        database.function_create(&RETURN_STATUS_CODE)?;
 
         let response = app.oneshot(request).await?;
         assert_eq!(StatusCode::OK, response.status());
@@ -113,9 +114,7 @@ mod tests {
             .body(Body::empty())?;
 
         database.project_create(PROJECT_NAME)?;
-        let mut function = RETURN_PARAMS.clone();
-        function.wasm = bindgen::create_component(&function.wasm)?;
-        database.function_create(PROJECT_NAME, FUNCTION_NAME, &function)?;
+        database.function_create(&RETURN_PARAMS)?;
 
         let response = app.oneshot(request).await?;
         let status = response.status();

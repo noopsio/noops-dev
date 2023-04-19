@@ -7,6 +7,8 @@ use crate::{
 };
 use std::path::Path;
 
+use super::diff::Diff;
+
 pub fn init(term: &Terminal) -> anyhow::Result<()> {
     let project_name = term.text_prompt("Name your Project")?;
     let config = Config::new(&project_name);
@@ -20,7 +22,7 @@ pub fn build(term: &Terminal, modules: &[Module]) -> anyhow::Result<()> {
     term.writeln(format!("Building {} modules", modules.len()))?;
 
     for module in modules.iter() {
-        term.writeln(format!("Building module {}", &module.name))?;
+        term.writeln(format!("Building {}", &module.name))?;
         match module.language {
             Language::Rust => {
                 let cargo = CargoAdapter::new();
@@ -43,13 +45,55 @@ pub fn deploy(term: &Terminal, config: &Config, client: NoopsClient) -> anyhow::
 
     if !client.project_exists()? {
         term.writeln("Creating project")?;
-        client.create_project()?;
+        client.project_create()?;
     }
 
-    term.writeln(format!("Uploading {} modules", config.modules.len()))?;
-    for module in config.modules.iter() {
-        term.writeln(format!("Uploading module {}", module.name))?;
-        client.create_module(module)?;
+    let remote_modules = client.project_get()?;
+    let diffs = Diff::new(&config.project_name, &config.modules, &remote_modules)?;
+    print_diff(&diffs, term)?;
+    if !term.confirm_prompt("Deploying")? {
+        term.writeln("Aborting")?;
+        return Ok(());
+    }
+
+    for (module_name, wasm) in &diffs.create {
+        term.writeln(format!("Creating {}", &module_name))?;
+        client.module_create(&module_name, &wasm)?;
+    }
+
+    for (module_name, wasm) in &diffs.update {
+        term.writeln(format!("Updating {}", &module_name))?;
+        client.module_create(&module_name, &wasm)?;
+    }
+
+    for module_name in &diffs.remove {
+        term.writeln(format!("Removing {}", &module_name))?;
+        client.module_delete(&module_name)?;
+    }
+
+    Ok(())
+}
+
+fn print_diff(diffs: &Diff, term: &Terminal) -> anyhow::Result<()> {
+    if diffs.create.len() > 0 {
+        term.writeln(format!("Creating {} modules", diffs.create.len()))?;
+        for (module_name, _) in &diffs.create {
+            term.writeln(format!("\t+ {}", &module_name))?;
+        }
+    }
+
+    if diffs.update.len() > 0 {
+        term.writeln(format!("Updating {} modules", &diffs.update.len()))?;
+        for (module_name, _) in &diffs.update {
+            term.writeln(format!("\t~ {}", &module_name))?;
+        }
+    }
+
+    if diffs.remove.len() > 0 {
+        term.writeln(format!("Removing {} modules", &diffs.remove.len()))?;
+        for module_name in &diffs.remove {
+            term.writeln(format!("\t- {}", &module_name))?;
+        }
     }
 
     Ok(())
@@ -60,7 +104,7 @@ pub fn destroy(term: &Terminal, client: NoopsClient) -> anyhow::Result<()> {
         term.writeln("Aborting")?;
         Ok(())
     } else {
-        client.delete_project()?;
+        client.project_delete()?;
         term.writeln("Successfully destroyed project")?;
         Ok(())
     }

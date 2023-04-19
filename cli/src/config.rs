@@ -6,14 +6,14 @@ pub const CONFIG_FILE_NAME: &str = "./noops.yaml";
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct Config {
-    pub name: String,
+    pub project_name: String,
     pub modules: Vec<Module>,
 }
 
 impl Config {
     pub fn new(name: &str) -> Self {
         Self {
-            name: name.to_string(),
+            project_name: name.to_string(),
             ..Default::default()
         }
     }

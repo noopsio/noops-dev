@@ -1,16 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
-pub struct CreateFunctionSchema {
-    pub name: String,
-    pub params: Vec<String>,
-    pub project: String,
+pub struct CreateFunctionDTO {
     pub wasm: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
-pub struct GetFunctionSchema {
-    pub name: String,
-    pub params: Vec<String>,
+pub struct GetFunctionDTO {
     pub project: String,
+    pub name: String,
+    pub hash: u64,
 }

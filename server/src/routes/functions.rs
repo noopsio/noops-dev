@@ -1,12 +1,19 @@
 use super::errors::AppError;
-use crate::{bindgen, database::Database, schemas};
+use crate::{
+    bindgen,
+    database::{Database, Function},
+};
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
     http::StatusCode,
     routing::post,
     Router,
 };
-use std::sync::Arc;
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    sync::Arc,
+};
 
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
@@ -23,15 +30,21 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 async fn create_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
-    Json(mut function): Json<schemas::CreateFunctionSchema>,
+    Json(function_dto): Json<dtos::CreateFunctionDTO>,
 ) -> Result<StatusCode, AppError> {
     if !database.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
 
-    function.wasm = bindgen::create_component(&function.wasm)?;
-    database.function_create(&project_name, &function_name, &function)?;
-    Ok(StatusCode::OK)
+    let function = Function {
+        name: function_name.clone(),
+        project: project_name.clone(),
+        component: bindgen::create_component(&function_dto.wasm)?,
+        hash: hash(&project_name, &function_name, &function_dto.wasm),
+    };
+
+    database.function_create(&function)?;
+    Ok(StatusCode::NO_CONTENT)
 }
 
 async fn delete_function(
@@ -42,7 +55,15 @@ async fn delete_function(
         return Ok(StatusCode::NOT_FOUND);
     }
     database.function_delete(&project_name, &function_name)?;
-    Ok(StatusCode::OK)
+    Ok(StatusCode::NO_CONTENT)
+}
+
+fn hash(project_name: &str, function_name: &str, wasm: &[u8]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    project_name.hash(&mut hasher);
+    function_name.hash(&mut hasher);
+    wasm.hash(&mut hasher);
+    hasher.finish()
 }
 
 #[cfg(test)]
@@ -54,6 +75,7 @@ mod tests {
         body::Body,
         http::{header, method::Method, Request},
     };
+    use dtos::CreateFunctionDTO;
     use lazy_static::lazy_static;
     use mime;
     use serde_json;
@@ -65,12 +87,17 @@ mod tests {
     const FUNCTION_NAME: &str = "test_function";
 
     lazy_static! {
-        static ref FUNCTION_SCHEMA: schemas::CreateFunctionSchema = schemas::CreateFunctionSchema {
+        static ref WASM: Vec<u8> =
+            std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200")).unwrap();
+        static ref FUNCTION: Function = Function {
             project: PROJECT_NAME.to_string(),
             name: FUNCTION_NAME.to_string(),
+            component: bindgen::create_component(&WASM).unwrap(),
+            hash: Default::default()
+        };
+        static ref CREATE_FUNCTION_DTO: CreateFunctionDTO = CreateFunctionDTO {
             wasm: std::fs::read(env!("CARGO_CDYLIB_FILE_RETURN_STATUS_CODE_200"))
-                .expect("Unable to read test module"),
-            params: Default::default(),
+                .expect("Unable to read test module")
         };
     }
 
@@ -87,11 +114,11 @@ mod tests {
             .method(Method::POST)
             .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
             .body(Body::from(serde_json::to_string(
-                &FUNCTION_SCHEMA.to_owned(),
+                &CREATE_FUNCTION_DTO.to_owned(),
             )?))?;
 
         let response = app.oneshot(request).await?;
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 
@@ -107,7 +134,7 @@ mod tests {
             .method(Method::POST)
             .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
             .body(Body::from(serde_json::to_string(
-                &FUNCTION_SCHEMA.to_owned(),
+                &CREATE_FUNCTION_DTO.to_owned(),
             )?))?;
 
         let response = app.oneshot(request).await?;
@@ -122,15 +149,7 @@ mod tests {
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
-        database.function_create(
-            PROJECT_NAME,
-            FUNCTION_NAME,
-            &schemas::CreateFunctionSchema {
-                name: FUNCTION_NAME.to_string(),
-                project: PROJECT_NAME.to_string(),
-                ..Default::default()
-            },
-        )?;
+        database.function_create(&FUNCTION)?;
 
         let uri = format!("/api/{}/{}", PROJECT_NAME, FUNCTION_NAME);
         let request = Request::builder()
@@ -139,7 +158,7 @@ mod tests {
             .body(Body::empty())?;
 
         let response = app.oneshot(request).await?;
-        assert_eq!(StatusCode::OK, response.status());
+        assert_eq!(StatusCode::NO_CONTENT, response.status());
         Ok(())
     }
 
