@@ -14,7 +14,7 @@ pub fn init(term: &Terminal) -> anyhow::Result<()> {
     let config = Config::new(&project_name);
     config.save()?;
 
-    term.writeln(&format!("Project {} Initialized", &project_name))?;
+    term.writeln(format!("Project {} Initialized", &project_name))?;
     Ok(())
 }
 
@@ -58,38 +58,38 @@ pub fn deploy(term: &Terminal, config: &Config, client: NoopsClient) -> anyhow::
 
     for (module_name, wasm) in &diffs.create {
         term.writeln(format!("Creating {}", &module_name))?;
-        client.module_create(&module_name, &wasm)?;
+        client.module_create(module_name, wasm)?;
     }
 
     for (module_name, wasm) in &diffs.update {
         term.writeln(format!("Updating {}", &module_name))?;
-        client.module_create(&module_name, &wasm)?;
+        client.module_create(module_name, wasm)?;
     }
 
     for module_name in &diffs.remove {
         term.writeln(format!("Removing {}", &module_name))?;
-        client.module_delete(&module_name)?;
+        client.module_delete(module_name)?;
     }
 
     Ok(())
 }
 
 fn print_diff(diffs: &Diff, term: &Terminal) -> anyhow::Result<()> {
-    if diffs.create.len() > 0 {
+    if diffs.create.is_empty() {
         term.writeln(format!("Creating {} modules", diffs.create.len()))?;
         for (module_name, _) in &diffs.create {
             term.writeln(format!("\t+ {}", &module_name))?;
         }
     }
 
-    if diffs.update.len() > 0 {
+    if diffs.update.is_empty() {
         term.writeln(format!("Updating {} modules", &diffs.update.len()))?;
         for (module_name, _) in &diffs.update {
             term.writeln(format!("\t~ {}", &module_name))?;
         }
     }
 
-    if diffs.remove.len() > 0 {
+    if diffs.remove.is_empty() {
         term.writeln(format!("Removing {} modules", &diffs.remove.len()))?;
         for module_name in &diffs.remove {
             term.writeln(format!("\t- {}", &module_name))?;

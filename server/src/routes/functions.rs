@@ -77,8 +77,6 @@ mod tests {
     };
     use dtos::CreateFunctionDTO;
     use lazy_static::lazy_static;
-    use mime;
-    use serde_json;
     use tempfile::tempdir;
     use tower::ServiceExt; // for `oneshot nad ready`
 
@@ -114,7 +112,7 @@ mod tests {
             .method(Method::POST)
             .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
             .body(Body::from(serde_json::to_string(
-                &CREATE_FUNCTION_DTO.to_owned(),
+                &CREATE_FUNCTION_DTO.clone(),
             )?))?;
 
         let response = app.oneshot(request).await?;
@@ -134,7 +132,7 @@ mod tests {
             .method(Method::POST)
             .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
             .body(Body::from(serde_json::to_string(
-                &CREATE_FUNCTION_DTO.to_owned(),
+                &CREATE_FUNCTION_DTO.clone(),
             )?))?;
 
         let response = app.oneshot(request).await?;

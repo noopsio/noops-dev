@@ -11,7 +11,7 @@ impl NoopsClient {
     pub fn new(base_url: Url, project: &str) -> Self {
         NoopsClient {
             project: project.to_string(),
-            base_url: base_url,
+            base_url,
             client: Client::new(),
         }
     }
@@ -56,7 +56,7 @@ impl NoopsClient {
     }
 
     pub fn module_create(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
-        let url = self.get_module_path(&module_name)?;
+        let url = self.get_module_path(module_name)?;
 
         let payload = dtos::CreateFunctionDTO {
             wasm: wasm.to_owned(),
@@ -68,7 +68,7 @@ impl NoopsClient {
     }
 
     pub fn module_delete(&self, module_name: &str) -> anyhow::Result<()> {
-        let url = self.get_module_path(&module_name)?;
+        let url = self.get_module_path(module_name)?;
         let response = self.client.delete(url).send()?;
         Self::handle_response(response)?;
         Ok(())

@@ -6,6 +6,7 @@ pub const CONFIG_FILE_NAME: &str = "./noops.yaml";
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
 pub struct Config {
+    #[serde(rename = "project")]
     pub project_name: String,
     pub modules: Vec<Module>,
 }
@@ -62,39 +63,75 @@ impl Config {
 #[cfg(test)]
 
 mod tests {
+    use std::fs;
+
     use super::*;
-    use crate::modules::Module;
+    use crate::modules::{Language, Module};
+    use indoc::formatdoc;
+    use lazy_static::lazy_static;
     use tempfile::tempdir;
 
-    const TEST_CONFIG_PATH: &str = "test/noops-config.yaml";
+    const TEST_CONFIG_PATH: &str = "noops.yaml";
+    const PROJECT_NAME: &str = "test-project";
+    const MODULE_NAME: &str = "test-function";
+    const MODULE_DESCRIPTION: &str = "Test module";
+    const RUST_MODULE_LANGUAGE: Language = Language::Rust;
+    const GO_MODULE_LANGUAGE: Language = Language::Golang;
+
+    lazy_static! {
+        static ref CONFIG_CONTENT: String = formatdoc! {"
+        project: {PROJECT_NAME}
+        modules:
+        - name: {MODULE_NAME}
+          description: {MODULE_DESCRIPTION}
+          language: {RUST_MODULE_LANGUAGE}
+        - name: {MODULE_NAME}
+          description: {MODULE_DESCRIPTION}
+          language: {GO_MODULE_LANGUAGE}
+        "};
+        static ref CONFIG: Config = Config {
+            project_name: PROJECT_NAME.to_string(),
+            modules: vec![
+                Module {
+                    name: MODULE_NAME.to_string(),
+                    description: MODULE_DESCRIPTION.to_string(),
+                    language: RUST_MODULE_LANGUAGE
+                },
+                Module {
+                    name: MODULE_NAME.to_string(),
+                    description: MODULE_DESCRIPTION.to_string(),
+                    language: GO_MODULE_LANGUAGE
+                },
+            ]
+        };
+    }
 
     #[test]
-    fn test_from_yaml() -> anyhow::Result<()> {
-        let mut wanted_config = Config::new("noops-example");
-
-        let example_module = Module {
-            name: "my-module".to_string(),
-            description: "my super duper module".to_string(),
-            language: crate::modules::Language::Rust,
-        };
-        wanted_config.add_module(example_module)?;
-
-        let parsed_config = Config::from_yaml(TEST_CONFIG_PATH)?;
-
-        assert_eq!(parsed_config, wanted_config);
+    fn from_yaml() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let config_path = temp_dir.path().join(TEST_CONFIG_PATH);
+        fs::write(&config_path, CONFIG_CONTENT.clone())?;
+        let config = Config::from_yaml(config_path)?;
+        assert_eq!(config, *CONFIG);
         Ok(())
     }
 
     #[test]
-    fn test_to_yaml() -> anyhow::Result<()> {
+    fn from_yaml_file_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let config = Config::from_yaml(TEST_CONFIG_PATH)?;
-        let saved_config_path = temp_dir.path().join("saved.yaml");
+        let config_path = temp_dir.path().join(TEST_CONFIG_PATH);
+        let config = Config::from_yaml(config_path);
+        assert!(config.is_err());
+        Ok(())
+    }
 
-        config.save_to(&saved_config_path)?;
-        let written_config = Config::from_yaml(&saved_config_path)?;
-
-        assert_eq!(config, written_config);
+    #[test]
+    fn to_yaml() -> anyhow::Result<()> {
+        let temp_dir = tempdir()?;
+        let config_path = temp_dir.path().join(TEST_CONFIG_PATH);
+        CONFIG.save_to(&config_path)?;
+        let written_config = fs::read_to_string(config_path)?;
+        assert_eq!(CONFIG_CONTENT.clone(), written_config);
         Ok(())
     }
 }

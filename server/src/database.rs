@@ -1,4 +1,3 @@
-use anyhow;
 use jammdb::{Data, DB};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -50,7 +49,7 @@ impl Database {
     pub fn project_delete(&self, project_name: &str) -> anyhow::Result<()> {
         let tx = self.database.tx(true)?;
         let root = tx.get_bucket(PROJECT_BUCKET)?;
-        let _ = root.delete_bucket(project_name)?;
+        root.delete_bucket(project_name)?;
         tx.commit()?;
         Ok(())
     }
@@ -74,11 +73,7 @@ impl Database {
         let tx = self.database.tx(false)?;
         let projects = tx.get_bucket(PROJECT_BUCKET)?;
         return if let Ok(project) = projects.get_bucket(project_name) {
-            return if let Some(_) = project.get(function_name) {
-                Ok(true)
-            } else {
-                Ok(false)
-            };
+            return Ok(project.get(function_name).is_some());
         } else {
             Ok(false)
         };

@@ -1,12 +1,11 @@
-use anyhow;
 use std::fs;
-use wasmtime;
+use wasmtime::component::bindgen;
 use wit_component::ComponentEncoder;
 
 const ADAPTER_PATH: &str = "../wit/wasi_snapshot_preview1.wasm";
 const ADAPTER_NAME: &str = "wasi_snapshot_preview1";
 
-wasmtime::component::bindgen!({
+bindgen!({
     world: "handler",
     path: "../wit",
     async: true
@@ -23,7 +22,7 @@ impl Default for Request<'_> {
 pub fn create_component(wasm_module: &[u8]) -> anyhow::Result<Vec<u8>> {
     let adapter = fs::read(ADAPTER_PATH)?;
     let component = ComponentEncoder::default()
-        .module(&wasm_module)?
+        .module(wasm_module)?
         .adapter(ADAPTER_NAME, &adapter)?
         .encode()?;
     Ok(component)

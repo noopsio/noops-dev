@@ -23,3 +23,6 @@ lazy_static.workspace = true
 tempfile.workspace = true
 dtos = { path = "../dtos" }
 
+[dev-dependencies]
+indoc = "2.0.1"
+

@@ -1,4 +1,3 @@
-use console;
 use dialoguer::{Confirm, Input, Select};
 
 pub struct Terminal {

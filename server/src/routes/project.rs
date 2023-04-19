@@ -73,9 +73,7 @@ mod tests {
         http::{method::Method, Request},
     };
     use dtos::GetFunctionDTO;
-    use hyper;
     use lazy_static::lazy_static;
-    use serde_json;
     use tempfile::tempdir;
     use tower::ServiceExt; // for `oneshot and ready`
 
