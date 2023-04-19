@@ -53,7 +53,7 @@ impl Diff {
 
             match remote_module {
                 Some(remote_module) => {
-                    if remote_module.hash != Self::hash(&project_name, &local_module.name, &wasm) {
+                    if remote_module.hash != Self::hash(project_name, &local_module.name, &wasm) {
                         update.push((local_module.name.clone(), wasm));
                     }
                 }

@@ -11,6 +11,15 @@ pub enum Language {
     Golang,
 }
 
+impl Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Language::Rust => f.write_str("rust"),
+            Language::Golang => f.write_str("golang"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Module {
     pub name: String,

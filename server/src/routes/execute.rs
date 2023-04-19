@@ -122,10 +122,7 @@ mod tests {
         let body = String::from_utf8_lossy(&body);
 
         assert_eq!(StatusCode::OK, status);
-        assert_eq!(
-            format!("key1=value1\nkey2=value2\nkey3=value3\n"),
-            body.to_owned()
-        );
+        assert_eq!(format!("key1=value1\nkey2=value2\nkey3=value3\n"), body);
         Ok(())
     }
 }

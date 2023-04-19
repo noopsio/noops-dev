@@ -19,7 +19,6 @@ impl BaseAdapter {
     pub fn build_command(&self, path: &Path, args: &[&str]) -> Command {
         let mut command = Command::new(self.program.clone());
         command.args(args).current_dir(path);
-        let command = command;
         command
     }
     pub fn execute(&self, mut command: Command) -> anyhow::Result<()> {

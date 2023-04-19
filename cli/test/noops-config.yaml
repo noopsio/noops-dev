@@ -1,9 +1,0 @@
-name: noops-example
-modules:
-  - module:
-    name: "my-module"
-    root: "test/"
-    description: "my super duper module"
-    template: "dummy"
-    language: "Rust"
-    target_dir: ""
