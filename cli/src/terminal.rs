@@ -1,18 +1,32 @@
+use console::{style, StyledObject};
 use dialoguer::{Confirm, Input, Select};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::time::Duration;
 
 pub struct Terminal {
     term: console::Term,
 }
-
 impl Terminal {
     pub fn new() -> Self {
         Self {
-            term: console::Term::stdout(),
+            term: console::Term::stderr(),
         }
     }
 
-    pub fn writeln(&self, line: impl AsRef<str>) -> anyhow::Result<()> {
-        self.term.write_line(line.as_ref())?;
+    pub fn write_heading(&self, heading: impl AsRef<str>) -> anyhow::Result<()> {
+        let heading = format!("--- {} ---", heading.as_ref());
+        let heading = style(heading.as_str()).bold();
+        self.write_styled_text(heading)?;
+        Ok(())
+    }
+
+    pub fn write_text(&self, text: impl AsRef<str>) -> anyhow::Result<()> {
+        self.term.write_line(text.as_ref())?;
+        Ok(())
+    }
+
+    pub fn write_styled_text(&self, style: StyledObject<&str>) -> anyhow::Result<()> {
+        self.term.write_line(&style.to_string())?;
         Ok(())
     }
 
@@ -21,12 +35,13 @@ impl Terminal {
         Ok(response)
     }
 
-    pub fn confirm_prompt(&self, text: &str) -> anyhow::Result<bool> {
+    pub fn confirm_prompt(&self, text: impl AsRef<str>) -> anyhow::Result<bool> {
         let response = Confirm::new()
-            .with_prompt(text)
+            .with_prompt(text.as_ref())
             .wait_for_newline(true)
             .default(false)
             .show_default(true)
+            .report(false)
             .interact_on(&self.term)?;
         Ok(response)
     }
@@ -38,5 +53,34 @@ impl Terminal {
             .default(0)
             .interact_on(&self.term)?;
         Ok(selection)
+    }
+
+    pub fn spinner(&self, message: impl AsRef<str>) -> ProgressBar {
+        let pb = ProgressBar::new_spinner();
+        pb.enable_steady_tick(Duration::from_millis(175));
+        pb.set_style(
+            ProgressStyle::with_template("{spinner:.blue} {msg}")
+                .unwrap()
+                .tick_strings(&["⠲", "⠴", "⠦", "⠖", "✔️"]),
+        );
+        pb.set_message(message.as_ref().to_string());
+        pb
+    }
+
+    pub fn spinner_with_prefix(
+        &self,
+        prefix: impl AsRef<str>,
+        message: impl AsRef<str>,
+    ) -> ProgressBar {
+        let pb = ProgressBar::new_spinner();
+        pb.enable_steady_tick(Duration::from_millis(175));
+        pb.set_style(
+            ProgressStyle::with_template("{prefix} {spinner:.blue} {msg}")
+                .unwrap()
+                .tick_strings(&["⠲", "⠴", "⠦", "⠖", "✔️"]),
+        );
+        pb.set_prefix(style(prefix.as_ref()).bold().dim().to_string());
+        pb.set_message(message.as_ref().to_string());
+        pb
     }
 }

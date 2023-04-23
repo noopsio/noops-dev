@@ -17,7 +17,10 @@ impl GolangAdapter {
     }
 
     pub fn build(&self, work_dir: &Path) -> anyhow::Result<()> {
-        fs::create_dir(work_dir.join("out"))?;
+        let out_path = work_dir.join("out");
+        if !out_path.exists() {
+            fs::create_dir(&out_path)?;
+        }
         let command = self.adapter.build_command(
             work_dir,
             &["build", "-target", "wasi", "-o", "./out/handler.wasm"],

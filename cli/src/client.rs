@@ -1,5 +1,5 @@
 use reqwest::blocking::{Client, Response};
-use reqwest::Url;
+use reqwest::{StatusCode, Url};
 
 pub struct NoopsClient {
     pub project: String,
@@ -30,7 +30,7 @@ impl NoopsClient {
     pub fn project_exists(&self) -> anyhow::Result<bool> {
         let url = self.get_project_path()?;
         let response = reqwest::blocking::get(url)?;
-        Ok(response.status().is_success())
+        Ok(response.status().is_success() && response.status() != StatusCode::NOT_FOUND)
     }
 
     pub fn project_get(&self) -> anyhow::Result<Vec<dtos::GetFunctionDTO>> {
