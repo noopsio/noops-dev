@@ -20,7 +20,7 @@ pub fn init(term: &Terminal) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let project_name = term.text_prompt("Name your Project")?;
+    let project_name = term.text_prompt("Project name")?;
     let config = Config::new(&project_name);
     config.save()?;
 
@@ -69,13 +69,13 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
     if diffs.has_changes() {
         print_changes(&diffs, term)?;
     }
-    if diffs.has_unbuilds() {
-        print_unbuild(&diffs, term)?;
+    if diffs.has_not_builds() {
+        print_not_build(&diffs, term)?;
     }
-    if !diffs.has_changes() && diffs.has_unbuilds() {
+    if !diffs.has_changes() && diffs.has_not_builds() {
         return Ok(());
     }
-    if !diffs.has_changes() && !diffs.has_unbuilds() {
+    if !diffs.has_changes() && !diffs.has_not_builds() {
         term.write_text("Project is up to date")?;
         return Ok(());
     }
@@ -166,11 +166,11 @@ fn print_changes(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn print_unbuild(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
-    term.write_styled_text(style("Unbuild:").bold())?;
+pub fn print_not_build(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
+    term.write_styled_text(style("Not build:").bold())?;
 
-    if !diffs.unbuild.is_empty() {
-        for module_name in &diffs.unbuild {
+    if !diffs.not_build.is_empty() {
+        for module_name in &diffs.not_build {
             let text = format!("\t* {}", &module_name);
             let text = style(text.as_str()).dim();
             term.write_styled_text(text)?;

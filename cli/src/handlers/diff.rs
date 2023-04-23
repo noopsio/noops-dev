@@ -10,14 +10,14 @@ use dtos::GetFunctionDTO;
 type Update = (String, Vec<u8>);
 type Create = (String, Vec<u8>);
 type Remove = String;
-type Unbuild = String;
+type NotBuild = String;
 
 #[derive(Default, Debug)]
 pub struct ModuleDiff {
     pub create: Vec<Create>,
     pub update: Vec<Update>,
     pub remove: Vec<Remove>,
-    pub unbuild: Vec<Remove>,
+    pub not_build: Vec<Remove>,
 }
 
 impl ModuleDiff {
@@ -33,7 +33,7 @@ impl ModuleDiff {
             create,
             update,
             remove,
-            unbuild,
+            not_build: unbuild,
         })
     }
 
@@ -41,10 +41,10 @@ impl ModuleDiff {
         project_name: &str,
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
-    ) -> anyhow::Result<(Vec<Create>, Vec<Update>, Vec<Unbuild>)> {
+    ) -> anyhow::Result<(Vec<Create>, Vec<Update>, Vec<NotBuild>)> {
         let mut create: Vec<Create> = Default::default();
         let mut update: Vec<Update> = Default::default();
-        let mut unbuild: Vec<Unbuild> = Default::default();
+        let mut not_build: Vec<NotBuild> = Default::default();
 
         for local_module in local_modules {
             let remote_module = remote_modules
@@ -56,7 +56,7 @@ impl ModuleDiff {
                 .join("handler.wasm");
 
             if !module_out_path.exists() {
-                unbuild.push(local_module.name.clone());
+                not_build.push(local_module.name.clone());
             } else {
                 let wasm = std::fs::read(module_out_path)?;
                 match remote_module {
@@ -70,7 +70,7 @@ impl ModuleDiff {
                 }
             }
         }
-        Ok((create, update, unbuild))
+        Ok((create, update, not_build))
     }
 
     fn remove(
@@ -104,7 +104,7 @@ impl ModuleDiff {
         !(self.create.is_empty() && self.update.is_empty() && self.remove.is_empty())
     }
 
-    pub fn has_unbuilds(&self) -> bool {
-        !self.unbuild.is_empty()
+    pub fn has_not_builds(&self) -> bool {
+        !self.not_build.is_empty()
     }
 }
