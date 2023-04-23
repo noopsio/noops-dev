@@ -31,6 +31,11 @@ pub fn init(term: &Terminal) -> anyhow::Result<()> {
 pub fn build(term: &Terminal, config: &Config) -> anyhow::Result<()> {
     term.write_heading(format!("Building {}", config.project_name))?;
 
+    if config.modules.is_empty() {
+        term.write_text("No modules to build")?;
+        return Ok(());
+    }
+
     for (i, module) in config.modules.iter().enumerate() {
         let prefix = format!("[{}/{}]", i + 1, config.modules.len());
         let spinner = term.spinner_with_prefix(prefix, &module.name);
