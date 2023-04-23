@@ -12,13 +12,13 @@ type Create = (String, Vec<u8>);
 type Remove = String;
 
 #[derive(Default, Debug)]
-pub struct Diff {
+pub struct ModuleDiff {
     pub create: Vec<Create>,
     pub update: Vec<Update>,
     pub remove: Vec<Remove>,
 }
 
-impl Diff {
+impl ModuleDiff {
     pub fn new(
         project_name: &str,
         local_modules: &[Module],
@@ -88,5 +88,9 @@ impl Diff {
         module_name.hash(&mut hasher);
         wasm.hash(&mut hasher);
         hasher.finish()
+    }
+
+    pub fn has_changes(&self) -> bool {
+        !(self.create.is_empty() && self.update.is_empty() && self.remove.is_empty())
     }
 }

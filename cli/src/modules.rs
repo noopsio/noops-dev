@@ -35,10 +35,10 @@ impl Display for Module {
 }
 
 impl Module {
-    pub fn from_template(template: Template) -> Self {
+    pub fn from_template(template: &Template) -> Self {
         Module {
             name: template.name.clone(),
-            description: template.description,
+            description: template.description.clone(),
             language: template.language,
         }
     }

@@ -27,21 +27,21 @@ fn main() -> anyhow::Result<()> {
 
         Some(("build", _)) => {
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            handlers::project::build(&terminal, &config.modules)?;
+            handlers::project::build(&terminal, &config)?;
         }
 
         Some(("deploy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
             let client = NoopsClient::new(base_url, &config.project_name);
-            handlers::project::deploy(&terminal, &config, client)?;
+            handlers::project::deploy(&terminal, &config, &client)?;
         }
 
         Some(("destroy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
             let client = NoopsClient::new(base_url, &config.project_name);
-            handlers::project::destroy(&terminal, client)?;
+            handlers::project::destroy(&terminal, &client, &config.project_name)?;
         }
 
         Some(("add", _)) => {
@@ -65,8 +65,8 @@ fn create_commands() -> Command {
     command!()
         .subcommand(Command::new("init").about("Create a new project"))
         .subcommand(Command::new("add").about("Add a new module"))
+        .subcommand(Command::new("remove").about("Remove a module"))
         .subcommand(Command::new("build").about("Builds all functions in project"))
         .subcommand(Command::new("deploy").about("Deploy the project"))
-        .subcommand(Command::new("remove").about("Remove a module"))
         .subcommand(Command::new("destroy").about("Destroy the project"))
 }
