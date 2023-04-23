@@ -4,7 +4,7 @@ use dtos::GetFunctionDTO;
 use crate::{
     adapter::{cargo::CargoAdapter, golang::GolangAdapter},
     client::NoopsClient,
-    config::Config,
+    config::{Config, CONFIG_FILE_NAME},
     modules::Language,
     terminal::Terminal,
 };
@@ -14,6 +14,11 @@ use super::diff::ModuleDiff;
 
 pub fn init(term: &Terminal) -> anyhow::Result<()> {
     term.write_heading("Initializing")?;
+
+    if Path::new(CONFIG_FILE_NAME).exists() {
+        term.write_text("Project already initialized")?;
+        return Ok(());
+    }
 
     let project_name = term.text_prompt("Name your Project")?;
     let config = Config::new(&project_name);
