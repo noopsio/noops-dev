@@ -4,18 +4,20 @@ use std::{
     path::Path,
 };
 
-use crate::{filesystem, modules::Module};
+use crate::modules::Module;
 use dtos::GetFunctionDTO;
 
 type Update = (String, Vec<u8>);
 type Create = (String, Vec<u8>);
 type Remove = String;
+type Unbuild = String;
 
 #[derive(Default, Debug)]
 pub struct ModuleDiff {
     pub create: Vec<Create>,
     pub update: Vec<Update>,
     pub remove: Vec<Remove>,
+    pub unbuild: Vec<Remove>,
 }
 
 impl ModuleDiff {
@@ -24,13 +26,14 @@ impl ModuleDiff {
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
     ) -> anyhow::Result<Self> {
-        let (create, update) =
+        let (create, update, unbuild) =
             Self::create_and_update(project_name, local_modules, remote_modules)?;
         let remove = Self::remove(local_modules, remote_modules)?;
         Ok(Self {
             create,
             update,
             remove,
+            unbuild,
         })
     }
 
@@ -38,29 +41,36 @@ impl ModuleDiff {
         project_name: &str,
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
-    ) -> anyhow::Result<(Vec<Create>, Vec<Update>)> {
+    ) -> anyhow::Result<(Vec<Create>, Vec<Update>, Vec<Unbuild>)> {
         let mut create: Vec<Create> = Default::default();
         let mut update: Vec<Update> = Default::default();
+        let mut unbuild: Vec<Unbuild> = Default::default();
 
         for local_module in local_modules {
             let remote_module = remote_modules
                 .iter()
                 .find(|&remote_module| remote_module.name == local_module.name);
 
-            let module_out_path = Path::new(&local_module.name).join("out");
-            let module_path = filesystem::find_wasm(module_out_path).unwrap();
-            let wasm = filesystem::read_wasm(&module_path)?;
+            let module_out_path = Path::new(&local_module.name)
+                .join("out")
+                .join("handler.wasm");
 
-            match remote_module {
-                Some(remote_module) => {
-                    if remote_module.hash != Self::hash(project_name, &local_module.name, &wasm) {
-                        update.push((local_module.name.clone(), wasm));
+            if !module_out_path.exists() {
+                unbuild.push(local_module.name.clone());
+            } else {
+                let wasm = std::fs::read(module_out_path)?;
+                match remote_module {
+                    Some(remote_module) => {
+                        if remote_module.hash != Self::hash(project_name, &local_module.name, &wasm)
+                        {
+                            update.push((local_module.name.clone(), wasm));
+                        }
                     }
+                    None => create.push((local_module.name.clone(), wasm)),
                 }
-                None => create.push((local_module.name.clone(), wasm)),
             }
         }
-        Ok((create, update))
+        Ok((create, update, unbuild))
     }
 
     fn remove(
@@ -92,5 +102,9 @@ impl ModuleDiff {
 
     pub fn has_changes(&self) -> bool {
         !(self.create.is_empty() && self.update.is_empty() && self.remove.is_empty())
+    }
+
+    pub fn has_unbuilds(&self) -> bool {
+        !self.unbuild.is_empty()
     }
 }

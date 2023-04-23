@@ -64,18 +64,22 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
         remote_modules = client.project_get()?;
     }
 
-    let module_diff = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
-    if !module_diff.has_changes() {
-        let text = format!(
-            "{} {}\nProject is up to date",
-            style("Changes:").bold(),
-            style("n/a").bold().dim()
-        );
-        term.write_text(text)?;
+    let diffs = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
+
+    if diffs.has_changes() {
+        print_changes(&diffs, term)?;
+    }
+    if diffs.has_unbuilds() {
+        print_unbuild(&diffs, term)?;
+    }
+    if !diffs.has_changes() && diffs.has_unbuilds() {
+        return Ok(());
+    }
+    if !diffs.has_changes() && !diffs.has_unbuilds() {
+        term.write_text("Project is up to date")?;
         return Ok(());
     }
 
-    print_module_diff(&module_diff, term)?;
     if !term.confirm_prompt("Deploying")? {
         term.write_text("Aborting")?;
         return Ok(());
@@ -84,7 +88,7 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
     if !project_exists {
         client.project_create()?;
     }
-    deploy_modules(term, &module_diff, client)?;
+    deploy_modules(term, &diffs, client)?;
 
     Ok(())
 }
@@ -130,7 +134,7 @@ fn deploy_modules(
     Ok(())
 }
 
-fn print_module_diff(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
+fn print_changes(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
     term.write_styled_text(style("Changes:").bold())?;
 
     if !diffs.create.is_empty() {
@@ -159,6 +163,21 @@ fn print_module_diff(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> 
 
     term.write_styled_text(style("---").bold().dim())?;
 
+    Ok(())
+}
+
+pub fn print_unbuild(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
+    term.write_styled_text(style("Unbuild:").bold())?;
+
+    if !diffs.unbuild.is_empty() {
+        for module_name in &diffs.unbuild {
+            let text = format!("\t* {}", &module_name);
+            let text = style(text.as_str()).dim();
+            term.write_styled_text(text)?;
+        }
+    }
+
+    term.write_styled_text(style("---").bold().dim())?;
     Ok(())
 }
 
