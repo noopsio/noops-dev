@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  noops:
+    image: noops:latest
+    build:
+      context: .
+    container_name: noops
+    ports:
+      - 8080:8080
