@@ -7,6 +7,7 @@ const TICK_STRING: &[&str] = &["⠲", "⠴", "⠦", "⠖", "✔️"];
 pub struct Terminal {
     term: console::Term,
 }
+
 impl Terminal {
     pub fn new() -> Self {
         Self {

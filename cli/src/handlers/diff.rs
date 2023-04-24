@@ -26,14 +26,14 @@ impl ModuleDiff {
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
     ) -> anyhow::Result<Self> {
-        let (create, update, unbuild) =
+        let (create, update, not_build) =
             Self::create_and_update(project_name, local_modules, remote_modules)?;
         let remove = Self::remove(local_modules, remote_modules)?;
         Ok(Self {
             create,
             update,
             remove,
-            not_build: unbuild,
+            not_build,
         })
     }
 
