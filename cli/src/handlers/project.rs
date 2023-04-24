@@ -20,7 +20,7 @@ pub fn init(term: &Terminal) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let project_name = term.text_prompt("Name your Project")?;
+    let project_name = term.text_prompt("Project name")?;
     let config = Config::new(&project_name);
     config.save()?;
 
@@ -30,6 +30,11 @@ pub fn init(term: &Terminal) -> anyhow::Result<()> {
 
 pub fn build(term: &Terminal, config: &Config) -> anyhow::Result<()> {
     term.write_heading(format!("Building {}", config.project_name))?;
+
+    if config.modules.is_empty() {
+        term.write_text("No modules to build")?;
+        return Ok(());
+    }
 
     for (i, module) in config.modules.iter().enumerate() {
         let prefix = format!("[{}/{}]", i + 1, config.modules.len());
@@ -59,18 +64,22 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
         remote_modules = client.project_get()?;
     }
 
-    let module_diff = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
-    if !module_diff.has_changes() {
-        let text = format!(
-            "{} {}\nProject is up to date",
-            style("Changes:").bold(),
-            style("n/a").bold().dim()
-        );
-        term.write_text(text)?;
+    let diffs = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
+
+    if diffs.has_changes() {
+        print_changes(&diffs, term)?;
+    }
+    if diffs.has_not_builds() {
+        print_not_build(&diffs, term)?;
+    }
+    if !diffs.has_changes() && diffs.has_not_builds() {
+        return Ok(());
+    }
+    if !diffs.has_changes() && !diffs.has_not_builds() {
+        term.write_text("Project is up to date")?;
         return Ok(());
     }
 
-    print_module_diff(&module_diff, term)?;
     if !term.confirm_prompt("Deploying")? {
         term.write_text("Aborting")?;
         return Ok(());
@@ -79,7 +88,7 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
     if !project_exists {
         client.project_create()?;
     }
-    deploy_modules(term, &module_diff, client)?;
+    deploy_modules(term, &diffs, client)?;
 
     Ok(())
 }
@@ -125,7 +134,7 @@ fn deploy_modules(
     Ok(())
 }
 
-fn print_module_diff(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
+fn print_changes(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
     term.write_styled_text(style("Changes:").bold())?;
 
     if !diffs.create.is_empty() {
@@ -154,6 +163,21 @@ fn print_module_diff(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> 
 
     term.write_styled_text(style("---").bold().dim())?;
 
+    Ok(())
+}
+
+pub fn print_not_build(diffs: &ModuleDiff, term: &Terminal) -> anyhow::Result<()> {
+    term.write_styled_text(style("Not build:").bold())?;
+
+    if !diffs.not_build.is_empty() {
+        for module_name in &diffs.not_build {
+            let text = format!("\t* {}", &module_name);
+            let text = style(text.as_str()).dim();
+            term.write_styled_text(text)?;
+        }
+    }
+
+    term.write_styled_text(style("---").bold().dim())?;
     Ok(())
 }
 

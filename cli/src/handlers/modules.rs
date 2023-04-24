@@ -8,6 +8,11 @@ use tempfile::tempdir;
 pub fn delete(term: &Terminal, mut config: Config) -> anyhow::Result<()> {
     term.write_heading("Removing a module")?;
 
+    if config.modules.is_empty() {
+        term.write_text("No modules to remove")?;
+        return Ok(());
+    }
+
     let index = term.select_prompt("Select a modules to delete", &config.modules)?;
     let module = config.get_module(index);
 
