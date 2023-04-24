@@ -3,6 +3,7 @@ use dialoguer::{Confirm, Input, Select};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
 
+const TICK_STRING: &[&str] = &["⠲", "⠴", "⠦", "⠖", "✔️"];
 pub struct Terminal {
     term: console::Term,
 }
@@ -61,7 +62,7 @@ impl Terminal {
         pb.set_style(
             ProgressStyle::with_template("{spinner:.blue} {msg}")
                 .unwrap()
-                .tick_strings(&["⠲", "⠴", "⠦", "⠖", "✔️"]),
+                .tick_strings(TICK_STRING),
         );
         pb.set_message(message.as_ref().to_string());
         pb
@@ -77,7 +78,7 @@ impl Terminal {
         pb.set_style(
             ProgressStyle::with_template("{prefix} {spinner:.blue} {msg}")
                 .unwrap()
-                .tick_strings(&["⠲", "⠴", "⠦", "⠖", "✔️"]),
+                .tick_strings(TICK_STRING),
         );
         pb.set_prefix(style(prefix.as_ref()).bold().dim().to_string());
         pb.set_message(message.as_ref().to_string());
