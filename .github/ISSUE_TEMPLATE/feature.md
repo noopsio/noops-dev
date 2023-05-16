@@ -7,8 +7,12 @@ assignees: ''
 
 ---
 
-**Description:**
+# Feature issue
+## Description
+As a user I want this feature because
 
-**Precondition:**
+## Precondition
 
-**Acceptance Criteria:**
+## Tasks
+- [] Task#1
+- [] Task#2
