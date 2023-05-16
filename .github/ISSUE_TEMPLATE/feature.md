@@ -8,11 +8,12 @@ assignees: ''
 ---
 
 # Feature issue
+
 ## Description
 As a user I want this feature because
 
 ## Precondition
 
 ## Tasks
-- [] Task#1
-- [] Task#2
+- [ ] Task#1
+- [ ] Task#2
