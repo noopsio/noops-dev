@@ -2,7 +2,7 @@
 name: Feature
 about: Feature template
 title: ''
-labels: feature
+labels: type:feature
 assignees: ''
 
 ---
@@ -14,6 +14,7 @@ As a user I want this feature because
 
 ## Precondition
 
+```[tasklist]
 ## Tasks
 - [ ] Task#1
-- [ ] Task#2
+```
