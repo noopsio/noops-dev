@@ -2,7 +2,7 @@
 name: Concept
 about: Issue to create a concept
 title: ''
-labels: concept
+labels: type:concept
 assignees: ''
 
 ---
