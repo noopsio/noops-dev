@@ -21,9 +21,13 @@ wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-protot
 #wasi_snapshot_preview1 = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c", features = ["reactor"], target = "wasm32-unknown-unknown", artifact = "cdylib" }
 tracing = "0.1.37"
 wit-component = "0.7.4"
-axum = { version = "0.6.12", features = ["json"] }
+axum = { version = "0.6.12", features = ["json", "headers"] }
 tower-http = { version = "0.4.0", features = ["trace"] }
 dtos = { path = "../dtos" }
+octocrab = "0.25.1"
+jsonwebtoken = "8.3.0"
+lazy_static = "1.4.0"
+thiserror = "1.0.41"
 
 
 

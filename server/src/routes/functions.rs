@@ -1,7 +1,7 @@
-use super::errors::AppError;
 use crate::{
     bindgen,
     database::{Database, Function},
+    errors::Error,
 };
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
@@ -31,7 +31,7 @@ async fn create_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
-) -> Result<StatusCode, AppError> {
+) -> Result<StatusCode, Error> {
     if !database.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
@@ -50,7 +50,7 @@ async fn create_function(
 async fn delete_function(
     Path((project_name, function_name)): Path<(String, String)>,
     State(database): State<Arc<Database>>,
-) -> Result<StatusCode, AppError> {
+) -> Result<StatusCode, Error> {
     if !database.function_exists(&project_name, &function_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
