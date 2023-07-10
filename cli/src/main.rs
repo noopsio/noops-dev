@@ -7,6 +7,8 @@ mod modules;
 mod templates;
 mod terminal;
 
+use std::{env, fs, path::Path};
+
 use adapter::git::GitAdapter;
 use clap::{command, Command};
 use client::NoopsClient;
@@ -15,11 +17,17 @@ use reqwest::Url;
 use terminal::Terminal;
 
 const BASE_URL: &str = "http://localhost:8080/api/";
+const CONFIG_NAME: &str = "noops";
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
     let terminal = Terminal::new();
     let mut commands = create_commands();
+
+    let xdg_config_home = env::var("XDG_CONFIG_HOME")?;
+    let config_path = Path::new(&xdg_config_home).join(CONFIG_NAME);
+    fs::create_dir_all(config_path.clone())?;
+
     match commands.clone().get_matches().subcommand() {
         Some(("init", _)) => {
             handlers::project::init(&terminal)?;
@@ -33,14 +41,24 @@ fn main() -> anyhow::Result<()> {
         Some(("deploy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::new(base_url, &config.project_name);
+            let jwt = handlers::auth::get_jwt(&config_path)?;
+            if jwt.is_none() {
+                terminal.write_text("You are not logged in.")?;
+                return Ok(());
+            }
+            let client = NoopsClient::new(base_url, config.project_name.clone(), jwt);
             handlers::project::deploy(&terminal, &config, &client)?;
         }
 
         Some(("destroy", _)) => {
             let base_url = Url::parse(BASE_URL)?;
             let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
-            let client = NoopsClient::new(base_url, &config.project_name);
+            let jwt = handlers::auth::get_jwt(&config_path)?;
+            if jwt.is_none() {
+                terminal.write_text("You are not logged in.")?;
+                return Ok(());
+            }
+            let client = NoopsClient::new(base_url, config.project_name.clone(), jwt);
             handlers::project::destroy(&terminal, &client, &config.project_name)?;
         }
 
@@ -55,6 +73,13 @@ fn main() -> anyhow::Result<()> {
             handlers::modules::delete(&terminal, config)?;
         }
 
+        Some(("login", _)) => {
+            let base_url = Url::parse(BASE_URL)?;
+            let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
+            let client = NoopsClient::new(base_url, config.project_name, None);
+            handlers::auth::login(&client, &terminal, &config_path)?;
+        }
+
         _ => commands.print_help()?,
     }
 
@@ -63,6 +88,7 @@ fn main() -> anyhow::Result<()> {
 
 fn create_commands() -> Command {
     command!()
+        .subcommand(Command::new("login").about("Login in the noops cloud"))
         .subcommand(Command::new("init").about("Create a new project"))
         .subcommand(Command::new("add").about("Add a new module"))
         .subcommand(Command::new("remove").about("Remove a module"))

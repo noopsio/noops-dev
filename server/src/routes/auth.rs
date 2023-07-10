@@ -59,5 +59,6 @@ pub async fn auth_middleware<B>(
     let _ = Jwt::decode(auth.token(), JWT_ISSUER, &DECODING_KEY)?;
     // TODO Check here if github access token is still valid
     // Get user information from Database. if not Available get it from Github
+    //request.headers_mut().remove(AUTHORIZATION);
     Ok(next.run(request).await)
 }
