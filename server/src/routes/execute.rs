@@ -8,9 +8,7 @@ use axum::{
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::{bindgen, database::Database, executor};
-
-use super::errors::AppError;
+use crate::{bindgen, database::Database, errors::Error, executor};
 
 pub fn create_routes(database: Arc<Database>) -> Router {
     Router::new()
@@ -22,7 +20,7 @@ async fn execute(
     Path((project_name, function_name)): Path<(String, String)>,
     Query(query_map): Query<HashMap<String, String>>,
     State(database): State<Arc<Database>>,
-) -> Result<Response, AppError> {
+) -> Result<Response, Error> {
     if !database.function_exists(&project_name, &function_name)? {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
@@ -39,7 +37,11 @@ async fn execute(
     };
     let response = executor::execute(function.component, request).await?;
 
-    Ok((StatusCode::from_u16(response.status)?, response.body).into_response())
+    Ok((
+        StatusCode::from_u16(response.status).unwrap(),
+        response.body,
+    )
+        .into_response())
 }
 
 #[cfg(test)]

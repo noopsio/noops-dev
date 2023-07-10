@@ -8,8 +8,7 @@ use axum::{
 use dtos::GetFunctionDTO;
 use std::sync::Arc;
 
-use super::errors::AppError;
-use crate::database::Database;
+use crate::{database::Database, errors::Error};
 
 pub fn create_routes(database: Arc<Database>) -> Router {
     Router::new()
@@ -23,7 +22,7 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 async fn create_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> Result<StatusCode, AppError> {
+) -> Result<StatusCode, Error> {
     if database.project_exists(&project_name)? {
         return Ok(StatusCode::CONFLICT);
     }
@@ -34,7 +33,7 @@ async fn create_project(
 async fn get_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> Result<Response, AppError> {
+) -> Result<Response, Error> {
     if !database.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
@@ -54,7 +53,7 @@ async fn get_project(
 async fn delete_project(
     Path(project_name): Path<String>,
     State(database): State<Arc<Database>>,
-) -> Result<StatusCode, AppError> {
+) -> Result<StatusCode, Error> {
     if !database.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
