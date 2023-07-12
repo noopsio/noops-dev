@@ -6,20 +6,18 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Jwt {
     iss: String,
-    sub: String,
+    pub sub: i32,
     iat: u64,
     exp: u64,
-    gh_access_token: String,
 }
 
 impl Jwt {
-    pub fn new(iss: &str, sub: &str, iat: u64, exp_delta: u64, gh_access_token: &str) -> Self {
+    pub fn new(iss: &str, sub: i32, iat: u64, exp_delta: u64) -> Self {
         Jwt {
             iss: iss.to_string(),
-            sub: sub.to_string(),
+            sub,
             iat,
             exp: iat + exp_delta,
-            gh_access_token: gh_access_token.to_string(),
         }
     }
 
@@ -51,8 +49,7 @@ mod tests {
 
     const JWT_SECRET: &str = "JWT_SECRET";
     const ISSUER: &str = "TEST_ISSUER";
-    const SUBJECT: &str = "TEST_ISSUER";
-    const GH_TOKEN: &str = "GH_TOKEN";
+    const SUBJECT: i32 = 1000;
     const EXPIRED_DELTA: u64 = 600;
 
     lazy_static! {
@@ -63,9 +60,8 @@ mod tests {
     #[test]
     fn encode_jwt_decocde_success() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at();
-        let jwt =
-            Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA, GH_TOKEN).encode(&ENCODING_KEY)?;
-        let _decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY)?;
+        let jwt = Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
+        let _ = Jwt::decode(&jwt, ISSUER, &DECODING_KEY)?;
         Ok(())
     }
 
@@ -86,7 +82,7 @@ mod tests {
     fn decode_invalid_signature() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at();
 
-        let jwt = Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA, GH_TOKEN)
+        let jwt = Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA)
             .encode(&EncodingKey::from_secret("INVALID_SECRET".as_bytes()))?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
@@ -106,14 +102,8 @@ mod tests {
     fn decode_invalid_issuer() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at();
 
-        let jwt = Jwt::new(
-            "INVALID_ISSUER",
-            SUBJECT,
-            issued_at,
-            EXPIRED_DELTA,
-            GH_TOKEN,
-        )
-        .encode(&ENCODING_KEY)?;
+        let jwt =
+            Jwt::new("INVALID_ISSUER", SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
 
@@ -130,14 +120,8 @@ mod tests {
     fn decode_token_expired() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at() - 900;
 
-        let jwt = Jwt::new(
-            "INVALID_ISSUER",
-            SUBJECT,
-            issued_at,
-            EXPIRED_DELTA,
-            GH_TOKEN,
-        )
-        .encode(&ENCODING_KEY)?;
+        let jwt =
+            Jwt::new("INVALID_ISSUER", SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
 

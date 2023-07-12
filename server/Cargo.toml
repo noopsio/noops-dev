@@ -24,10 +24,12 @@ wit-component = "0.7.4"
 axum = { version = "0.6.12", features = ["json", "headers"] }
 tower-http = { version = "0.4.0", features = ["trace"] }
 dtos = { path = "../dtos" }
-octocrab = "0.25.1"
 jsonwebtoken = "8.3.0"
 lazy_static = "1.4.0"
 thiserror = "1.0.41"
+diesel = { version = "2.1.0", features = ["sqlite", "r2d2", "returning_clauses_for_sqlite_3_35"] }
+dotenvy = "0.15.7"
+reqwest = {version = "0.11.18", features = ["json"] }
 
 
 
@@ -40,4 +42,5 @@ hyper = "0.14.25"
 return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
 return-params = { path = "../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
 mime = "0.3.17"
+diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
 

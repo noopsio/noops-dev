@@ -8,9 +8,9 @@ use axum::{
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::{bindgen, database::Database, errors::Error, executor};
+use crate::{bindgen, database::wasmstore::Wasmstore, errors::Error, executor};
 
-pub fn create_routes(database: Arc<Database>) -> Router {
+pub fn create_routes(database: Arc<Wasmstore>) -> Router {
     Router::new()
         .route("/:project_name/:function_name", get(execute))
         .with_state(database)
@@ -19,13 +19,13 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 async fn execute(
     Path((project_name, function_name)): Path<(String, String)>,
     Query(query_map): Query<HashMap<String, String>>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
 ) -> Result<Response, Error> {
-    if !database.function_exists(&project_name, &function_name)? {
+    if !wasmstore.function_exists(&project_name, &function_name)? {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let function = database.function_get(&project_name, &function_name)?;
+    let function = wasmstore.function_get(&project_name, &function_name)?;
     let mut query_list: Vec<(&str, &str)> = Vec::new();
     for (key, value) in query_map.iter() {
         query_list.push((key, value));
@@ -47,7 +47,7 @@ async fn execute(
 #[cfg(test)]
 mod tests {
 
-    use crate::database::Function;
+    use crate::database::wasmstore::Function;
 
     use super::*;
     use axum::{
@@ -84,7 +84,7 @@ mod tests {
     #[tokio::test]
     async fn return_status_code() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         let request = Request::builder()
@@ -104,7 +104,7 @@ mod tests {
     #[tokio::test]
     async fn return_params() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         let request = Request::builder()

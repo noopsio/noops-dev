@@ -12,12 +12,12 @@ pub struct Function {
     pub hash: u64,
 }
 
-pub struct Database {
+pub struct Wasmstore {
     database: DB,
 }
 
-impl Database {
-    pub fn new(path: impl AsRef<Path>) -> anyhow::Result<Database> {
+impl Wasmstore {
+    pub fn new(path: impl AsRef<Path>) -> anyhow::Result<Wasmstore> {
         let database = DB::open(path)?;
         let tx = database.tx(true)?;
 
@@ -26,7 +26,7 @@ impl Database {
         }
 
         tx.commit()?;
-        Ok(Database { database })
+        Ok(Wasmstore { database })
     }
 
     pub fn project_exists(&self, project_name: &str) -> anyhow::Result<bool> {
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn new() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
         let tx = db.database.tx(false)?;
         let _ = tx.get_bucket(PROJECT_BUCKET)?;
         Ok(())
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn project_create() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
         assert!(db.project_exists(PROJECT_NAME)?);
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn project_delete() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
         assert!(db.project_exists(PROJECT_NAME)?);
@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn project_get() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
         db.function_create(&FUNCTION)?;
@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn function_create() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
         db.function_create(&FUNCTION)?;
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn function_delete() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let db = Database::new(temp_dir.path().join(DATABASE_NAME))?;
+        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
 
         db.project_create(PROJECT_NAME)?;
         db.function_create(&FUNCTION)?;

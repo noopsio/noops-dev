@@ -8,9 +8,9 @@ use axum::{
 use dtos::GetFunctionDTO;
 use std::sync::Arc;
 
-use crate::{database::Database, errors::Error};
+use crate::{database::wasmstore::Wasmstore, errors::Error};
 
-pub fn create_routes(database: Arc<Database>) -> Router {
+pub fn create_routes(database: Arc<Wasmstore>) -> Router {
     Router::new()
         .route(
             "/api/:project_name",
@@ -21,23 +21,23 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 
 async fn create_project(
     Path(project_name): Path<String>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
 ) -> Result<StatusCode, Error> {
-    if database.project_exists(&project_name)? {
+    if wasmstore.project_exists(&project_name)? {
         return Ok(StatusCode::CONFLICT);
     }
 
-    database.project_create(&project_name)?;
+    wasmstore.project_create(&project_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
     Path(project_name): Path<String>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
 ) -> Result<Response, Error> {
-    if !database.project_exists(&project_name)? {
+    if !wasmstore.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
-    let functions = database.project_get(&project_name)?;
+    let functions = wasmstore.project_get(&project_name)?;
     let functions: Vec<GetFunctionDTO> = functions
         .iter()
         .map(|function| dtos::GetFunctionDTO {
@@ -52,19 +52,19 @@ async fn get_project(
 
 async fn delete_project(
     Path(project_name): Path<String>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
 ) -> Result<StatusCode, Error> {
-    if !database.project_exists(&project_name)? {
+    if !wasmstore.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
-    database.project_delete(&project_name)?;
+    wasmstore.project_delete(&project_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::database::Function;
+    use crate::database::wasmstore::Function;
 
     use super::*;
     use axum::{
@@ -91,7 +91,7 @@ mod tests {
     #[tokio::test]
     async fn create_project_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database);
 
         let uri = format!("/api/{}", PROJECT_NAME);
@@ -108,7 +108,7 @@ mod tests {
     #[tokio::test]
     async fn create_project_conflict() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         database.project_create(PROJECT_NAME)?;
         let app = create_routes(database);
 
@@ -128,7 +128,7 @@ mod tests {
     #[ignore]
     async fn get_project_empty_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         database.project_create(PROJECT_NAME)?;
         let app = create_routes(database);
 
@@ -150,7 +150,7 @@ mod tests {
     #[tokio::test]
     async fn get_project_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
@@ -178,7 +178,7 @@ mod tests {
     #[tokio::test]
     async fn get_project_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database);
 
         let uri = format!("/api/{}", PROJECT_NAME);
@@ -195,7 +195,7 @@ mod tests {
     #[tokio::test]
     async fn delete_project_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         database.project_create(PROJECT_NAME)?;
 
         let app = create_routes(database);
@@ -215,7 +215,7 @@ mod tests {
     #[tokio::test]
     async fn delete_project_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database);
 
         let uri = format!("/api/{}", PROJECT_NAME);

@@ -46,6 +46,7 @@ fn get_github_token(terminal: &Terminal) -> anyhow::Result<AccessToken> {
         .exchange_device_code()
         .unwrap()
         .add_scope(Scope::new("read:user".to_string()))
+        .add_scope(Scope::new("user:email".to_string()))
         .request(http_client)
         .map_err(|err| err.to_string())
         .unwrap();

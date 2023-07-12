@@ -1,6 +1,6 @@
 use crate::{
     bindgen,
-    database::{Database, Function},
+    database::wasmstore::{Function, Wasmstore},
     errors::Error,
 };
 use axum::{
@@ -17,7 +17,7 @@ use std::{
 
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
-pub fn create_routes(database: Arc<Database>) -> Router {
+pub fn create_routes(database: Arc<Wasmstore>) -> Router {
     Router::new()
         .route(
             "/api/:project_name/:function_name",
@@ -29,10 +29,10 @@ pub fn create_routes(database: Arc<Database>) -> Router {
 
 async fn create_function(
     Path((project_name, function_name)): Path<(String, String)>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
 ) -> Result<StatusCode, Error> {
-    if !database.project_exists(&project_name)? {
+    if !wasmstore.project_exists(&project_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
 
@@ -43,18 +43,18 @@ async fn create_function(
         hash: hash(&project_name, &function_name, &function_dto.wasm),
     };
 
-    database.function_create(&function)?;
+    wasmstore.function_create(&function)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
 async fn delete_function(
     Path((project_name, function_name)): Path<(String, String)>,
-    State(database): State<Arc<Database>>,
+    State(wasmstore): State<Arc<Wasmstore>>,
 ) -> Result<StatusCode, Error> {
-    if !database.function_exists(&project_name, &function_name)? {
+    if !wasmstore.function_exists(&project_name, &function_name)? {
         return Ok(StatusCode::NOT_FOUND);
     }
-    database.function_delete(&project_name, &function_name)?;
+    wasmstore.function_delete(&project_name, &function_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -102,7 +102,7 @@ mod tests {
     #[tokio::test]
     async fn create_function_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
@@ -123,7 +123,7 @@ mod tests {
     #[tokio::test]
     async fn create_function_project_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database);
 
         let uri = format!("/api/{}/{}", PROJECT_NAME, FUNCTION_NAME);
@@ -143,7 +143,7 @@ mod tests {
     #[tokio::test]
     async fn delete_function_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
@@ -163,7 +163,7 @@ mod tests {
     #[tokio::test]
     async fn delete_function_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         database.project_create(PROJECT_NAME)?;
@@ -182,7 +182,7 @@ mod tests {
     #[tokio::test]
     async fn delete_function_project_not_found() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
-        let database = Arc::new(Database::new(temp_dir.path().join(DATABASE_NAME))?);
+        let database = Arc::new(Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?);
         let app = create_routes(database.clone());
 
         let uri = format!("/api/{}/{}", PROJECT_NAME, FUNCTION_NAME);
