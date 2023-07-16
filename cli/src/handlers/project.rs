@@ -61,7 +61,7 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
     let project_exists = client.project_exists()?;
 
     if project_exists {
-        remote_modules = client.project_get()?;
+        remote_modules = client.project_get()?.functions;
     }
 
     let diffs = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
@@ -100,7 +100,6 @@ fn deploy_modules(
 ) -> anyhow::Result<()> {
     let mut index = 1;
     let length = module_diff.create.len() + module_diff.update.len() + module_diff.remove.len();
-
     for (module_name, wasm) in &module_diff.create {
         let prefix = format!("[{}/{}]", index, length);
         let message = format!("Creating {}", &module_name);
@@ -116,7 +115,7 @@ fn deploy_modules(
         let message = format!("Updating {}", &module_name);
         let spinner = term.spinner_with_prefix(prefix, &message);
 
-        client.module_create(module_name, wasm)?;
+        client.module_update(module_name, wasm)?;
         spinner.finish_with_message(message);
         index += 1;
     }

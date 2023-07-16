@@ -46,6 +46,7 @@ fn get_github_token(terminal: &Terminal) -> anyhow::Result<AccessToken> {
         .exchange_device_code()
         .unwrap()
         .add_scope(Scope::new("read:user".to_string()))
+        .add_scope(Scope::new("user:email".to_string()))
         .request(http_client)
         .map_err(|err| err.to_string())
         .unwrap();
@@ -73,11 +74,12 @@ pub fn login(client: &NoopsClient, terminal: &Terminal, path: &Path) -> anyhow::
 }
 
 pub fn get_jwt(path: &Path) -> anyhow::Result<Option<String>> {
+    let path = path.join(JWT_FILE_NAME);
     if !path.exists() {
         return Ok(None);
     }
     let mut jwt = String::default();
-    let mut file = File::open(path.join(JWT_FILE_NAME))?;
+    let mut file = File::open(path)?;
     file.read_to_string(&mut jwt)?;
     Ok(Some(jwt))
 }

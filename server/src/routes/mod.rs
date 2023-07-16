@@ -1,18 +1,38 @@
+// https://docs.rs/axum/0.6.10/axum/extract/struct.State.html#substates
+
 mod auth;
 mod execute;
-mod functions;
+mod function;
 mod project;
 
-use axum::{middleware, Router};
-use std::sync::Arc;
+use crate::database::{wasmstore::WasmStore, Database};
+use axum::{extract::FromRef, middleware, Router};
 
-use crate::database::Database;
+#[derive(Debug, Clone)]
+pub struct AppState {
+    database: Database,
+    wasmstore: WasmStore,
+}
 
-pub fn create_routes(database: Arc<Database>) -> Router {
+impl FromRef<AppState> for Database {
+    fn from_ref(app_state: &AppState) -> Database {
+        app_state.database.clone()
+    }
+}
+
+pub fn create_routes(database: Database, wasmstore: WasmStore) -> Router {
+    let state = AppState {
+        database: database.clone(),
+        wasmstore,
+    };
+
     Router::new()
-        .merge(project::create_routes(database.clone()))
-        .merge(functions::create_routes(database.clone()))
-        .route_layer(middleware::from_fn(auth::auth_middleware)) //This activates the auth middleware
-        .merge(execute::create_routes(database))
-        .merge(auth::create_routes())
+        .merge(project::create_routes(state.clone()))
+        .merge(function::create_routes(state.clone()))
+        .route_layer(middleware::from_fn_with_state(
+            state.database.clone(),
+            auth::auth_middleware,
+        ))
+        .merge(auth::create_routes(state.clone()))
+        .merge(execute::create_routes(state))
 }

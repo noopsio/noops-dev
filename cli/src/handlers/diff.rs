@@ -61,8 +61,7 @@ impl ModuleDiff {
                 let wasm = std::fs::read(module_out_path)?;
                 match remote_module {
                     Some(remote_module) => {
-                        if remote_module.hash != Self::hash(project_name, &local_module.name, &wasm)
-                        {
+                        if remote_module.hash != Self::hash(&wasm) {
                             update.push((local_module.name.clone(), wasm));
                         }
                     }
@@ -92,12 +91,10 @@ impl ModuleDiff {
         Ok(remove)
     }
 
-    fn hash(project_name: &str, module_name: &str, wasm: &[u8]) -> u64 {
+    fn hash(wasm: &[u8]) -> String {
         let mut hasher = DefaultHasher::new();
-        project_name.hash(&mut hasher);
-        module_name.hash(&mut hasher);
         wasm.hash(&mut hasher);
-        hasher.finish()
+        hasher.finish().to_string()
     }
 
     pub fn has_changes(&self) -> bool {

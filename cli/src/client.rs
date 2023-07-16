@@ -1,5 +1,5 @@
 use dtos::GetJWTDTO;
-use reqwest::blocking::{Client, Response};
+use reqwest::blocking::Client;
 use reqwest::{header::AUTHORIZATION, StatusCode, Url};
 
 pub struct NoopsClient {
@@ -26,7 +26,7 @@ impl NoopsClient {
         Ok(response.jwt)
     }
 
-    pub fn project_get(&self) -> anyhow::Result<Vec<dtos::GetFunctionDTO>> {
+    pub fn project_get(&self) -> anyhow::Result<dtos::GetProjectDTO> {
         let url = self.get_project_path()?;
         let jwt = self.jwt.clone().unwrap();
         let response = self
@@ -34,8 +34,14 @@ impl NoopsClient {
             .get(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .send()?;
-        //FIXME
-        //Self::handle_response(response)?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
         Ok(response.json()?)
     }
 
@@ -48,7 +54,14 @@ impl NoopsClient {
             .post(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .send()?;
-        Self::handle_response(response)?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
         Ok(())
     }
 
@@ -61,7 +74,14 @@ impl NoopsClient {
             .delete(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .send()?;
-        Self::handle_response(response)?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
         Ok(())
     }
 
@@ -73,6 +93,15 @@ impl NoopsClient {
             .get(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .send()?;
+
+        if !response.status().is_success() && response.status() != StatusCode::NOT_FOUND {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?
+            );
+        }
+
         Ok(response.status().is_success() && response.status() != StatusCode::NOT_FOUND)
     }
 
@@ -92,7 +121,37 @@ impl NoopsClient {
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .json(&payload)
             .send()?;
-        Self::handle_response(response)?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
+        Ok(())
+    }
+
+    pub fn module_update(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
+        let url = self.get_module_path(module_name)?;
+        let payload = dtos::CreateFunctionDTO {
+            wasm: wasm.to_owned(),
+        };
+        let jwt = self.jwt.clone().unwrap();
+        let response = self
+            .client
+            .put(url)
+            .header(AUTHORIZATION, format!("Bearer {}", jwt))
+            .json(&payload)
+            .send()?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
         Ok(())
     }
 
@@ -105,7 +164,14 @@ impl NoopsClient {
             .delete(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .send()?;
-        Self::handle_response(response)?;
+
+        if !response.status().is_success() {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?,
+            );
+        }
         Ok(())
     }
 
@@ -114,17 +180,5 @@ impl NoopsClient {
             .base_url
             .join(&format!("{}/", self.project))?
             .join(module_name)?)
-    }
-
-    fn handle_response(response: Response) -> anyhow::Result<()> {
-        if !response.status().is_success() {
-            let error_message = format!(
-                "Request failed with status code {}: {}",
-                response.status(),
-                response.text()?
-            );
-            anyhow::bail!(error_message);
-        }
-        Ok(())
     }
 }
