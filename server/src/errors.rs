@@ -9,9 +9,27 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Token error: {}", .0)]
-    TokenError(#[from] jsonwebtoken::errors::Error),
+    Token(#[from] jsonwebtoken::errors::Error),
     #[error("Unknown error: {}", .0)]
     Unknown(#[from] anyhow::Error),
+
+    #[error("User not registered")]
+    UserNotRegistered,
+
+    #[error("User not found")]
+    UserNotFound,
+
+    #[error("User already exists")]
+    UserAlreadyExists,
+
+    #[error("Project already exists")]
+    ProjectAlreadyExists,
+
+    #[error("Project not found")]
+    ProjectNotFound,
+
+    #[error("Function not found")]
+    FunctionNotFound,
 }
 
 impl IntoResponse for Error {
@@ -19,25 +37,39 @@ impl IntoResponse for Error {
         tracing::error!("{}", self);
 
         let (status, error_message) = match self {
-            Error::TokenError(err) => match err.into_kind() {
+            Error::Token(err) => match err.into_kind() {
                 jsonwebtoken::errors::ErrorKind::InvalidToken => {
-                    (StatusCode::UNAUTHORIZED, "Invalid Token".to_string())
+                    (StatusCode::UNAUTHORIZED, "Invalid token".to_string())
                 }
                 jsonwebtoken::errors::ErrorKind::InvalidSignature => {
-                    (StatusCode::UNAUTHORIZED, "Invalid Signature".to_string())
+                    (StatusCode::UNAUTHORIZED, "Invalid signature".to_string())
                 }
 
                 jsonwebtoken::errors::ErrorKind::InvalidIssuer => {
-                    (StatusCode::UNAUTHORIZED, "Invalid Issuer".to_string())
+                    (StatusCode::UNAUTHORIZED, "Invalid issuer".to_string())
                 }
                 jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
-                    (StatusCode::UNAUTHORIZED, "Token Expired".to_string())
+                    (StatusCode::UNAUTHORIZED, "Token expired".to_string())
                 }
                 _ => (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal Server Error".to_string(),
+                    "Internal server error".to_string(),
                 ),
             },
+
+            Error::UserNotRegistered => {
+                (StatusCode::UNAUTHORIZED, "User not registered".to_string())
+            }
+            Error::UserNotFound => (StatusCode::NOT_FOUND, "User not found".to_string()),
+            Error::ProjectNotFound => (StatusCode::NOT_FOUND, "Project not found".to_string()),
+            Error::FunctionNotFound => (StatusCode::NOT_FOUND, "Function not found".to_string()),
+
+            Error::UserAlreadyExists => (StatusCode::CONFLICT, "User already exists".to_string()),
+
+            Error::ProjectAlreadyExists => {
+                (StatusCode::CONFLICT, "Project already exists".to_string())
+            }
+
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal Server Error".to_string(),

@@ -1,21 +1,21 @@
-use crate::errors::Error;
+use crate::{database::sqlite_uuid::UUID, errors::Error};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Jwt {
     iss: String,
-    pub sub: i32,
+    pub sub: String,
     iat: u64,
     exp: u64,
 }
 
 impl Jwt {
-    pub fn new(iss: &str, sub: i32, iat: u64, exp_delta: u64) -> Self {
+    pub fn new(iss: &str, sub: UUID, iat: u64, exp_delta: u64) -> Self {
         Jwt {
             iss: iss.to_string(),
-            sub,
+            sub: sub.to_string(),
             iat,
             exp: iat + exp_delta,
         }
@@ -49,18 +49,19 @@ mod tests {
 
     const JWT_SECRET: &str = "JWT_SECRET";
     const ISSUER: &str = "TEST_ISSUER";
-    const SUBJECT: i32 = 1000;
     const EXPIRED_DELTA: u64 = 600;
 
     lazy_static! {
-        pub static ref ENCODING_KEY: EncodingKey = EncodingKey::from_secret(JWT_SECRET.as_bytes());
-        pub static ref DECODING_KEY: DecodingKey = DecodingKey::from_secret(JWT_SECRET.as_bytes());
+        static ref ENCODING_KEY: EncodingKey = EncodingKey::from_secret(JWT_SECRET.as_bytes());
+        static ref DECODING_KEY: DecodingKey = DecodingKey::from_secret(JWT_SECRET.as_bytes());
+        static ref SUBJECT: UUID = UUID::new();
     }
 
     #[test]
     fn encode_jwt_decocde_success() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at();
-        let jwt = Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
+
+        let jwt = Jwt::new(ISSUER, *SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
         let _ = Jwt::decode(&jwt, ISSUER, &DECODING_KEY)?;
         Ok(())
     }
@@ -71,7 +72,7 @@ mod tests {
         let decode_result = Jwt::decode(jwt, ISSUER, &DECODING_KEY);
         assert!(decode_result.is_err());
 
-        if let Error::TokenError(err) = decode_result.unwrap_err() {
+        if let Error::Token(err) = decode_result.unwrap_err() {
             assert_eq!(err.kind(), &jsonwebtoken::errors::ErrorKind::InvalidToken);
             return Ok(());
         }
@@ -82,13 +83,13 @@ mod tests {
     fn decode_invalid_signature() -> anyhow::Result<()> {
         let issued_at = Jwt::create_issued_at();
 
-        let jwt = Jwt::new(ISSUER, SUBJECT, issued_at, EXPIRED_DELTA)
+        let jwt = Jwt::new(ISSUER, *SUBJECT, issued_at, EXPIRED_DELTA)
             .encode(&EncodingKey::from_secret("INVALID_SECRET".as_bytes()))?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
         assert!(decode_result.is_err());
 
-        if let Error::TokenError(err) = decode_result.unwrap_err() {
+        if let Error::Token(err) = decode_result.unwrap_err() {
             assert_eq!(
                 err.kind(),
                 &jsonwebtoken::errors::ErrorKind::InvalidSignature
@@ -103,13 +104,13 @@ mod tests {
         let issued_at = Jwt::create_issued_at();
 
         let jwt =
-            Jwt::new("INVALID_ISSUER", SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
+            Jwt::new("INVALID_ISSUER", *SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
 
         assert!(decode_result.is_err());
 
-        if let Error::TokenError(err) = decode_result.unwrap_err() {
+        if let Error::Token(err) = decode_result.unwrap_err() {
             assert_eq!(err.kind(), &jsonwebtoken::errors::ErrorKind::InvalidIssuer);
             return Ok(());
         }
@@ -121,13 +122,13 @@ mod tests {
         let issued_at = Jwt::create_issued_at() - 900;
 
         let jwt =
-            Jwt::new("INVALID_ISSUER", SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
+            Jwt::new("INVALID_ISSUER", *SUBJECT, issued_at, EXPIRED_DELTA).encode(&ENCODING_KEY)?;
 
         let decode_result = Jwt::decode(&jwt, ISSUER, &DECODING_KEY);
 
         assert!(decode_result.is_err());
 
-        if let Error::TokenError(err) = decode_result.unwrap_err() {
+        if let Error::Token(err) = decode_result.unwrap_err() {
             assert_eq!(
                 err.kind(),
                 &jsonwebtoken::errors::ErrorKind::ExpiredSignature

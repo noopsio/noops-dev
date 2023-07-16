@@ -6,10 +6,15 @@ pub struct CreateFunctionDTO {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
-pub struct GetFunctionDTO {
-    pub project: String,
+pub struct GetProjectDTO {
     pub name: String,
-    pub hash: u64,
+    pub functions: Vec<GetFunctionDTO>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
+pub struct GetFunctionDTO {
+    pub name: String,
+    pub hash: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]

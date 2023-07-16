@@ -8,12 +8,11 @@ mod routes;
 
 use axum::Server;
 use database::Database;
-use std::sync::Arc;
 use std::{net::SocketAddr, path::Path};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{self, layer::SubscriberExt, util::SubscriberInitExt};
 
-const DATABASE_PATH: &str = "noops.db";
+const WASMSTORE_PREFIX: &str = "./wasmstore";
 const DATABASE_CONNECTION: &str = "./noops.sqlite";
 
 #[tokio::main]
@@ -26,10 +25,10 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let wasmstore = Arc::new(database::wasmstore::Wasmstore::new(DATABASE_PATH)?);
-    let database = Arc::new(Database::new(Path::new(DATABASE_CONNECTION)));
+    let wasmstore = database::wasmstore::WasmStore::new(Path::new(WASMSTORE_PREFIX))?;
+    let database = Database::new(Path::new(DATABASE_CONNECTION));
 
-    let app = routes::create_routes(wasmstore, database).layer(TraceLayer::new_for_http());
+    let app = routes::create_routes(database, wasmstore).layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("listening on {}", addr);
     Server::bind(&addr)

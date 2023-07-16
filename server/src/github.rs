@@ -17,7 +17,6 @@ pub struct GithubUser {
 #[derive(Deserialize)]
 struct User {
     id: i32,
-    name: String,
 }
 
 #[derive(Deserialize)]

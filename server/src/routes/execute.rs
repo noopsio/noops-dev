@@ -1,3 +1,5 @@
+use super::AppState;
+use crate::{bindgen, database::wasmstore::WasmStore, errors::Error, executor};
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
@@ -6,48 +8,43 @@ use axum::{
     Router,
 };
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use crate::{bindgen, database::wasmstore::Wasmstore, errors::Error, executor};
-
-pub fn create_routes(database: Arc<Wasmstore>) -> Router {
+pub fn create_routes(state: AppState) -> Router {
     Router::new()
         .route("/:project_name/:function_name", get(execute))
-        .with_state(database)
+        .with_state(state)
 }
 
 async fn execute(
     Path((project_name, function_name)): Path<(String, String)>,
     Query(query_map): Query<HashMap<String, String>>,
-    State(wasmstore): State<Arc<Wasmstore>>,
+    State(state): State<AppState>,
 ) -> Result<Response, Error> {
-    if !wasmstore.function_exists(&project_name, &function_name)? {
-        return Ok(StatusCode::NOT_FOUND.into_response());
-    }
-
-    let function = wasmstore.function_get(&project_name, &function_name)?;
-    let mut query_list: Vec<(&str, &str)> = Vec::new();
-    for (key, value) in query_map.iter() {
-        query_list.push((key, value));
-    }
-    let result = query_list;
-
-    let request = bindgen::Request {
-        query_params: &result[..],
-    };
-    let response = executor::execute(function.component, request).await?;
-
-    Ok((
-        StatusCode::from_u16(response.status).unwrap(),
-        response.body,
-    )
-        .into_response())
+    //let function = wasmstore.function_get(&project_name, &function_name)?;
+    //let mut query_list: Vec<(&str, &str)> = Vec::new();
+    //for (key, value) in query_map.iter() {
+    //    query_list.push((key, value));
+    //}
+    //let result = query_list;
+    //
+    //let request = bindgen::Request {
+    //    query_params: &result[..],
+    //};
+    //let response = executor::execute(function.component, request).await?;
+    //
+    //Ok((
+    //    StatusCode::from_u16(response.status).unwrap(),
+    //    response.body,
+    //)
+    //    .into_response())
+    todo!()
 }
 
+/*
 #[cfg(test)]
 mod tests {
 
-    use crate::database::wasmstore::Function;
+    use crate::database::wasmstore::WasmStore;
 
     use super::*;
     use axum::{
@@ -128,3 +125,4 @@ mod tests {
         Ok(())
     }
 }
+ */

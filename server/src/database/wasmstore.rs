@@ -1,202 +1,141 @@
-use jammdb::{Data, DB};
-use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::{Path, PathBuf},
+};
 
-const PROJECT_BUCKET: &str = "PROJECTS";
+use crate::errors::Error::{
+    self, FunctionNotFound, ProjectAlreadyExists, ProjectNotFound, UserAlreadyExists, UserNotFound,
+};
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
-pub struct Function {
-    pub name: String,
-    pub project: String,
-    pub component: Vec<u8>,
-    pub hash: u64,
+#[derive(Debug, Clone)]
+pub struct WasmStore {
+    prefix: PathBuf,
 }
 
-pub struct Wasmstore {
-    database: DB,
-}
-
-impl Wasmstore {
-    pub fn new(path: impl AsRef<Path>) -> anyhow::Result<Wasmstore> {
-        let database = DB::open(path)?;
-        let tx = database.tx(true)?;
-
-        if tx.buckets().count() == 0 {
-            tx.create_bucket(PROJECT_BUCKET)?;
-        }
-
-        tx.commit()?;
-        Ok(Wasmstore { database })
+impl WasmStore {
+    pub fn new(path: &Path) -> anyhow::Result<Self> {
+        fs::create_dir_all(path)?;
+        Ok(Self {
+            prefix: path.to_path_buf(),
+        })
     }
 
-    pub fn project_exists(&self, project_name: &str) -> anyhow::Result<bool> {
-        let tx = self.database.tx(false)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        match projects.get_bucket(project_name) {
-            Ok(_) => Ok(true),
-            Err(_) => Ok(false),
+    pub fn create_user(&self, user: &str) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if user_path.exists() {
+            return Err(UserAlreadyExists);
         }
-    }
 
-    pub fn project_create(&self, project_name: &str) -> anyhow::Result<()> {
-        let tx = self.database.tx(true)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        let _ = projects.create_bucket(project_name)?;
-        tx.commit()?;
+        fs::create_dir(user_path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn project_delete(&self, project_name: &str) -> anyhow::Result<()> {
-        let tx = self.database.tx(true)?;
-        let root = tx.get_bucket(PROJECT_BUCKET)?;
-        root.delete_bucket(project_name)?;
-        tx.commit()?;
-        Ok(())
-    }
-
-    pub fn project_get(&self, project_name: &str) -> anyhow::Result<Vec<Function>> {
-        let tx = self.database.tx(false)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        let all_functions = projects.get_bucket(project_name)?;
-
-        let mut functions: Vec<Function> = Vec::new();
-        for data in all_functions.into_iter() {
-            if let Data::KeyValue(kv) = data {
-                let function: Function = bincode::deserialize(kv.value())?;
-                functions.push(function);
-            }
+    pub fn _delete_user(&self, user: &str) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
         }
-        Ok(functions)
-    }
-
-    pub fn function_exists(&self, project_name: &str, function_name: &str) -> anyhow::Result<bool> {
-        let tx = self.database.tx(false)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        return if let Ok(project) = projects.get_bucket(project_name) {
-            return Ok(project.get(function_name).is_some());
-        } else {
-            Ok(false)
-        };
-    }
-
-    pub fn function_create(&self, function: &Function) -> anyhow::Result<()> {
-        let tx = self.database.tx(true)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        let project = projects.get_bucket(function.project.clone())?;
-        project.put(function.name.clone(), bincode::serialize(&function)?)?;
-        tx.commit()?;
+        fs::remove_dir_all(user_path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn function_get(
+    pub fn create_project(&self, user: &str, project: &str) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
+        }
+
+        let project_path = user_path.join(project);
+        if project_path.exists() {
+            return Err(ProjectAlreadyExists);
+        }
+
+        fs::create_dir(project_path).map_err(|err| anyhow::anyhow!(err))?;
+        Ok(())
+    }
+
+    pub fn delete_project(&self, user: &str, project: &str) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
+        }
+
+        let project_path = user_path.join(project);
+        if !project_path.exists() {
+            return Err(ProjectNotFound);
+        }
+
+        fs::remove_dir_all(project_path).map_err(|err| anyhow::anyhow!(err))?;
+        Ok(())
+    }
+
+    pub fn create_function(
         &self,
-        project_name: &str,
-        function_name: &str,
-    ) -> anyhow::Result<Function> {
-        let tx = self.database.tx(false)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        let functions = projects.get_bucket(project_name)?;
-        let kv = functions.get_kv(function_name).unwrap();
-        let data = kv.value();
-        Ok(bincode::deserialize(data)?)
-    }
+        user: &str,
+        project: &str,
+        function: &str,
+        wasm: &[u8],
+    ) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
+        }
 
-    pub fn function_delete(&self, project_name: &str, function_name: &str) -> anyhow::Result<()> {
-        let tx = self.database.tx(true)?;
-        let projects = tx.get_bucket(PROJECT_BUCKET)?;
-        let functions = projects.get_bucket(project_name)?;
+        let project_path = user_path.join(project);
+        if !project_path.exists() {
+            return Err(ProjectNotFound);
+        }
 
-        functions.delete(function_name)?;
-        tx.commit()?;
-        Ok(())
-    }
-}
+        let function_path = project_path.join(function);
 
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-    use lazy_static::lazy_static;
-    use tempfile::tempdir;
-
-    const DATABASE_NAME: &str = "noops.test_db";
-    const PROJECT_NAME: &str = "test_project";
-    const FUNCTION_NAME: &str = "test_function";
-
-    lazy_static! {
-        static ref FUNCTION: Function = Function {
-            name: FUNCTION_NAME.to_string(),
-            project: PROJECT_NAME.to_string(),
-            ..Default::default()
-        };
-    }
-
-    #[test]
-    fn new() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
-        let tx = db.database.tx(false)?;
-        let _ = tx.get_bucket(PROJECT_BUCKET)?;
+        let mut file = File::create(function_path).map_err(|err| anyhow::anyhow!(err))?;
+        file.write_all(wasm).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    #[test]
-    fn project_create() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
+    pub fn delete_function(&self, user: &str, project: &str, function: &str) -> Result<(), Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
+        }
 
-        db.project_create(PROJECT_NAME)?;
-        assert!(db.project_exists(PROJECT_NAME)?);
+        let project_path = user_path.join(project);
+        if !project_path.exists() {
+            return Err(ProjectNotFound);
+        }
+
+        let function_path = project_path.join(function);
+        if !project_path.exists() {
+            return Err(FunctionNotFound);
+        }
+
+        fs::remove_file(function_path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    #[test]
-    fn project_delete() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
+    pub fn read_function(
+        &self,
+        user: &str,
+        project: &str,
+        function: &str,
+    ) -> Result<Vec<u8>, Error> {
+        let user_path = self.prefix.join(user);
+        if !user_path.exists() {
+            return Err(UserNotFound);
+        }
 
-        db.project_create(PROJECT_NAME)?;
-        assert!(db.project_exists(PROJECT_NAME)?);
+        let project_path = user_path.join(project);
+        if !project_path.exists() {
+            return Err(ProjectNotFound);
+        }
 
-        db.project_delete(PROJECT_NAME)?;
-        assert!(!db.project_exists(PROJECT_NAME)?);
-        Ok(())
-    }
+        let function_path = user_path.join(function);
+        if !project_path.exists() {
+            return Err(FunctionNotFound);
+        }
 
-    #[test]
-    fn project_get() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
-
-        db.project_create(PROJECT_NAME)?;
-        db.function_create(&FUNCTION)?;
-        let functions = db.project_get(PROJECT_NAME)?;
-        assert_eq!(vec![FUNCTION.clone()], functions);
-        Ok(())
-    }
-
-    #[test]
-    fn function_create() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
-
-        db.project_create(PROJECT_NAME)?;
-        db.function_create(&FUNCTION)?;
-        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
-        Ok(())
-    }
-
-    #[test]
-    fn function_delete() -> anyhow::Result<()> {
-        let temp_dir = tempdir()?;
-        let db = Wasmstore::new(temp_dir.path().join(DATABASE_NAME))?;
-
-        db.project_create(PROJECT_NAME)?;
-        db.function_create(&FUNCTION)?;
-        assert!(db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
-
-        db.function_delete(PROJECT_NAME, FUNCTION_NAME)?;
-        assert!(!db.function_exists(PROJECT_NAME, FUNCTION_NAME)?);
-        Ok(())
+        let wasm = fs::read(function_path).map_err(|err| anyhow::anyhow!(err))?;
+        Ok(wasm)
     }
 }

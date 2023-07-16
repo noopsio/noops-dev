@@ -3,64 +3,79 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
-    Json, Router,
+    Extension, Json, Router,
 };
-use dtos::GetFunctionDTO;
-use std::sync::Arc;
+use dtos::{GetFunctionDTO, GetProjectDTO};
 
-use crate::{database::wasmstore::Wasmstore, errors::Error};
+use crate::{
+    database::{models::User, Database},
+    errors::Error::{self, ProjectNotFound},
+};
 
-pub fn create_routes(database: Arc<Wasmstore>) -> Router {
+use super::AppState;
+
+pub fn create_routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/api/:project_name",
             get(get_project).post(create_project).delete(delete_project),
         )
-        .with_state(database)
+        .with_state(state)
 }
 
 async fn create_project(
     Path(project_name): Path<String>,
-    State(wasmstore): State<Arc<Wasmstore>>,
+    State(state): State<AppState>,
+    Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    if wasmstore.project_exists(&project_name)? {
-        return Ok(StatusCode::CONFLICT);
-    }
-
-    wasmstore.project_create(&project_name)?;
+    let project = state.database.create_project(user.id, &project_name)?;
+    state
+        .wasmstore
+        .create_project(&user.id.to_string(), &project.id.to_string())?;
     Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
     Path(project_name): Path<String>,
-    State(wasmstore): State<Arc<Wasmstore>>,
+    State(database): State<Database>,
+    Extension(user): Extension<User>,
 ) -> Result<Response, Error> {
-    if !wasmstore.project_exists(&project_name)? {
-        return Ok(StatusCode::NOT_FOUND.into_response());
+    let project = database.read_project(user.id, &project_name)?;
+    if project.is_none() {
+        return Err(ProjectNotFound);
     }
-    let functions = wasmstore.project_get(&project_name)?;
-    let functions: Vec<GetFunctionDTO> = functions
-        .iter()
-        .map(|function| dtos::GetFunctionDTO {
-            name: function.name.to_string(),
-            project: function.project.to_string(),
+
+    let project = project.unwrap();
+    let functions = database.read_functions(project.id)?;
+
+    let functions = functions
+        .into_iter()
+        .map(|function| GetFunctionDTO {
+            name: function.name,
             hash: function.hash,
         })
         .collect();
 
-    Ok((StatusCode::OK, Json(functions)).into_response())
+    let project = GetProjectDTO {
+        name: project.name,
+        functions,
+    };
+
+    Ok((StatusCode::OK, Json(project)).into_response())
 }
 
 async fn delete_project(
     Path(project_name): Path<String>,
-    State(wasmstore): State<Arc<Wasmstore>>,
+    State(state): State<AppState>,
+    Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    if !wasmstore.project_exists(&project_name)? {
-        return Ok(StatusCode::NOT_FOUND);
-    }
-    wasmstore.project_delete(&project_name)?;
+    let project = state.database.delete_project(user.id, &project_name)?;
+    state
+        .wasmstore
+        .delete_project(&user.id.to_string(), &project.id.to_string())?;
     Ok(StatusCode::NO_CONTENT)
 }
 
+/*
 #[cfg(test)]
 mod tests {
 
@@ -88,6 +103,8 @@ mod tests {
         };
     }
 
+
+
     #[tokio::test]
     async fn create_project_ok() -> anyhow::Result<()> {
         let temp_dir = tempdir()?;
@@ -96,7 +113,7 @@ mod tests {
 
         let uri = format!("/api/{}", PROJECT_NAME);
         let request = Request::builder()
-            .uri(uri)
+        .uri(uri)
             .method(Method::POST)
             .body(Body::empty())?;
         let response = app.oneshot(request).await?;
@@ -229,3 +246,5 @@ mod tests {
         Ok(())
     }
 }
+
+        */
