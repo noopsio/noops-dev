@@ -20,9 +20,15 @@ impl FromRef<AppState> for Database {
     }
 }
 
+impl FromRef<AppState> for WasmStore {
+    fn from_ref(app_state: &AppState) -> WasmStore {
+        app_state.wasmstore.clone()
+    }
+}
+
 pub fn create_routes(database: Database, wasmstore: WasmStore) -> Router {
     let state = AppState {
-        database: database.clone(),
+        database,
         wasmstore,
     };
 

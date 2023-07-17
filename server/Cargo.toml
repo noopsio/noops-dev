@@ -29,6 +29,7 @@ diesel = { version = "2.1.0", features = ["sqlite", "r2d2", "returning_clauses_f
 dotenvy = "0.15.7"
 reqwest = {version = "0.11.18", features = ["json"] }
 uuid = {version = "1.4.0", features = ["std", "v1", "v7", "rng"] }
+nanoid = "0.4.0"
 
 
 

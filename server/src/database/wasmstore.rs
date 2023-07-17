@@ -130,7 +130,7 @@ impl WasmStore {
             return Err(ProjectNotFound);
         }
 
-        let function_path = user_path.join(function);
+        let function_path = project_path.join(function);
         if !project_path.exists() {
             return Err(FunctionNotFound);
         }

@@ -117,7 +117,7 @@ impl NoopsClient {
         let jwt = self.jwt.clone().unwrap();
         let response = self
             .client
-            .post(url)
+            .put(url)
             .header(AUTHORIZATION, format!("Bearer {}", jwt))
             .json(&payload)
             .send()?;

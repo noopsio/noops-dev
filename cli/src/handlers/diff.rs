@@ -22,12 +22,10 @@ pub struct ModuleDiff {
 
 impl ModuleDiff {
     pub fn new(
-        project_name: &str,
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
     ) -> anyhow::Result<Self> {
-        let (create, update, not_build) =
-            Self::create_and_update(project_name, local_modules, remote_modules)?;
+        let (create, update, not_build) = Self::create_and_update(local_modules, remote_modules)?;
         let remove = Self::remove(local_modules, remote_modules)?;
         Ok(Self {
             create,
@@ -38,7 +36,6 @@ impl ModuleDiff {
     }
 
     fn create_and_update(
-        project_name: &str,
         local_modules: &[Module],
         remote_modules: &[GetFunctionDTO],
     ) -> anyhow::Result<(Vec<Create>, Vec<Update>, Vec<NotBuild>)> {
