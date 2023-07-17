@@ -11,33 +11,32 @@ use std::collections::HashMap;
 
 pub fn create_routes(state: AppState) -> Router {
     Router::new()
-        .route("/:project_name/:function_name", get(execute))
+        .route("/:user_id/:project_id/:function_id", get(execute))
         .with_state(state)
 }
 
 async fn execute(
-    Path((project_name, function_name)): Path<(String, String)>,
+    Path((user_id, project_id, function_id)): Path<(String, String, String)>,
     Query(query_map): Query<HashMap<String, String>>,
-    State(state): State<AppState>,
+    State(wasmstore): State<WasmStore>,
 ) -> Result<Response, Error> {
-    //let function = wasmstore.function_get(&project_name, &function_name)?;
-    //let mut query_list: Vec<(&str, &str)> = Vec::new();
-    //for (key, value) in query_map.iter() {
-    //    query_list.push((key, value));
-    //}
-    //let result = query_list;
-    //
-    //let request = bindgen::Request {
-    //    query_params: &result[..],
-    //};
-    //let response = executor::execute(function.component, request).await?;
-    //
-    //Ok((
-    //    StatusCode::from_u16(response.status).unwrap(),
-    //    response.body,
-    //)
-    //    .into_response())
-    todo!()
+    let function = wasmstore.read_function(&user_id, &project_id, &function_id)?;
+    let mut query_list: Vec<(&str, &str)> = Vec::new();
+    for (key, value) in query_map.iter() {
+        query_list.push((key, value));
+    }
+    let result = query_list;
+
+    let request = bindgen::Request {
+        query_params: &result[..],
+    };
+    let response = executor::execute(function, request).await?;
+
+    Ok((
+        StatusCode::from_u16(response.status).unwrap(),
+        response.body,
+    )
+        .into_response())
 }
 
 /*

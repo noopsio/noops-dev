@@ -16,8 +16,7 @@ pub struct UUID(pub uuid::Uuid);
 
 impl UUID {
     pub fn new() -> Self {
-        let node_id: [u8; 6] = [1, 2, 3, 4, 5, 6];
-        Self(Uuid::now_v1(&node_id))
+        Self(Uuid::now_v7())
     }
 
     pub fn from_str(uuid: &str) -> Result<Self, Error> {

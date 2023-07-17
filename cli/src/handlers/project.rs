@@ -64,7 +64,7 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
         remote_modules = client.project_get()?.functions;
     }
 
-    let diffs = ModuleDiff::new(&config.project_name, &config.modules, &remote_modules)?;
+    let diffs = ModuleDiff::new(&config.modules, &remote_modules)?;
 
     if diffs.has_changes() {
         print_changes(&diffs, term)?;
