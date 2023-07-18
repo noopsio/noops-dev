@@ -1,4 +1,4 @@
-use crate::{database::models::User, errors::Error};
+use crate::{bindgen, database::models::User, errors::Error};
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
     http::StatusCode,
@@ -26,18 +26,17 @@ async fn create_function(
     Extension(user): Extension<User>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
 ) -> Result<StatusCode, Error> {
-    let function = state.database.create_function(
-        user.id,
-        &project_name,
-        function_name,
-        &function_dto.wasm,
-    )?;
+    let wasm = bindgen::create_component(&function_dto.wasm)?;
+
+    let function = state
+        .database
+        .create_function(user.id, &project_name, function_name, &wasm)?;
 
     state.wasmstore.create_function(
         &user.id.to_string(),
         &function.project_id.to_string(),
         &function.id.to_string(),
-        &function_dto.wasm,
+        &wasm,
     )?;
 
     Ok(StatusCode::NO_CONTENT)

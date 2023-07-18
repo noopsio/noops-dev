@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::errors::Error;
 
 #[derive(Debug, Clone, Copy, FromSqlRow, AsExpression, Hash, Eq, PartialEq)]
-#[sql_type = "Binary"]
+#[diesel(sql_type = Binary)]
 pub struct UUID(pub uuid::Uuid);
 
 impl UUID {

@@ -87,7 +87,7 @@ impl WasmStore {
             return Err(ProjectNotFound);
         }
 
-        let function_path = project_path.join(function);
+        let function_path = project_path.join(format!("{}.wasm", function));
 
         let mut file = File::create(function_path).map_err(|err| anyhow::anyhow!(err))?;
         file.write_all(wasm).map_err(|err| anyhow::anyhow!(err))?;
@@ -105,7 +105,7 @@ impl WasmStore {
             return Err(ProjectNotFound);
         }
 
-        let function_path = project_path.join(function);
+        let function_path = project_path.join(format!("{}.wasm", function));
         if !project_path.exists() {
             return Err(FunctionNotFound);
         }
@@ -130,7 +130,7 @@ impl WasmStore {
             return Err(ProjectNotFound);
         }
 
-        let function_path = project_path.join(function);
+        let function_path = project_path.join(format!("{}.wasm", function));
         if !project_path.exists() {
             return Err(FunctionNotFound);
         }
