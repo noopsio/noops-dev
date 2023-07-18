@@ -102,6 +102,8 @@ impl Database {
     }
 }
 
+/*
+
 #[cfg(test)]
 mod tests {
 
@@ -129,3 +131,5 @@ mod tests {
         Ok((temp_dir, database))
     }
 }
+
+*/

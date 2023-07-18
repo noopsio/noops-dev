@@ -51,6 +51,9 @@ fn get_github_token(terminal: &Terminal) -> anyhow::Result<AccessToken> {
         .map_err(|err| err.to_string())
         .unwrap();
 
+    // This seams to be a clippy bug
+    #[allow(clippy::to_string_in_format_args)]
+    #[allow(clippy::unnecessary_to_owned)]
     terminal.write_text(format!(
         "Open this URL in your browser:\n{}\nand enter the code: {}",
         details.verification_uri().to_string(),

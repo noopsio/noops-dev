@@ -1,0 +1,43 @@
+name: Rust
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install toolchain
+      uses: dsherret/rust-toolchain-file@v1
+
+    - name: Download dependencies
+      run: cargo fetch
+
+    - name: Check Server
+      run: |
+        cargo clippy -p noops-server -- -D warnings
+        cargo clippy --tests -p noops-server -- -D warnings
+
+    - name: Build Server
+      run: cargo build -p noops-server
+
+    - name: Test Server
+      run: cargo test -p noops-server
+
+    - name: Check CLI
+      run: |
+        cargo clippy -p noops -- -D warnings
+        cargo clippy --tests -p noops -- -D warnings
+
+    - name: Build CLI
+      run: cargo build -p noops
+
+    - name: Test CLI
+      run: cargo test -p noops
+
