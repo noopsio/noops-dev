@@ -52,8 +52,8 @@ fn get_github_token(terminal: &Terminal) -> anyhow::Result<AccessToken> {
         .unwrap();
 
     terminal.write_text(format!(
-        "Open this URL in your browser:\n{:?}\nand enter the code: {}",
-        details.verification_uri(),
+        "Open this URL in your browser:\n{}\nand enter the code: {}",
+        details.verification_uri().to_string(),
         details.user_code().secret()
     ))?;
 
