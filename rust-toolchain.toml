@@ -1,2 +1,4 @@
 [toolchain]
 channel = "nightly-2023-03-01"
+targets = [ "wasm32-unknown-unknown", "wasm32-wasi" ]
+components = [ "clippy" ]

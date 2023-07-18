@@ -109,9 +109,8 @@ mod tests {
     #[test]
     fn read_user_by_id_not_found() -> anyhow::Result<()> {
         let (_temp_dir, database) = setup()?;
-        let result = database.read_user_by_id(UUID::new());
-        // TODO Check which error
-        assert!(result.is_err());
+        let result = database.read_user_by_id(UUID::new())?;
+        assert!(result.is_none());
         Ok(())
     }
 

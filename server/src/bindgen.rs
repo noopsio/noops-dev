@@ -11,6 +11,7 @@ bindgen!({
     async: true
 });
 
+#[allow(clippy::derivable_impls)]
 impl Default for Request<'_> {
     fn default() -> Self {
         Self {

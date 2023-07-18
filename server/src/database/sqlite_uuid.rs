@@ -10,8 +10,9 @@ use uuid::Uuid;
 
 use crate::errors::Error;
 
-#[derive(Debug, Clone, Copy, FromSqlRow, AsExpression, Hash, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, FromSqlRow, AsExpression, Hash, Eq, PartialEq)]
 #[diesel(sql_type = Binary)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct UUID(pub uuid::Uuid);
 
 impl UUID {
