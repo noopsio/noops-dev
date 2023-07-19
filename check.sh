@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-
 if [[ -z "$1" || "$1" == "help" ]]; then
     script_name="$(basename "$0")"
     echo -e "Checks the code like the CI\n"
@@ -9,9 +8,9 @@ if [[ -z "$1" || "$1" == "help" ]]; then
     echo -e "\tserver"
     echo -e "\tcli"
     exit 0
-fi    
+fi
 
-if [[ "$1" == "server" ]]; then
+function check_server() {
     echo "[Server] Linting checks..."
     cargo clippy -p noops-server -- -D warnings
     cargo clippy --tests -p noops-server -- -D warnings
@@ -21,17 +20,27 @@ if [[ "$1" == "server" ]]; then
 
     echo "[Server] Test..."
     cargo test -p noops-server
+}
 
-elif [[ "$1" == "cli" ]]; then
-    echo "[CLI] Linting checks..."
+function check_cli() {
+    echo "[Server] Linting checks..."
     cargo clippy -p noops-server -- -D warnings
-    cargo clippy --tests -p noops -- -D warnings
+    cargo clippy --tests -p noops-server -- -D warnings
 
-    echo "[CLI] Build..."
-    cargo build -p noops
+    echo "[Server] Build..."
+    cargo build -p noops-server
 
-    echo "[CLI] Test..."
-    cargo test -p noops
+    echo "[Server] Test..."
+    cargo test -p noops-server
+}
+
+if [[ "$1" == "server" ]]; then
+    check_server
+elif [[ "$1" == "cli" ]]; then
+    check_cli
+elif [[ "$1" == "all" ]]; then
+    check_server
+    check_cli
 else
     echo "Scope \""$1"\" not found"
     exit 1
