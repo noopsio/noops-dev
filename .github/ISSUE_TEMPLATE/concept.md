@@ -7,9 +7,7 @@ assignees: ''
 
 ---
 
-**Description:**
+## Description
 
-**Goal:**
+## Goal
 
-**Acceptance criteria:**
-* Link to design document

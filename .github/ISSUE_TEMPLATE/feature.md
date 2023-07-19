@@ -7,12 +7,16 @@ assignees: ''
 
 ---
 
-# Feature issue
-
 ## Description
-As a user I want this feature because
+* As a user I want this feature because...
 
 ## Precondition
+
+## Acceptance criteria
+
+## Remarks
+
+---
 
 ```[tasklist]
 ## Tasks
