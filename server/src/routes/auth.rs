@@ -1,5 +1,5 @@
 use crate::{
-    database::{sqlite_uuid::UUID, Database},
+    database::Database,
     errors::Error::{self, UserNotRegistered},
     github,
     jwt::Jwt,
@@ -56,19 +56,24 @@ async fn login(
                 state
                     .database
                     .create_user(gh_user.id, gh_user.email, github_access_token)?;
-            state.wasmstore.create_user(&user.id.to_string())?;
+            state.wasmstore.create_user(&user.id)?;
             user
         }
     };
 
-    let jwt = create_token(user.id)?;
+    let jwt = create_token(&user.id)?;
     Ok((StatusCode::OK, Json(GetJWTDTO { jwt })).into_response())
 }
 
-fn create_token(subject: UUID) -> anyhow::Result<String> {
+fn create_token(subject: &str) -> anyhow::Result<String> {
     let issued_at = Jwt::create_issued_at();
-    let jwt =
-        Jwt::new(JWT_ISSUER, subject, issued_at, JWT_EXPIRATION_DELTA).encode(&ENCODING_KEY)?;
+    let jwt = Jwt::new(
+        JWT_ISSUER.to_string(),
+        subject.to_string(),
+        issued_at,
+        JWT_EXPIRATION_DELTA,
+    )
+    .encode(&ENCODING_KEY)?;
 
     Ok(jwt)
 }
@@ -80,8 +85,7 @@ pub async fn auth_middleware<B>(
     next: Next<B>,
 ) -> Result<Response, Error> {
     let (_, claims) = Jwt::decode(auth.token(), JWT_ISSUER, &DECODING_KEY)?;
-    let user_id = UUID::from_str(&claims.sub)?;
-    let user = database.read_user_by_id(user_id)?;
+    let user = database.read_user_by_id(&claims.sub)?;
     if user.is_none() {
         return Err(UserNotRegistered);
     }

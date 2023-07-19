@@ -28,10 +28,10 @@ async fn create_project(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    let project = state.database.create_project(user.id, &project_name)?;
-    state
-        .wasmstore
-        .create_project(&user.id.to_string(), &project.id.to_string())?;
+    let project = state
+        .database
+        .create_project(user.id.clone(), &project_name)?;
+    state.wasmstore.create_project(&user.id, &project.id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
@@ -39,13 +39,13 @@ async fn get_project(
     State(database): State<Database>,
     Extension(user): Extension<User>,
 ) -> Result<Response, Error> {
-    let project = database.read_project(user.id, &project_name)?;
+    let project = database.read_project(&user.id, &project_name)?;
     if project.is_none() {
         return Err(ProjectNotFound);
     }
 
     let project = project.unwrap();
-    let functions = database.read_functions(project.id)?;
+    let functions = database.read_functions(&project.id)?;
 
     let functions = functions
         .into_iter()
@@ -68,10 +68,8 @@ async fn delete_project(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    let project = state.database.delete_project(user.id, &project_name)?;
-    state
-        .wasmstore
-        .delete_project(&user.id.to_string(), &project.id.to_string())?;
+    let project = state.database.delete_project(&user.id, &project_name)?;
+    state.wasmstore.delete_project(&user.id, &project.id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

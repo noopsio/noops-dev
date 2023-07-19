@@ -1,15 +1,15 @@
-use super::{models::*, schema::projects, sqlite_uuid::UUID, Database};
+use super::{models::*, schema::projects, Database};
 use crate::errors::Error::{self, ProjectAlreadyExists, ProjectNotFound};
 use diesel::prelude::*;
 
 impl Database {
-    pub fn create_project(&self, user_id: UUID, project_name: &str) -> Result<Project, Error> {
-        if self.read_project(user_id, project_name)?.is_some() {
+    pub fn create_project(&self, user_id: String, project_name: &str) -> Result<Project, Error> {
+        if self.read_project(&user_id, project_name)?.is_some() {
             return Err(ProjectAlreadyExists);
         }
 
         let project = Project {
-            id: UUID::new(),
+            id: Self::create_id(),
             name: project_name.to_string(),
             user_id,
         };
@@ -27,7 +27,7 @@ impl Database {
 
     pub fn read_project(
         &self,
-        user_id: UUID,
+        user_id: &str,
         project_name: &str,
     ) -> anyhow::Result<Option<Project>> {
         let mut connection = self.pool.get()?;
@@ -41,7 +41,7 @@ impl Database {
         Ok(project)
     }
 
-    pub fn delete_project(&self, user_id: UUID, project_name: &str) -> Result<Project, Error> {
+    pub fn delete_project(&self, user_id: &str, project_name: &str) -> Result<Project, Error> {
         let mut connection = self.pool.get().map_err(|err| anyhow::anyhow!(err))?;
 
         self.read_project(user_id, project_name)?
@@ -94,7 +94,7 @@ mod tests {
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
 
-        let project = database.create_project(user.id, PROJECT_NAME)?;
+        let project = database.create_project(user.id.clone(), PROJECT_NAME)?;
 
         assert_eq!(PROJECT_NAME, project.name);
         assert_eq!(user.id, project.user_id);
@@ -111,7 +111,7 @@ mod tests {
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
 
-        database.create_project(user.id, PROJECT_NAME)?;
+        database.create_project(user.id.clone(), PROJECT_NAME)?;
         let result = database.create_project(user.id, PROJECT_NAME);
         assert!(result.is_err());
         Ok(())
@@ -125,9 +125,9 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let project = database.create_project(user.id, PROJECT_NAME)?;
+        let project = database.create_project(user.id.clone(), PROJECT_NAME)?;
 
-        let result = database.read_project(user.id, PROJECT_NAME)?;
+        let result = database.read_project(&user.id, PROJECT_NAME)?;
 
         assert!(result.is_some());
         let result = result.unwrap();
@@ -146,8 +146,8 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let _ = database.create_project(user.id, PROJECT_NAME)?;
-        database.delete_project(user.id, PROJECT_NAME)?;
+        let _ = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        database.delete_project(&user.id, PROJECT_NAME)?;
         Ok(())
     }
 
@@ -159,9 +159,9 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let _ = database.create_project(user.id, PROJECT_NAME)?;
-        database.delete_project(user.id, PROJECT_NAME)?;
-        let result = database.delete_project(user.id, PROJECT_NAME);
+        let _ = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        database.delete_project(&user.id, PROJECT_NAME)?;
+        let result = database.delete_project(&user.id, PROJECT_NAME);
         // TODO Check which error
         assert!(result.is_err());
         Ok(())

@@ -2,16 +2,14 @@ mod function;
 pub mod models;
 mod project;
 mod schema;
-pub mod sqlite_uuid;
 mod user;
 pub mod wasmstore;
-
-use std::path::Path;
 
 use diesel::{
     prelude::*,
     r2d2::{ConnectionManager, Pool},
 };
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct Database {
@@ -27,5 +25,9 @@ impl Database {
             .build(manager)
             .unwrap();
         Self { pool }
+    }
+
+    fn create_id() -> String {
+        nanoid::nanoid!()
     }
 }

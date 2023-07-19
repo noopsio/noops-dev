@@ -1,9 +1,9 @@
-use super::{models::*, schema::users, sqlite_uuid::UUID, Database};
+use super::{models::*, schema::users, Database};
 use crate::errors::Error::{self};
 use diesel::prelude::*;
 
 impl Database {
-    pub fn read_user_by_id(&self, id: UUID) -> Result<Option<User>, Error> {
+    pub fn read_user_by_id(&self, id: &str) -> Result<Option<User>, Error> {
         let mut connection = self.pool.get().map_err(|err| anyhow::anyhow!(err))?;
         let user = users::dsl::users
             .find(id)
@@ -32,7 +32,7 @@ impl Database {
         github_access_token: String,
     ) -> anyhow::Result<User> {
         let user = User {
-            id: UUID::new(),
+            id: Self::create_id(),
             email,
             github_id,
             github_access_token,
@@ -95,7 +95,7 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let result = database.read_user_by_id(user.id)?;
+        let result = database.read_user_by_id(&user.id)?;
         assert!(result.is_some());
         let result = result.unwrap();
         assert_eq!(user.id, result.id);
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn read_user_by_id_not_found() -> anyhow::Result<()> {
         let (_temp_dir, database) = setup()?;
-        let result = database.read_user_by_id(UUID::new())?;
+        let result = database.read_user_by_id("UNKNOWN_ID")?;
         assert!(result.is_none());
         Ok(())
     }
