@@ -4,9 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::errors::Error::{
-    self, FunctionNotFound, ProjectAlreadyExists, ProjectNotFound, UserAlreadyExists, UserNotFound,
-};
+use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
 
 #[derive(Debug, Clone)]
 pub struct WasmStore {
@@ -21,121 +19,31 @@ impl WasmStore {
         })
     }
 
-    pub fn create_user(&self, user: &str) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if user_path.exists() {
-            return Err(UserAlreadyExists);
+    pub fn create_function(&self, function: &str, wasm: &[u8]) -> Result<(), Error> {
+        let function = self.prefix.join(format!("{}.wasm", function));
+        if function.exists() {
+            return Err(FunctionAlreadyExists);
         }
-
-        fs::create_dir(user_path).map_err(|err| anyhow::anyhow!(err))?;
-        Ok(())
-    }
-
-    pub fn _delete_user(&self, user: &str) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-        fs::remove_dir_all(user_path).map_err(|err| anyhow::anyhow!(err))?;
-        Ok(())
-    }
-
-    pub fn create_project(&self, user: &str, project: &str) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-
-        let project_path = user_path.join(project);
-        if project_path.exists() {
-            return Err(ProjectAlreadyExists);
-        }
-
-        fs::create_dir(project_path).map_err(|err| anyhow::anyhow!(err))?;
-        Ok(())
-    }
-
-    pub fn delete_project(&self, user: &str, project: &str) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-
-        let project_path = user_path.join(project);
-        if !project_path.exists() {
-            return Err(ProjectNotFound);
-        }
-
-        fs::remove_dir_all(project_path).map_err(|err| anyhow::anyhow!(err))?;
-        Ok(())
-    }
-
-    pub fn create_function(
-        &self,
-        user: &str,
-        project: &str,
-        function: &str,
-        wasm: &[u8],
-    ) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-
-        let project_path = user_path.join(project);
-        if !project_path.exists() {
-            return Err(ProjectNotFound);
-        }
-
-        let function_path = project_path.join(format!("{}.wasm", function));
-
-        let mut file = File::create(function_path).map_err(|err| anyhow::anyhow!(err))?;
+        let mut file = File::create(function).map_err(|err| anyhow::anyhow!(err))?;
         file.write_all(wasm).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn delete_function(&self, user: &str, project: &str, function: &str) -> Result<(), Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-
-        let project_path = user_path.join(project);
-        if !project_path.exists() {
-            return Err(ProjectNotFound);
-        }
-
-        let function_path = project_path.join(format!("{}.wasm", function));
-        if !project_path.exists() {
+    pub fn delete_function(&self, function: &str) -> Result<(), Error> {
+        let function = self.prefix.join(format!("{}.wasm", function));
+        if !function.exists() {
             return Err(FunctionNotFound);
         }
-
-        fs::remove_file(function_path).map_err(|err| anyhow::anyhow!(err))?;
+        fs::remove_file(function).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn read_function(
-        &self,
-        user: &str,
-        project: &str,
-        function: &str,
-    ) -> Result<Vec<u8>, Error> {
-        let user_path = self.prefix.join(user);
-        if !user_path.exists() {
-            return Err(UserNotFound);
-        }
-
-        let project_path = user_path.join(project);
-        if !project_path.exists() {
-            return Err(ProjectNotFound);
-        }
-
-        let function_path = project_path.join(format!("{}.wasm", function));
-        if !project_path.exists() {
+    pub fn read_function(&self, function: &str) -> Result<Vec<u8>, Error> {
+        let function = self.prefix.join(format!("{}.wasm", function));
+        if !function.exists() {
             return Err(FunctionNotFound);
         }
-
-        let wasm = fs::read(function_path).map_err(|err| anyhow::anyhow!(err))?;
+        let wasm = fs::read(function).map_err(|err| anyhow::anyhow!(err))?;
         Ok(wasm)
     }
 }

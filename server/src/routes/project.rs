@@ -28,10 +28,7 @@ async fn create_project(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    let project = state
-        .database
-        .create_project(user.id.clone(), &project_name)?;
-    state.wasmstore.create_project(&user.id, &project.id)?;
+    state.database.create_project(user.id, project_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
@@ -68,8 +65,7 @@ async fn delete_project(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    let project = state.database.delete_project(&user.id, &project_name)?;
-    state.wasmstore.delete_project(&user.id, &project.id)?;
+    state.database.delete_project(&user.id, &project_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

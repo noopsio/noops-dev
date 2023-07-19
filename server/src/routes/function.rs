@@ -31,10 +31,7 @@ async fn create_function(
     let function = state
         .database
         .create_function(&user.id, &project_name, function_name, &wasm)?;
-
-    state
-        .wasmstore
-        .create_function(&user.id, &function.project_id, &function.id, &wasm)?;
+    state.wasmstore.create_function(&function.id, &wasm)?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -48,9 +45,7 @@ async fn delete_function(
         .database
         .delete_function(&user.id, &project_name, &function_name)?;
 
-    state
-        .wasmstore
-        .delete_function(&user.id, &function.project_id, &function.id)?;
+    state.wasmstore.delete_function(&function.id)?;
 
     Ok(StatusCode::NO_CONTENT)
 }
