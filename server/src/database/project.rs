@@ -3,14 +3,14 @@ use crate::errors::Error::{self, ProjectAlreadyExists, ProjectNotFound};
 use diesel::prelude::*;
 
 impl Database {
-    pub fn create_project(&self, user_id: String, project_name: &str) -> Result<Project, Error> {
-        if self.read_project(&user_id, project_name)?.is_some() {
+    pub fn create_project(&self, user_id: String, project_name: String) -> Result<Project, Error> {
+        if self.read_project(&user_id, &project_name)?.is_some() {
             return Err(ProjectAlreadyExists);
         }
 
         let project = Project {
             id: Self::create_id(),
-            name: project_name.to_string(),
+            name: project_name,
             user_id,
         };
 
@@ -68,13 +68,12 @@ mod tests {
 
     const DATABASE_NAME: &str = "noops_test.sqlite";
     const USER_GH_ID: i32 = 42;
+    const PROJECT_NAME: &str = "TEST_PROJECT";
 
     lazy_static! {
         static ref USER_EMAIL: String = "test@example.com".to_string();
         static ref USER_GH_ACCESS_TOKEN: String = "Yiu0Hae4ietheereij4OhneuNe6tae0e".to_string();
     }
-
-    const PROJECT_NAME: &str = "TEST_PROJECT";
 
     fn setup() -> anyhow::Result<(TempDir, Database)> {
         let temp_dir = tempdir()?;
@@ -94,7 +93,7 @@ mod tests {
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
 
-        let project = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        let project = database.create_project(user.id.clone(), PROJECT_NAME.to_string())?;
 
         assert_eq!(PROJECT_NAME, project.name);
         assert_eq!(user.id, project.user_id);
@@ -111,8 +110,8 @@ mod tests {
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
 
-        database.create_project(user.id.clone(), PROJECT_NAME)?;
-        let result = database.create_project(user.id, PROJECT_NAME);
+        database.create_project(user.id.clone(), PROJECT_NAME.to_string())?;
+        let result = database.create_project(user.id, PROJECT_NAME.to_string());
         assert!(result.is_err());
         Ok(())
     }
@@ -125,7 +124,7 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let project = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        let project = database.create_project(user.id.clone(), PROJECT_NAME.to_string())?;
 
         let result = database.read_project(&user.id, PROJECT_NAME)?;
 
@@ -146,7 +145,7 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let _ = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        let _ = database.create_project(user.id.clone(), PROJECT_NAME.to_string())?;
         database.delete_project(&user.id, PROJECT_NAME)?;
         Ok(())
     }
@@ -159,7 +158,7 @@ mod tests {
             (*USER_EMAIL).clone(),
             (*USER_GH_ACCESS_TOKEN).clone(),
         )?;
-        let _ = database.create_project(user.id.clone(), PROJECT_NAME)?;
+        let _ = database.create_project(user.id.clone(), PROJECT_NAME.to_string())?;
         database.delete_project(&user.id, PROJECT_NAME)?;
         let result = database.delete_project(&user.id, PROJECT_NAME);
         // TODO Check which error

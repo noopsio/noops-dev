@@ -11,16 +11,16 @@ use std::collections::HashMap;
 
 pub fn create_routes(state: AppState) -> Router {
     Router::new()
-        .route("/:user_id/:project_id/:function_id", get(execute))
+        .route("/:function", get(execute))
         .with_state(state)
 }
 
 async fn execute(
-    Path((user_id, project_id, function_id)): Path<(String, String, String)>,
+    Path(function): Path<String>,
     Query(query_map): Query<HashMap<String, String>>,
     State(wasmstore): State<WasmStore>,
 ) -> Result<Response, Error> {
-    let function = wasmstore.read_function(&user_id, &project_id, &function_id)?;
+    let function = wasmstore.read_function(&function)?;
     let mut query_list: Vec<(&str, &str)> = Vec::new();
     for (key, value) in query_map.iter() {
         query_list.push((key, value));

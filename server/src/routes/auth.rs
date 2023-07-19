@@ -51,14 +51,9 @@ async fn login(
 
     let user = match result {
         Some(user) => user,
-        None => {
-            let user =
-                state
-                    .database
-                    .create_user(gh_user.id, gh_user.email, github_access_token)?;
-            state.wasmstore.create_user(&user.id)?;
-            user
-        }
+        None => state
+            .database
+            .create_user(gh_user.id, gh_user.email, github_access_token)?,
     };
 
     let jwt = create_token(&user.id)?;
