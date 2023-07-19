@@ -30,14 +30,11 @@ async fn create_function(
 
     let function = state
         .database
-        .create_function(user.id, &project_name, function_name, &wasm)?;
+        .create_function(&user.id, &project_name, function_name, &wasm)?;
 
-    state.wasmstore.create_function(
-        &user.id.to_string(),
-        &function.project_id.to_string(),
-        &function.id.to_string(),
-        &wasm,
-    )?;
+    state
+        .wasmstore
+        .create_function(&user.id, &function.project_id, &function.id, &wasm)?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -49,13 +46,11 @@ async fn delete_function(
 ) -> Result<StatusCode, Error> {
     let function = state
         .database
-        .delete_function(user.id, &project_name, &function_name)?;
+        .delete_function(&user.id, &project_name, &function_name)?;
 
-    state.wasmstore.delete_function(
-        &user.id.to_string(),
-        &function.project_id.to_string(),
-        &function.id.to_string(),
-    )?;
+    state
+        .wasmstore
+        .delete_function(&user.id, &function.project_id, &function.id)?;
 
     Ok(StatusCode::NO_CONTENT)
 }

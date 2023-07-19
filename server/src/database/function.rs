@@ -1,4 +1,4 @@
-use super::{models::*, schema::functions, sqlite_uuid::UUID, Database};
+use super::{models::*, schema::functions, Database};
 use crate::errors::Error::{self, FunctionNotFound, ProjectNotFound};
 use diesel::prelude::*;
 use std::{
@@ -9,7 +9,7 @@ use std::{
 impl Database {
     pub fn create_function(
         &self,
-        user_id: UUID,
+        user_id: &str,
         project_name: &str,
         function_name: String,
         wasm: &[u8],
@@ -19,15 +19,15 @@ impl Database {
             .ok_or(ProjectNotFound)?;
 
         let function = Function {
-            id: UUID::new(),
+            id: Self::create_id(),
             name: function_name.clone(),
             hash: Self::hash(wasm),
-            project_id: project.id,
+            project_id: project.id.clone(),
         };
 
         let mut connection = self.pool.get().map_err(|err| anyhow::anyhow!(err))?;
 
-        let function = if self.read_function(project.id, &function_name)?.is_some() {
+        let function = if self.read_function(&project.id, &function_name)?.is_some() {
             diesel::replace_into(functions::table)
                 .values(&function)
                 .returning(Function::as_returning())
@@ -46,7 +46,7 @@ impl Database {
 
     pub fn read_function(
         &self,
-        project_id: UUID,
+        project_id: &str,
         function_name: &str,
     ) -> anyhow::Result<Option<Function>> {
         let mut connection = self.pool.get()?;
@@ -60,7 +60,7 @@ impl Database {
         Ok(function)
     }
 
-    pub fn read_functions(&self, project_id: UUID) -> Result<Vec<Function>, Error> {
+    pub fn read_functions(&self, project_id: &str) -> Result<Vec<Function>, Error> {
         let mut connection = self.pool.get().map_err(|err| anyhow::anyhow!(err))?;
 
         let functions = functions::table
@@ -73,7 +73,7 @@ impl Database {
 
     pub fn delete_function(
         &self,
-        user_id: UUID,
+        user_id: &str,
         project_name: &str,
         function_name: &str,
     ) -> Result<Function, Error> {
@@ -81,7 +81,7 @@ impl Database {
             .read_project(user_id, project_name)?
             .ok_or(ProjectNotFound)?;
 
-        self.read_function(project.id, function_name)?
+        self.read_function(&project.id, function_name)?
             .ok_or(FunctionNotFound)?;
 
         let query = functions::table

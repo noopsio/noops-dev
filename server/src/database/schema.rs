@@ -2,24 +2,24 @@
 
 diesel::table! {
     functions (id) {
-        id -> Binary,
+        id -> Text,
         name -> Text,
         hash -> Text,
-        project_id -> Binary,
+        project_id -> Text,
     }
 }
 
 diesel::table! {
     projects (id) {
-        id -> Binary,
+        id -> Text,
         name -> Text,
-        user_id -> Binary,
+        user_id -> Text,
     }
 }
 
 diesel::table! {
     users (id) {
-        id -> Binary,
+        id -> Text,
         email -> Text,
         github_id -> Integer,
         github_access_token -> Text,
