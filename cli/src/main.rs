@@ -73,8 +73,8 @@ fn main() -> anyhow::Result<()> {
                 let git = GitAdapter::new();
                 handlers::modules::add(&terminal, config, &git)?;
             }
-            commands::FunctionCommands::Build => todo!(),
-            commands::FunctionCommands::Deploy => todo!(),
+            commands::FunctionCommands::Build => unimplemented!(),
+            commands::FunctionCommands::Deploy => unimplemented!(),
             commands::FunctionCommands::Destroy => {
                 let config = Config::from_yaml(config::CONFIG_FILE_NAME)?;
                 handlers::modules::delete(&terminal, config)?;
