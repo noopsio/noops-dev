@@ -23,10 +23,7 @@ jobs:
         uses: dsherret/rust-toolchain-file@v1
 
       - name: build release
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: "--release"
+        run: "cargo build --release"
   
 
 
