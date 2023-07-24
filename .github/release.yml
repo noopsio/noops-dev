@@ -10,6 +10,7 @@ changelog:
       labels:
         - type:fix
     - title: CI
+      labels:
         - type:CI/CD
     - Title: Other Changes
       labels: 
