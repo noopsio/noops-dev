@@ -1,5 +1,9 @@
 name: Rust
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+  
 on:
   pull_request:
     branches: [ "main" ]
@@ -8,36 +12,75 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
+  server_build_and_test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Install toolchain
-      uses: dsherret/rust-toolchain-file@v1
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Download dependencies
-      run: cargo fetch
+      - name: Install toolchain
+        uses: dsherret/rust-toolchain-file@v1
+      
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
-    - name: Check Server
-      run: |
-        cargo clippy -p noops-server -- -D warnings
-        cargo clippy --tests -p noops-server -- -D warnings
+      - name: Download dependencies
+        run: cargo fetch
 
-    - name: Build Server
-      run: cargo build -p noops-server
+      - name: Check Server
+        run: |
+          cargo clippy -p noops-server -- -D warnings
+          cargo clippy --tests -p noops-server -- -D warnings
 
-    - name: Test Server
-      run: cargo test -p noops-server
+      - name: Build Server
+        run: cargo build -p noops-server
 
-    - name: Check CLI
-      run: |
-        cargo clippy -p noops -- -D warnings
-        cargo clippy --tests -p noops -- -D warnings
+      - name: Test Server
+        run: cargo test -p noops-server        
 
-    - name: Build CLI
-      run: cargo build -p noops
+  cli_build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Test CLI
-      run: cargo test -p noops
+      - name: Install toolchain
+        uses: dsherret/rust-toolchain-file@v1
+      
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-cargo
+          restore-keys: ${{ runner.os }}-cargo
+
+      - name: Download dependencies
+        run: cargo fetch
+
+      - name: Check CLI
+        run: |
+          cargo clippy -p noops -- -D warnings
+          cargo clippy --tests -p noops -- -D warnings
+
+      - name: Build CLI
+        run: cargo build -p noops
+
+      - name: Test CLI
+        run: cargo test -p noops
 
