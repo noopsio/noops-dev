@@ -1,0 +1,14 @@
+changelog:
+  exclude: 
+    labels: 
+      - type:CI/CD
+  categories:
+    - title: New Features 🎉
+      labels:
+        - type:feature
+    - title: Fixes
+      labels:
+        - type:fix
+    - Title: Other Changes
+      labels: 
+        - "*"
