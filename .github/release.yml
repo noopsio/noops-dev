@@ -9,6 +9,8 @@ changelog:
     - title: Fixes
       labels:
         - type:fix
+    - title: CI
+        - type:CI/CD
     - Title: Other Changes
       labels: 
         - "*"
