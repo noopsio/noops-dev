@@ -21,8 +21,21 @@ jobs:
       - name: Install toolchain
         uses: dsherret/rust-toolchain-file@v1
 
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-cargo
+          restore-keys: ${{ runner.os }}-cargo        
+
       - name: build release
-        run: "cargo build --release"
+        run: "cargo build --release --bin noops"
   
 
 
@@ -35,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
         with: 
-          file: target/release/noops-cli
+          file: target/release/noops
           draft: false
           tags: true
 
