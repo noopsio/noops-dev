@@ -3,5 +3,6 @@ CREATE TABLE projects (
   id CHAR(21) PRIMARY KEY NOT NULL,
   name VARCHAR NOT NULL, 
   user_id CHAR(21) REFERENCES user(id) NOT NULL,
-  UNIQUE(name, user_id)
+  UNIQUE(name, user_id),
+  foreign key (user_id) references users(id)
 );

@@ -16,9 +16,6 @@ pub enum Error {
     #[error("User not registered")]
     UserNotRegistered,
 
-    #[error("Project already exists")]
-    ProjectAlreadyExists,
-
     #[error("Project not found")]
     ProjectNotFound,
 
@@ -60,9 +57,6 @@ impl IntoResponse for Error {
             Error::ProjectNotFound => (StatusCode::NOT_FOUND, "Project not found".to_string()),
             Error::FunctionNotFound => (StatusCode::NOT_FOUND, "Function not found".to_string()),
 
-            Error::ProjectAlreadyExists => {
-                (StatusCode::CONFLICT, "Project already exists".to_string())
-            }
             Error::FunctionAlreadyExists => {
                 (StatusCode::CONFLICT, "Function already exists".to_string())
             }
