@@ -9,4 +9,3 @@ changelog:
     - title: CI
       labels:
         - type:CI/CD
-
