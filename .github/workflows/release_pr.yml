@@ -43,8 +43,6 @@ jobs:
             echo "Opening new PR"
             gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
 
-      
-
   update-release:
     needs: [check-for-new-release]
     if: needs.check-for-new-release.outputs.NEW_RELEASE == 'false'
@@ -54,7 +52,3 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-
-
-
