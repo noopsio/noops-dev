@@ -9,6 +9,9 @@ jobs:
   check-for-open-pr:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
       - name: Check for open PR to Release Branch
         id: check_pr
         env:
@@ -28,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_OPEN: ${{ steps.check_pr.outputs.PR_OPEN }}
         run: |
-          if [[ "$pr-open" == "false" ]]; then
+          if [[ "$PR_OPEN" == "false" ]]; then
             echo "Opening new PR"
             gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
           else
