@@ -6,8 +6,10 @@ on:
   workflow_dispatch:
 
 jobs: 
-  check-for-open-pr:
+  check-for-new-release:
     runs-on: ubuntu-latest
+    outputs:
+      NEW_RELEASE: ${{ steps.check_pr.outputs.PR_OPEN}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,20 +26,51 @@ jobs:
           else
             echo "Release PR open"
             echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
-          fi
+          fi        
+  
+  create-release:
+    needs: [check-for-new-release]
+    if: needs.check-for-new-release.outputs.NEW_RELEASE == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Open or Update PR to Release Branch
+      - name: Create PR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_OPEN: ${{ steps.check_pr.outputs.PR_OPEN }}
         run: |
-          if [[ "$PR_OPEN" == "false" ]]; then
             echo "Opening new PR"
             gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
-          else
-            echo "Release PR already open"
-          fi          
-        
-      
-      
+
+      - name: Create Prelease
+        uses: ncipollo/release-action@v1
+        with:
+          name: main
+          allowUpdates: true
+          generateReleaseNotes: true
+          prerelease: true
+          tag: WIP
+
+  update-release:
+    needs: [check-for-new-release]
+    if: needs.check-for-new-release.outputs.NEW_RELEASE == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update Prelease
+        uses: ncipollo/release-action@v1
+        with:
+          name: main
+          allowUpdates: true
+          generateReleaseNotes: true
+          tag: WIP
+
+
 
