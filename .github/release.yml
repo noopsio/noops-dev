@@ -6,7 +6,5 @@ changelog:
     - title: Fixes
       labels:
         - type:fix
-    - title: CI
-      labels:
-        - type:CI/CD
+
 
