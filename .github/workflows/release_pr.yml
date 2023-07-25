@@ -1,0 +1,40 @@
+name: Create Release Pr
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs: 
+  check-for-open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for open PR to Release Branch
+        id: check_pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_prs=$(gh pr list -B release --json id)
+          if [[ "$release_prs" == "[]" ]]; then
+            echo "No open release PR"
+            echo "::set-output name=PR_OPEN::false"
+          else
+            echo "Release PR open"
+            echo "::set-output name=PR_OPEN::true"
+          fi
+
+      - name: Open or Update PR to Release Branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_OPEN: ${{ steps.check_pr.outputs.PR_OPEN }}
+        run: |
+          if [[ "$PR_OPEN" == "false" ]]; then
+            echo "Opening new PR"
+            gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main"
+          else
+            echo "Release PR already open"
+          fi          
+        
+      
+      
+
