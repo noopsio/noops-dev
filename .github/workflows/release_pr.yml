@@ -17,10 +17,10 @@ jobs:
           release_prs=$(gh pr list -B release --json id)
           if [[ "$release_prs" == "[]" ]]; then
             echo "No open release PR"
-            echo "::set-output name=PR_OPEN::false"
+            echo "PR_OPEN=false" >> "$GITHUB_OUTPUT"
           else
             echo "Release PR open"
-            echo "::set-output name=PR_OPEN::true"
+            echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Open or Update PR to Release Branch
@@ -28,9 +28,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_OPEN: ${{ steps.check_pr.outputs.PR_OPEN }}
         run: |
-          if [[ "$PR_OPEN" == "false" ]]; then
+          if [[ "$pr-open" == "false" ]]; then
             echo "Opening new PR"
-            gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main"
+            gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
           else
             echo "Release PR already open"
           fi          
