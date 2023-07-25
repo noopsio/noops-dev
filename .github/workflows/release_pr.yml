@@ -1,8 +1,8 @@
 name: Create Release Pr
 on:
-  push:
-    branches:
-      - main
+#  push:
+#    branches:
+#      - main
   workflow_dispatch:
 
 jobs: 
@@ -22,18 +22,16 @@ jobs:
           release_prs=$(gh pr list -B release --json id)
           if [[ "$release_prs" == "[]" ]]; then
             echo "No open release PR"
-            echo "PR_OPEN=false" >> "$GITHUB_OUTPUT"
+            echo "NEW_RELEASE=true" >> "$GITHUB_OUTPUT"
           else
             echo "Release PR open"
-            echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
+            echo "NEW_RELEASE=false" >> "$GITHUB_OUTPUT"
           fi        
   
   create-release:
     needs: [check-for-new-release]
     if: needs.check-for-new-release.outputs.NEW_RELEASE == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write    
+    runs-on: ubuntu-latest  
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -45,15 +43,6 @@ jobs:
             echo "Opening new PR"
             gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
 
-      - name: Create Prelease
-        uses: ncipollo/release-action@v1
-        with:
-          name: main
-          allowUpdates: true
-          generateReleaseNotes: true
-          prerelease: true
-          tag: WIP
-
   update-release:
     needs: [check-for-new-release]
     if: needs.check-for-new-release.outputs.NEW_RELEASE == 'false'
@@ -63,14 +52,3 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Update Prelease
-        uses: ncipollo/release-action@v1
-        with:
-          name: main
-          allowUpdates: true
-          generateReleaseNotes: true
-          tag: WIP
-
-
-

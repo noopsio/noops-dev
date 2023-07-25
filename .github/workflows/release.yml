@@ -5,8 +5,8 @@ on:
       - release
 
 jobs:
-  build-and-sign:
-    name: build and sign release assets
+  build-artifacts:
+    name: build 
     runs-on: ubuntu-latest
     permissions:
       # cosign uses the GitHub OIDC token
@@ -37,19 +37,12 @@ jobs:
       - name: build release
         run: "cargo build --release --bin noops"
   
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: false
+          generateReleaseNotes: true
+          makeLatest: true
+          tag: WIP  
+          artifacts: target/release/noops
 
-
-  upload-to-release:
-    needs: build-and-sign
-    runs-on: ubuntu-latest
-    steps:
-      - name: Upload To Github Release
-        uses: xresloader/upload-to-github-release@v1.3.12
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
-        with: 
-          file: target/release/noops
-          draft: false
-          tags: true
-
-  
