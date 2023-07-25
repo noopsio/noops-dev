@@ -48,9 +48,29 @@ jobs:
       - name: Create Prelease
         uses: ncipollo/release-action@v1
         with:
+          name: main
           allowUpdates: true
           generateReleaseNotes: true
           prerelease: true
           tag: WIP
 
-  
+  update-release:
+    needs: [check-for-new-release]
+    if: needs.check-for-new-release.outputs.NEW_RELEASE == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update Prelease
+        uses: ncipollo/release-action@v1
+        with:
+          name: main
+          allowUpdates: true
+          generateReleaseNotes: true
+          tag: WIP
+
+
+
