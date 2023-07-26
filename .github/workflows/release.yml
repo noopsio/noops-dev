@@ -69,6 +69,8 @@ jobs:
       - name: Create PR to main
         env: 
           NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
+          CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}          
+          CARGO_TOML: "./cli/Cargo.toml"
         run: |
             sed -i -m "0,/version = \"$CURRENT_VERSION\"/{s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/}" "$CARGO_TOML"
             git add ./cli/Cargo.toml
