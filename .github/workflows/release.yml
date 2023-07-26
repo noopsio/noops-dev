@@ -72,7 +72,7 @@ jobs:
           CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}          
           CARGO_TOML: "./cli/Cargo.toml"
         run: |
-            sed -i -m "0,/version = \"$CURRENT_VERSION\"/{s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/}" "$CARGO_TOML"
+            awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
             git add ./cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
             git push 
