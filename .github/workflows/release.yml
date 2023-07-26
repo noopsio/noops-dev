@@ -20,8 +20,8 @@ jobs:
       - name: Read Version Increase from Merge PR
         id: version_increase
         run: |
-          # --head main 
-          PR_LABELS=$(gh pr list --base release --state merged --json labels --jq '.[0].labels | map(.name)')
+          #  
+          PR_LABELS=$(gh pr list --base release --head main --state merged --json labels --jq '.[0].labels | map(.name)')
           VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "0.1.0" elif any(.[]; . == "version:minor") then "0.0.1" else empty end')
           echo "VERSION_INCREASE=$VERSION_INCREASE" >> "$GITHUB_OUTPUT"
         

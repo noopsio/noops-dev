@@ -21,8 +21,7 @@ jobs:
       - name: Extract Merge PR Labels
         id: pr_labels
         run: |
-          # --state merged --base main 
-          labels=$(gh pr list --json labels --jq '.[0].labels | map(.name)')
+          labels=$(gh pr list --state merged --base main --json labels --jq '.[0].labels | map(.name)')
           echo "PR_LABELS=$labels" >> "$GITHUB_OUTPUT"
 
       - name: Check for CI release label
