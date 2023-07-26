@@ -33,8 +33,8 @@ jobs:
           # Check if either "type:feature" or "type:fix" label exists in the list
           if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature" or . == "type:fix")' > /dev/null; then
               # Determine the tag based on the label found
-              VERSION_BUMP=$(echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature") | "version:major" // "version:minor"')
-          
+              VERSION_BUMP=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "type:feature") then "version:major" elif any(.[]; . == "type:fix") then "version:minor" else empty end')
+
               # Output the Version Tag
               echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
           else
