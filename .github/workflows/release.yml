@@ -5,6 +5,56 @@ on:
       - release
 
 jobs:
+  bump-version:
+    name: bump and tag version
+    runs-on: ubunutu-latest
+    env: 
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Read Version Increase from Merge PR
+        id: version_increase
+        run: |
+          PR_LABELS=$(gh pr list --base release --head main --state merged --json labels --jq '.[0].labels | map(.name)')
+          VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "0.1.0" elif any(.[]; . == "version:minor") then "0.0.1" else empty end')
+          echo "VERSION_INCREASE=$VERSION_INCREASE" >> "GITHUB_OUTPUT"
+        
+      - name: Read CLI Version from Cargo.toml
+        id: read_current_version
+        run: |
+          CURRENT_VERSION=$(awk -F'"' '/version =/ {print $2}' ./cli/Cargo.toml)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> "GITHUB_OUTPUT"
+
+      - name: Bump Version
+        env: 
+          VERSION_INCREASE: ${{ steps.version_increase.outputs.VERSION_INCREASE }}
+          CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}
+        run: |
+          if [ -n "$VERSION_INCREASE" ]; then
+            add_version() {
+                NEW_VERSION=$(echo -e "$1\n$2" | awk -F. '{printf "%d.%d.%d\n", $1+$4, $2+$5, $3+$6}')
+                echo "$new_version"
+            }
+        
+            new_version=$(add_version "$CURRENT_VERSION" "$VERSION_BUMP")
+        
+            # Create a git tag with the new version
+            git tag -a "v$new_version" -m "Version $new_version"
+        
+            # Push the tag to the remote repository
+            git push origin "v$new_version"
+        
+            echo "Existing Version: $existing_version"
+            echo "Version Bump:     $VERSION_BUMP"
+            echo "New Version:      $new_version"
+          else
+            echo "No 'version:major' or 'version:minor' label found in the list."
+          fi
+          
+
+
   build-artifacts:
     name: build 
     runs-on: ubuntu-latest
