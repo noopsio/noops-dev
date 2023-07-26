@@ -8,6 +8,8 @@ on:
 jobs: 
   check-for-new-release:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       NEW_RELEASE: ${{ steps.check_pr.outputs.PR_OPEN}}
       VERSION_BUMP: ${{ steps.determine_version.outputs.VERSION_BUMP }}
@@ -19,19 +21,31 @@ jobs:
       - name: Extract Merge PR Labels
         id: pr_labels
         run: |
-          labels=$(gh pr list --state merged --base main --json labels --jq '.[0].labels | map(.name)')
-          echo "PR_LABELS=labels" >> "$GITHUB_OUTPUT"
+          # --state merged --base main 
+          labels=$(gh pr list --json labels --jq '.[0].labels | map(.name)')
+          echo "PR_LABELS=$labels" >> "$GITHUB_OUTPUT"
+
+      - name: Check for CI release label
+        id: is_ci_release
+        env: 
+          PR_LABELS: ${{ steps.pr_labels.outputs.PR_LABELS }}
+        run: |
+          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:ci")' > /dev/null; then
+            echo "CI Release detected"
+            echo "CI_RELEASE=true" >> "$GITHUB_OUTPUT"
+          fi
       
       - name: Label to Version
         id: determine_version
+        if: steps.is_ci_release.outputs.CI_RELEASE == 'false'
         env: 
           PR_LABELS: ${{ steps.pr_labels.outputs.PR_LABELS }}
         run: |
           # Check if either "type:feature" or "type:fix" label exists in the list
           if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature" or . == "type:fix")' > /dev/null; then
               # Determine the tag based on the label found
-              VERSION_BUMP=$(echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature") | "version:major" // "version:minor"')
-          
+              VERSION_BUMP=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "type:feature") then "version:major" elif any(.[]; . == "type:chore") or any(.[]; . == "type:fix") then "version:minor" else empty end')
+
               # Output the Version Tag
               echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
           else
@@ -41,16 +55,15 @@ jobs:
 
       - name: Check for open PR to Release Branch
         id: check_pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.is_ci_release.outputs.CI_RELEASE == 'false'
         run: |
           release_prs=$(gh pr list -B release --json id)
           if [[ "$release_prs" == "[]" ]]; then
             echo "No open release PR"
-            echo "NEW_RELEASE=true" >> "$GITHUB_OUTPUT"
+            echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
           else
             echo "Release PR open"
-            echo "NEW_RELEASE=false" >> "$GITHUB_OUTPUT"
+            echo "PR_OPEN=false" >> "$GITHUB_OUTPUT"
             PR_NUMBER=$(echo $release_prs | jq '.[0].number')
             echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi        
@@ -85,7 +98,7 @@ jobs:
         env: 
           PR_NUMBER: ${{ needs.check-for-new-release.outputs.PR_NUMBER }}
           VERSION_BUMP: ${{ needs.check-for-new-release.outputs.VERSION_BUMP }}
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
         run: |
           # Check if $RELEASE_TAG equals "version:major"
           if [ "$VERSION_BUMP" = "version:major" ]; then
