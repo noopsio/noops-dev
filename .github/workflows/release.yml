@@ -8,7 +8,7 @@ on:
 jobs:
   bump-version:
     name: bump and tag version
-    runs-on: ubunutu-latest
+    runs-on: ubuntu-latest
     outputs: 
       NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
     env: 
