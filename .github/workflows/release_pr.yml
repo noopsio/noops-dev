@@ -1,8 +1,8 @@
 name: Create Release Pr
 on:
-#  push:
-#    branches:
-#      - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs: 
@@ -10,10 +10,35 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       NEW_RELEASE: ${{ steps.check_pr.outputs.PR_OPEN}}
+      VERSION_BUMP: ${{ steps.determine_version.outputs.VERSION_BUMP }}
+      PR_NUMBER: ${{ steps.check_pr.outputs.PR_NUMBER }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
+
+      - name: Extract Merge PR Labels
+        id: pr_labels
+        run: |
+          labels=$(gh pr list --state merged --base main --json labels --jq '.[0].labels | map(.name)')
+          echo "PR_LABELS=labels" >> "$GITHUB_OUTPUT"
+      
+      - name: Label to Version
+        id: determine_version
+        env: 
+          PR_LABELS: ${{ steps.pr_labels.outputs.PR_LABELS }}
+        run: |
+          # Check if either "type:feature" or "type:fix" label exists in the list
+          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature" or . == "type:fix")' > /dev/null; then
+              # Determine the tag based on the label found
+              VERSION_BUMP=$(echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature") | "version:major" // "version:minor"')
+          
+              # Output the Version Tag
+              echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
+          else
+              echo "No 'type:feature' or 'type:fix' label found."
+              echo "No Version Bump"
+          fi
+
       - name: Check for open PR to Release Branch
         id: check_pr
         env:
@@ -26,6 +51,8 @@ jobs:
           else
             echo "Release PR open"
             echo "NEW_RELEASE=false" >> "$GITHUB_OUTPUT"
+            PR_NUMBER=$(echo $release_prs | jq '.[0].number')
+            echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi        
   
   create-release:
@@ -39,9 +66,10 @@ jobs:
       - name: Create PR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_BUMP: ${{ needs.check-for-new-release.outputs.VERSION_BUMP }}
         run: |
             echo "Opening new PR"
-            gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE
+            gh pr create --base release --head main --title "Automatic Release PR" --body "This PR was automatically created by commiting to main" --draft --label DONT_MERGE --label $VERSION_BUMP
 
   update-release:
     needs: [check-for-new-release]
@@ -52,3 +80,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      
+      - name: Check Release PR for Labels
+        env: 
+          PR_NUMBER: ${{ needs.check-for-new-release.outputs.PR_NUMBER }}
+          VERSION_BUMP: ${{ needs.check-for-new-release.outputs.VERSION_BUMP }}
+
+        run: |
+          # Check if $RELEASE_TAG equals "version:major"
+          if [ "$VERSION_BUMP" = "version:major" ]; then
+            echo "Adding 'version:major' label to the pull request."
+            # Use the appropriate command to add the label to the pull request
+            gh pr edit $PR_NUMBER --add-label version:major
+          else
+            # Get the list of labels for the pull request
+            labels=$(gh pr view $PR_NUMBER --json labels --jq '.[0].labels | map(.name)')
+        
+            # Check if "version:major" label exists in the list
+            if echo "$labels" | jq -e '.[] | select(. == "version:major")' > /dev/null; then
+              echo "Already a major Version, not adding minor"
+            else
+              echo "Already Tagged with version:minor"
+            fi
+          fi
+        
+
+
+
+
+
