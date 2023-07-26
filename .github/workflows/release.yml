@@ -40,12 +40,16 @@ jobs:
         run: |
           if [ -n "$VERSION_INCREASE" ]; then
             add_version() {
-                NEW_VERSION=$(echo -e "$1\n$2" | awk -F. '{printf "%d.%d.%d\n", $1+$4, $2+$5, $3+$6}')
-                echo "$NEW_VERSION"
+                # Use 'expr' for integer addition
+                major=$(expr "$1" + "$4")
+                minor=$(expr "$2" + "$5")
+                patch=$(expr "$3" + "$6")
+                printf "%d.%d.%d\n" "$major" "$minor" "$patch"
+            
+                #echo "$NEW_VERSION"
             }
-        
-            NEW_VERSION=$(add_version "$CURRENT_VERSION" "$VERSION_BUMP")
-        
+                
+            NEW_VERSION=$(add_version $(echo "$CURRENT_VERSION" | tr '.' ' ') $(echo "$VERSION_INCREASE" | tr '.' ' '))
             # Create a git tag with the new version
             git tag -a "v$NEW_VERSION" -m "Version $NEW_VERSION"
         
@@ -53,7 +57,7 @@ jobs:
             git push origin "v$NEW_VERSION"
         
             echo "Current Version:  $CURRENT_VERSION"
-            echo "Version Bump:     $VERSION_BUMP"
+            echo "Version Bump:     $VERSION_INCREASE"
             echo "New Version:      $NEW_VERSION"
 
             echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
