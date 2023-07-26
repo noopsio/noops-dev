@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - release
+  workflow_dispatch:
 
 jobs:
   bump-version:
     name: bump and tag version
     runs-on: ubunutu-latest
+    outputs: 
+      NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
     env: 
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -19,15 +22,16 @@ jobs:
         run: |
           PR_LABELS=$(gh pr list --base release --head main --state merged --json labels --jq '.[0].labels | map(.name)')
           VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "0.1.0" elif any(.[]; . == "version:minor") then "0.0.1" else empty end')
-          echo "VERSION_INCREASE=$VERSION_INCREASE" >> "GITHUB_OUTPUT"
+          echo "VERSION_INCREASE=$VERSION_INCREASE" >> "$GITHUB_OUTPUT"
         
       - name: Read CLI Version from Cargo.toml
         id: read_current_version
         run: |
           CURRENT_VERSION=$(awk -F'"' '/version =/ {print $2}' ./cli/Cargo.toml)
-          echo "CURRENT_VERSION=$CURRENT_VERSION" >> "GITHUB_OUTPUT"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Bump Version
+        id: bump_version
         env: 
           VERSION_INCREASE: ${{ steps.version_increase.outputs.VERSION_INCREASE }}
           CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}
@@ -35,31 +39,39 @@ jobs:
           if [ -n "$VERSION_INCREASE" ]; then
             add_version() {
                 NEW_VERSION=$(echo -e "$1\n$2" | awk -F. '{printf "%d.%d.%d\n", $1+$4, $2+$5, $3+$6}')
-                echo "$new_version"
+                echo "$NEW_VERSION"
             }
         
-            new_version=$(add_version "$CURRENT_VERSION" "$VERSION_BUMP")
+            NEW_VERSION=$(add_version "$CURRENT_VERSION" "$VERSION_BUMP")
         
             # Create a git tag with the new version
-            git tag -a "v$new_version" -m "Version $new_version"
+            git tag -a "v$NEW_VERSION" -m "Version $NEW_VERSION"
         
             # Push the tag to the remote repository
-            git push origin "v$new_version"
+            git push origin "v$NEW_VERSION"
         
-            echo "Existing Version: $existing_version"
+            echo "Current Version:  $CURRENT_VERSION"
             echo "Version Bump:     $VERSION_BUMP"
-            echo "New Version:      $new_version"
+            echo "New Version:      $NEW_VERSION"
+
+            echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "No 'version:major' or 'version:minor' label found in the list."
           fi
+      - name: Create PR to main
+        env: 
+          NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
+        run: |
+            git add ./cli/Cargo.toml
+            git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
+            git push 
+            gh pr create --fill-first --label type:CI/CD --base main
           
-
-
   build-artifacts:
     name: build 
     runs-on: ubuntu-latest
+    needs: [bump-version]
     permissions:
-      # cosign uses the GitHub OIDC token
       id-token: write
       # needed to upload artifacts to a GH release
       contents: write
@@ -89,10 +101,12 @@ jobs:
   
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
+        env: 
+          TAG: ${{ needs.bump-version.outputs.NEW_VERSION }}
         with:
           allowUpdates: false
           generateReleaseNotes: true
           makeLatest: true
-          tag: WIP  
+          tag: $TAG  
           artifacts: target/release/noops
 
