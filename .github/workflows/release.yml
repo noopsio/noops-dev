@@ -70,6 +70,7 @@ jobs:
         env: 
           NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
         run: |
+            sed -i -m "0,/version = \"$CURRENT_VERSION\"/{s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/}" "$CARGO_TOML"
             git add ./cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
             git push 
