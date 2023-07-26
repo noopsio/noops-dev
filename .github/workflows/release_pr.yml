@@ -22,7 +22,7 @@ jobs:
         id: pr_labels
         run: |
           labels=$(gh pr list --state merged --base main --json labels --jq '.[0].labels | map(.name)')
-          echo "PR_LABELS=labels" >> "$GITHUB_OUTPUT"
+          echo "PR_LABELS=$labels" >> "$GITHUB_OUTPUT"
       
       - name: Label to Version
         id: determine_version
