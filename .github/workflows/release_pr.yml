@@ -47,10 +47,10 @@ jobs:
           release_prs=$(gh pr list -B release --json id)
           if [[ "$release_prs" == "[]" ]]; then
             echo "No open release PR"
-            echo "NEW_RELEASE=true" >> "$GITHUB_OUTPUT"
+            echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
           else
             echo "Release PR open"
-            echo "NEW_RELEASE=false" >> "$GITHUB_OUTPUT"
+            echo "PR_OPEN=false" >> "$GITHUB_OUTPUT"
             PR_NUMBER=$(echo $release_prs | jq '.[0].number')
             echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           fi        
