@@ -62,6 +62,8 @@ jobs:
             echo "Version Bump:     $VERSION_INCREASE"
             echo "New Version:      $NEW_VERSION"
 
+            awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
+
             echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "No 'version:major' or 'version:minor' label found in the list."
