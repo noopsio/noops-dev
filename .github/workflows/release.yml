@@ -110,12 +110,10 @@ jobs:
   
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
-        env: 
-          TAG: ${{ needs.bump-version.outputs.NEW_VERSION }}
         with:
           allowUpdates: false
           generateReleaseNotes: true
           makeLatest: true
-          tag: $TAG  
+          tag: ${{ needs.bump-version.outputs.NEW_VERSION }} 
           artifacts: target/release/noops
 
