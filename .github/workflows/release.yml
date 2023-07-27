@@ -74,7 +74,7 @@ jobs:
             git add ./cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
             git push 
-            gh pr create --fill-first --label type:CI/CD --base main
+            gh pr create  --title "Bump Cargo to $NEW_VERSION" --body "This was automatically created" --label type:CI/CD --base main
           
   build-artifacts:
     name: build 
