@@ -37,6 +37,7 @@ jobs:
         env: 
           VERSION_INCREASE: ${{ steps.version_increase.outputs.VERSION_INCREASE }}
           CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}
+          CARGO_TOML: "./cli/Cargo.toml"
         run: |
           if [ -n "$VERSION_INCREASE" ]; then
             add_version() {
