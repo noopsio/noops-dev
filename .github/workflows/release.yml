@@ -8,7 +8,7 @@ on:
 jobs:
   bump-version:
     name: bump and tag version
-    runs-on: ubunutu-latest
+    runs-on: ubuntu-latest
     outputs: 
       NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
     env: 
@@ -19,16 +19,16 @@ jobs:
 
       - name: Read Version Increase from Merge PR
         id: version_increase
-        run: |
-          # --head main 
-          PR_LABELS=$(gh pr list --base release --state merged --json labels --jq '.[0].labels | map(.name)')
+        run: |  
+          PR_LABELS=$(gh pr list --base release --head main --state merged --json labels --jq '.[0].labels | map(.name)')
           VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "0.1.0" elif any(.[]; . == "version:minor") then "0.0.1" else empty end')
           echo "VERSION_INCREASE=$VERSION_INCREASE" >> "$GITHUB_OUTPUT"
         
       - name: Read CLI Version from Cargo.toml
         id: read_current_version
         run: |
-          CURRENT_VERSION=$(awk -F'"' '/version =/ {print $2}' ./cli/Cargo.toml)
+          CURRENT_VERSION_LINE=$(grep -m 1 '^version =' ./cli/Cargo.toml)
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION_LINE" | awk -F'"' '{print $2}')
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Bump Version
@@ -36,24 +36,25 @@ jobs:
         env: 
           VERSION_INCREASE: ${{ steps.version_increase.outputs.VERSION_INCREASE }}
           CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}
+          CARGO_TOML: "./cli/Cargo.toml"
         run: |
           if [ -n "$VERSION_INCREASE" ]; then
             add_version() {
-                NEW_VERSION=$(echo -e "$1\n$2" | awk -F. '{printf "%d.%d.%d\n", $1+$4, $2+$5, $3+$6}')
-                echo "$NEW_VERSION"
+                # Use 'expr' for integer addition
+                major=$(expr "$1" + "$4")
+                minor=$(expr "$2" + "$5")
+                patch=$(expr "$3" + "$6")
+                printf "%d.%d.%d\n" "$major" "$minor" "$patch"
+            
+                #echo "$NEW_VERSION"
             }
-        
-            NEW_VERSION=$(add_version "$CURRENT_VERSION" "$VERSION_BUMP")
-        
-            # Create a git tag with the new version
-            git tag -a "v$NEW_VERSION" -m "Version $NEW_VERSION"
-        
-            # Push the tag to the remote repository
-            git push origin "v$NEW_VERSION"
-        
+            NEW_VERSION=$(add_version $(echo "$CURRENT_VERSION" | tr '.' ' ') $(echo "$VERSION_INCREASE" | tr '.' ' '))
+            
             echo "Current Version:  $CURRENT_VERSION"
-            echo "Version Bump:     $VERSION_BUMP"
+            echo "Version Bump:     $VERSION_INCREASE"
             echo "New Version:      $NEW_VERSION"
+
+            awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
 
             echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           else
@@ -62,11 +63,17 @@ jobs:
       - name: Create PR to main
         env: 
           NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
+          CURRENT_VERSION: ${{ steps.read_current_version.outputs.CURRENT_VERSION }}          
+          CARGO_TOML: "./cli/Cargo.toml"
         run: |
+            awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
+            git config user.email "bot@noops.io"
+            git config user.name "Release Bot"
+                
             git add ./cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
             git push 
-            gh pr create --fill-first --label type:CI/CD --base main
+            gh pr create  --title "Bump Cargo to $NEW_VERSION" --body "This was automatically created" --label type:CI/CD --base main
           
   build-artifacts:
     name: build 
@@ -102,12 +109,10 @@ jobs:
   
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
-        env: 
-          TAG: ${{ needs.bump-version.outputs.NEW_VERSION }}
         with:
           allowUpdates: false
           generateReleaseNotes: true
           makeLatest: true
-          tag: $TAG  
+          tag: ${{ needs.bump-version.outputs.NEW_VERSION }} 
           artifacts: target/release/noops
 

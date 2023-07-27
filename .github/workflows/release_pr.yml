@@ -21,8 +21,7 @@ jobs:
       - name: Extract Merge PR Labels
         id: pr_labels
         run: |
-          # --state merged --base main 
-          labels=$(gh pr list --json labels --jq '.[0].labels | map(.name)')
+          labels=$(gh pr list --state merged --base main --json labels --jq '.[0].labels | map(.name)')
           echo "PR_LABELS=$labels" >> "$GITHUB_OUTPUT"
 
       - name: Check for CI release label
@@ -33,6 +32,8 @@ jobs:
           if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:ci")' > /dev/null; then
             echo "CI Release detected"
             echo "CI_RELEASE=true" >> "$GITHUB_OUTPUT"
+          else 
+            echo "CI_RELEASE=false" >> "$GITHUB_OUTPUT"
           fi
       
       - name: Label to Version
