@@ -11,7 +11,6 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Login in the noops cloud
-    #[command(subcommand)]
     Login,
 
     /// Project subcommands
