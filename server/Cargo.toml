@@ -26,6 +26,7 @@ thiserror = "1.0.41"
 diesel = { version = "2.1.0", features = ["sqlite", "r2d2", "returning_clauses_for_sqlite_3_35"] }
 reqwest = {version = "0.11.18", features = ["json"] }
 nanoid = "0.4.0"
+faux = "0.1.9"
 
 
 

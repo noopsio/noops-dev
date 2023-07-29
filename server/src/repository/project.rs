@@ -31,11 +31,19 @@ impl Project {
     }
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::create)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 #[derive(Debug, Clone)]
 pub struct ProjectRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::methods)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl Repository<Project> for ProjectRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -71,6 +79,10 @@ impl Repository<Project> for ProjectRepository {
     }
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::methods)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl ProjectRepository {
     pub fn belonging_to_by_name(
         &self,
@@ -112,9 +124,15 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, ProjectRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
+<<<<<<< HEAD
         let projects = ProjectRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
         let mut connection = projects.pool.get()?;
+=======
+        let mut connection = pool.get()?;
+        let projects = ProjectRepository::new(pool);
+        let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, projects))
     }

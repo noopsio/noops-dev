@@ -6,11 +6,13 @@ use std::{
 
 use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
 
+#[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct WasmStore {
     prefix: PathBuf,
 }
 
+#[cfg_attr(test, faux::methods)]
 impl WasmStore {
     pub fn new(path: &Path) -> anyhow::Result<Self> {
         fs::create_dir_all(path)?;

@@ -8,7 +8,11 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
 };
 
+<<<<<<< HEAD
 #[derive(Identifiable, Insertable, Queryable, Selectable, Debug, Clone, PartialEq)]
+=======
+#[derive(Identifiable, Insertable, Queryable, Selectable, Debug, Clone, PartialEq, Default)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 #[diesel(table_name = crate::repository::schema::users)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct User {
@@ -29,11 +33,19 @@ impl User {
     }
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::create)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 #[derive(Debug, Clone)]
 pub struct UserRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::methods)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl Repository<User> for UserRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -63,6 +75,10 @@ impl Repository<User> for UserRepository {
     }
 }
 
+<<<<<<< HEAD
+=======
+#[cfg_attr(test, faux::methods)]
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl UserRepository {
     pub fn read_by_gh_id(&self, github_id: i32) -> anyhow::Result<Option<User>> {
         let mut connection = self.pool.get()?;
@@ -101,9 +117,15 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, UserRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
+<<<<<<< HEAD
         let users = UserRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
         let mut connection = users.pool.get()?;
+=======
+        let mut connection = pool.get()?;
+        let users = UserRepository::new(pool);
+        let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
+>>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, users))
     }
