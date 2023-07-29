@@ -26,8 +26,6 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    functions,
-    projects,
-    users,
-);
+diesel::joinable!(functions -> projects (project_id));
+diesel::joinable!(projects -> users (user_id));
+diesel::allow_tables_to_appear_in_same_query!(functions, projects, users,);

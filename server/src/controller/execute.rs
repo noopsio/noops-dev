@@ -1,5 +1,5 @@
 use super::AppState;
-use crate::{bindgen, database::wasmstore::WasmStore, errors::Error, executor};
+use crate::{bindgen, errors::Error, executor, wasmstore::WasmStore};
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
@@ -20,7 +20,7 @@ async fn execute(
     Query(query_map): Query<HashMap<String, String>>,
     State(wasmstore): State<WasmStore>,
 ) -> Result<Response, Error> {
-    let function = wasmstore.read_function(&function)?;
+    let function = wasmstore.read(&function)?;
     let mut query_list: Vec<(&str, &str)> = Vec::new();
     for (key, value) in query_map.iter() {
         query_list.push((key, value));
