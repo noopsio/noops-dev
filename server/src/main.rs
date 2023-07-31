@@ -9,9 +9,8 @@ mod service;
 mod wasmstore;
 
 use axum::Server;
-use service::{
-    auth::AuthService, function::FunctionService, project::ProjectService, user::UserService,
-};
+use github::GithubClient;
+use service::{auth::AuthService, function::FunctionService, project::ProjectService};
 use std::{net::SocketAddr, path::Path};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{self, layer::SubscriberExt, util::SubscriberInitExt};
@@ -47,18 +46,11 @@ fn create_app_state(database_path: &Path, wasmstore_path: &Path) -> anyhow::Resu
     let (users, projects, functions) = repository::new(database_path);
     let wasmstore = wasmstore::WasmStore::new(wasmstore_path)?;
 
-    let auth_service = AuthService::new(users);
-    let user_service = UserService::new();
+    let auth_service = AuthService::new(GithubClient::new(), users);
     let project_service = ProjectService::new(projects.clone(), functions.clone());
     let function_service = FunctionService::new(projects, functions, wasmstore.clone());
 
-    let state = AppState::new(
-        auth_service,
-        user_service,
-        project_service,
-        function_service,
-        wasmstore,
-    );
+    let state = AppState::new(auth_service, project_service, function_service, wasmstore);
 
     Ok(state)
 }

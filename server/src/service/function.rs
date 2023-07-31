@@ -82,3 +82,106 @@ impl FunctionService {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::FunctionService;
+    use crate::{
+        repository::{
+            function::FunctionRepository,
+            project::{Project, ProjectRepository},
+            user::User,
+        },
+        wasmstore::WasmStore,
+    };
+    use faux::when;
+    use lazy_static::lazy_static;
+
+    const PROJECT_NAME: &str = "PROJECT_NAME";
+    const USER_EMAIL: &str = "test@example.com";
+    const USER_GH_ACCESS_TOKEN: &str = "Yiu0Hae4ietheereij4OhneuNe6tae0e";
+    const USER_GH_ID: i32 = 42;
+
+    lazy_static! {
+        static ref USER: User = User::new(
+            USER_EMAIL.to_string(),
+            USER_GH_ID,
+            USER_GH_ACCESS_TOKEN.to_string(),
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn create_ok() {
+        // FIXME: Deactivated due to the lack of the faux crate to assert a functions has been called
+    }
+
+    #[test]
+    fn create_project_not_found() {
+        let mut projects_mock = ProjectRepository::faux();
+        when!(projects_mock.belonging_to_by_name(USER.clone(), PROJECT_NAME))
+            .once()
+            .then_return(Ok(None));
+
+        let functions_mock = FunctionRepository::faux();
+        let wasmstore_mock: WasmStore = WasmStore::faux();
+
+        // -------------------------------------------------------------------------------------
+
+        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
+        let result =
+            function_service.create(&USER, PROJECT_NAME, "function_1".to_string(), &[0, 0, 0]);
+
+        assert!(result.is_err())
+    }
+
+    #[test]
+    #[ignore]
+    fn delete_ok() {
+        // FIXME: Deactivated due to the lack of the faux crate to assert a functions has been called
+    }
+
+    #[test]
+    fn delete_project_not_found() {
+        let mut projects_mock = ProjectRepository::faux();
+        when!(projects_mock.belonging_to_by_name(USER.clone(), PROJECT_NAME))
+            .once()
+            .then_return(Ok(None));
+
+        let functions_mock = FunctionRepository::faux();
+        let wasmstore_mock: WasmStore = WasmStore::faux();
+
+        // -------------------------------------------------------------------------------------
+
+        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
+        let result = function_service.delete(&USER, PROJECT_NAME, "function_1");
+
+        assert!(result.is_err())
+    }
+
+    #[test]
+    fn delete_function_not_found() {
+        let function_name = "function_1";
+        let project_expected = Project::new(PROJECT_NAME.to_string(), USER.id.clone());
+
+        // -------------------------------------------------------------------------------------
+
+        let mut projects_mock = ProjectRepository::faux();
+        when!(projects_mock.belonging_to_by_name(USER.clone(), PROJECT_NAME))
+            .once()
+            .then_return(Ok(Some(project_expected.clone())));
+
+        let mut functions_mock = FunctionRepository::faux();
+        when!(functions_mock.belonging_to_by_name(project_expected, function_name))
+            .once()
+            .then_return(Ok(None));
+        let wasmstore_mock: WasmStore = WasmStore::faux();
+
+        // -------------------------------------------------------------------------------------
+
+        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
+        let result = function_service.delete(&USER, PROJECT_NAME, function_name);
+
+        assert!(result.is_err())
+    }
+}

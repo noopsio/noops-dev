@@ -8,7 +8,7 @@ use diesel::{
     r2d2::{ConnectionManager, Pool},
 };
 
-#[derive(Identifiable, Insertable, Queryable, Selectable, Debug, Clone, PartialEq)]
+#[derive(Identifiable, Insertable, Queryable, Selectable, Debug, Clone, PartialEq, Default)]
 #[diesel(table_name = crate::repository::schema::users)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct User {
@@ -29,11 +29,13 @@ impl User {
     }
 }
 
+#[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct UserRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
+#[cfg_attr(test, faux::methods)]
 impl Repository<User> for UserRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -63,6 +65,7 @@ impl Repository<User> for UserRepository {
     }
 }
 
+#[cfg_attr(test, faux::methods)]
 impl UserRepository {
     pub fn read_by_gh_id(&self, github_id: i32) -> anyhow::Result<Option<User>> {
         let mut connection = self.pool.get()?;
@@ -101,9 +104,9 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, UserRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
+        let mut connection = pool.get()?;
         let users = UserRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
-        let mut connection = users.pool.get()?;
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, users))
     }

@@ -31,11 +31,13 @@ impl Project {
     }
 }
 
+#[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct ProjectRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
+#[cfg_attr(test, faux::methods)]
 impl Repository<Project> for ProjectRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -71,6 +73,7 @@ impl Repository<Project> for ProjectRepository {
     }
 }
 
+#[cfg_attr(test, faux::methods)]
 impl ProjectRepository {
     pub fn belonging_to_by_name(
         &self,
@@ -112,9 +115,9 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, ProjectRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
+        let mut connection = pool.get()?;
         let projects = ProjectRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
-        let mut connection = projects.pool.get()?;
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, projects))
     }

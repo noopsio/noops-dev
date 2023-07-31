@@ -7,14 +7,13 @@ mod project;
 
 use crate::service::auth::AuthService;
 use crate::service::function::FunctionService;
-use crate::service::{project::ProjectService, user::UserService};
+use crate::service::project::ProjectService;
 use crate::wasmstore::WasmStore;
 use axum::{extract::FromRef, middleware, Router};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
     auth: AuthService,
-    users: UserService,
     projects: ProjectService,
     functions: FunctionService,
     wasmstore: WasmStore,
@@ -23,14 +22,12 @@ pub struct AppState {
 impl AppState {
     pub fn new(
         auth: AuthService,
-        users: UserService,
         projects: ProjectService,
         functions: FunctionService,
         wasmstore: WasmStore,
     ) -> Self {
         Self {
             auth,
-            users,
             projects,
             functions,
             wasmstore,
@@ -47,12 +44,6 @@ impl FromRef<AppState> for WasmStore {
 impl FromRef<AppState> for AuthService {
     fn from_ref(app_state: &AppState) -> AuthService {
         app_state.auth.clone()
-    }
-}
-
-impl FromRef<AppState> for UserService {
-    fn from_ref(app_state: &AppState) -> UserService {
-        app_state.users.clone()
     }
 }
 

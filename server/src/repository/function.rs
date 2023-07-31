@@ -39,11 +39,13 @@ impl From<Function> for GetFunctionDTO {
     }
 }
 
+#[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct FunctionRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
+#[cfg_attr(test, faux::methods)]
 impl Repository<Function> for FunctionRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -81,10 +83,10 @@ impl Repository<Function> for FunctionRepository {
     }
 }
 
+#[cfg_attr(test, faux::methods)]
 impl FunctionRepository {
     pub fn belonging_to(&self, project: &Project) -> anyhow::Result<Vec<Function>> {
         let mut connection = self.pool.get()?;
-
         let functions = Function::belonging_to(project).load::<Function>(&mut connection)?;
         Ok(functions)
     }
@@ -133,9 +135,9 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, FunctionRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
+        let mut connection = pool.get()?;
         let projects = FunctionRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
-        let mut connection = projects.pool.get()?;
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, projects))
     }

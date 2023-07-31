@@ -1,5 +1,5 @@
 use crate::errors::Error::{self, UserNotRegistered};
-use crate::github;
+use crate::github::GithubClient;
 use crate::jwt::Jwt;
 use crate::repository::user::User;
 use crate::repository::{user::UserRepository, Repository};
@@ -18,16 +18,23 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct AuthService {
+    github_client: GithubClient,
     users: UserRepository,
 }
 
 impl AuthService {
-    pub fn new(users: UserRepository) -> AuthService {
-        Self { users }
+    pub fn new(github_client: GithubClient, users: UserRepository) -> AuthService {
+        Self {
+            github_client,
+            users,
+        }
     }
 
     pub async fn login(&self, github_access_token: String) -> Result<GetJWTDTO, Error> {
-        let gh_user = github::get_user(github_access_token.clone()).await?;
+        let gh_user = self
+            .github_client
+            .get_user(github_access_token.clone())
+            .await?;
         let result = self.users.read_by_gh_id(gh_user.id)?;
 
         let user = match result {
@@ -56,5 +63,96 @@ impl AuthService {
         }
         let user = user.unwrap();
         Ok(user)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use faux::when;
+
+    use super::*;
+    use crate::{github::GithubUser, repository::user::UserRepository};
+
+    const USER_EMAIL: &str = "test@example.com";
+    const USER_GH_ACCESS_TOKEN: &str = "Yiu0Hae4ietheereij4OhneuNe6tae0e";
+    const USER_GH_ID: i32 = 42;
+
+    lazy_static! {
+        static ref USER: User = User::new(
+            USER_EMAIL.to_string(),
+            USER_GH_ID,
+            USER_GH_ACCESS_TOKEN.to_string(),
+        );
+        static ref JWT: String = Jwt::create_token(
+            USER.id.clone(),
+            JWT_ISSUER.to_string(),
+            JWT_EXPIRATION_DELTA,
+            &ENCODING_KEY,
+        )
+        .unwrap();
+        static ref GITHUB_USER: GithubUser = GithubUser {
+            id: USER_GH_ID,
+            email: USER.email.clone(),
+            access_token: USER_GH_ACCESS_TOKEN.to_string(),
+        };
+    }
+
+    #[tokio::test]
+    async fn login_ok() -> anyhow::Result<()> {
+        let mut users_mock = UserRepository::faux();
+        when!(users_mock.read_by_gh_id(USER_GH_ID))
+            .once()
+            .then_return(Ok(Some(USER.clone())));
+
+        let mut github_client_mock = GithubClient::faux();
+        when!(github_client_mock.get_user(USER_GH_ACCESS_TOKEN.to_string()))
+            .once()
+            .then_return(Ok(GITHUB_USER.clone()));
+
+        // -------------------------------------------------------------------------------------
+
+        let auth_service = AuthService::new(github_client_mock, users_mock);
+        let _ = auth_service
+            .login(USER_GH_ACCESS_TOKEN.to_string())
+            .await?
+            .jwt;
+
+        Ok(())
+    }
+
+    #[test]
+    fn authenticate_ok() -> anyhow::Result<()> {
+        let mut users_mock = UserRepository::faux();
+        when!(users_mock.read(USER.id.as_ref()))
+            .once()
+            .then_return(Ok(Some(USER.clone())));
+
+        let github_client_mock = GithubClient::faux();
+
+        // -------------------------------------------------------------------------------------
+
+        let auth_service = AuthService::new(github_client_mock, users_mock);
+        let user = auth_service.authenticate(&JWT)?;
+        assert_eq!(*USER, user);
+
+        Ok(())
+    }
+
+    #[test]
+    fn authenticate_user_not_registered() -> anyhow::Result<()> {
+        let mut users_mock = UserRepository::faux();
+        when!(users_mock.read(USER.id.as_ref()))
+            .once()
+            .then_return(Ok(None));
+
+        let github_client_mock = GithubClient::faux();
+
+        // -------------------------------------------------------------------------------------
+
+        let auth_service = AuthService::new(github_client_mock, users_mock);
+        let result = auth_service.authenticate(&JWT);
+        assert!(result.is_err());
+
+        Ok(())
     }
 }
