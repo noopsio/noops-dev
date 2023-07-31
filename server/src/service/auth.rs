@@ -1,9 +1,5 @@
 use crate::errors::Error::{self, UserNotRegistered};
-<<<<<<< HEAD
-use crate::github;
-=======
 use crate::github::GithubClient;
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 use crate::jwt::Jwt;
 use crate::repository::user::User;
 use crate::repository::{user::UserRepository, Repository};
@@ -22,22 +18,11 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct AuthService {
-<<<<<<< HEAD
-=======
     github_client: GithubClient,
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
     users: UserRepository,
 }
 
 impl AuthService {
-<<<<<<< HEAD
-    pub fn new(users: UserRepository) -> AuthService {
-        Self { users }
-    }
-
-    pub async fn login(&self, github_access_token: String) -> Result<GetJWTDTO, Error> {
-        let gh_user = github::get_user(github_access_token.clone()).await?;
-=======
     pub fn new(github_client: GithubClient, users: UserRepository) -> AuthService {
         Self {
             github_client,
@@ -50,7 +35,6 @@ impl AuthService {
             .github_client
             .get_user(github_access_token.clone())
             .await?;
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
         let result = self.users.read_by_gh_id(gh_user.id)?;
 
         let user = match result {
@@ -81,8 +65,6 @@ impl AuthService {
         Ok(user)
     }
 }
-<<<<<<< HEAD
-=======
 
 #[cfg(test)]
 mod tests {
@@ -174,4 +156,3 @@ mod tests {
         Ok(())
     }
 }
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))

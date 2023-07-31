@@ -39,19 +39,13 @@ impl From<Function> for GetFunctionDTO {
     }
 }
 
-<<<<<<< HEAD
-=======
 #[cfg_attr(test, faux::create)]
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 #[derive(Debug, Clone)]
 pub struct FunctionRepository {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
-<<<<<<< HEAD
-=======
 #[cfg_attr(test, faux::methods)]
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl Repository<Function> for FunctionRepository {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self {
         Self { pool }
@@ -89,14 +83,10 @@ impl Repository<Function> for FunctionRepository {
     }
 }
 
-<<<<<<< HEAD
-=======
 #[cfg_attr(test, faux::methods)]
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
 impl FunctionRepository {
     pub fn belonging_to(&self, project: &Project) -> anyhow::Result<Vec<Function>> {
         let mut connection = self.pool.get()?;
-
         let functions = Function::belonging_to(project).load::<Function>(&mut connection)?;
         Ok(functions)
     }
@@ -145,15 +135,9 @@ mod tests {
     fn setup() -> anyhow::Result<(TempDir, FunctionRepository)> {
         let temp_dir = tempdir()?;
         let pool = create_pool(&temp_dir.path().join(DATABASE_NAME));
-<<<<<<< HEAD
-        let projects = FunctionRepository::new(pool);
-        let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
-        let mut connection = projects.pool.get()?;
-=======
         let mut connection = pool.get()?;
         let projects = FunctionRepository::new(pool);
         let migrations = FileBasedMigrations::find_migrations_directory_in_path("./server")?;
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
         connection.run_pending_migrations(migrations).unwrap();
         Ok((temp_dir, projects))
     }

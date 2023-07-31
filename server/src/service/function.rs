@@ -82,8 +82,6 @@ impl FunctionService {
         Ok(())
     }
 }
-<<<<<<< HEAD
-=======
 
 #[cfg(test)]
 mod tests {
@@ -187,4 +185,3 @@ mod tests {
         assert!(result.is_err())
     }
 }
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))

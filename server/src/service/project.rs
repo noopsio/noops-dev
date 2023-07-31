@@ -62,8 +62,6 @@ impl ProjectService {
         Ok((project, functions))
     }
 }
-<<<<<<< HEAD
-=======
 
 #[cfg(test)]
 mod tests {
@@ -167,4 +165,3 @@ mod tests {
         Ok(())
     }
 }
->>>>>>> 39b86c3 (feat: Consolidate cli commands into subcommands (#166))
