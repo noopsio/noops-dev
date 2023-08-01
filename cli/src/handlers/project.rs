@@ -4,7 +4,7 @@ use dtos::GetFunctionDTO;
 use crate::{
     adapter::{cargo::CargoAdapter, golang::GolangAdapter},
     client::NoopsClient,
-    config::{Config, CONFIG_FILE_NAME},
+    manifest::{Manifest, MANIFEST_FILE_NAME},
     modules::Language,
     terminal::Terminal,
 };
@@ -15,29 +15,29 @@ use super::diff::ModuleDiff;
 pub fn init(term: &Terminal) -> anyhow::Result<()> {
     term.write_heading("Initializing")?;
 
-    if Path::new(CONFIG_FILE_NAME).exists() {
+    if Path::new(MANIFEST_FILE_NAME).exists() {
         term.write_text("Project already initialized")?;
         return Ok(());
     }
 
     let project_name = term.text_prompt("Project name")?;
-    let config = Config::new(&project_name);
-    config.save()?;
+    let manifest = Manifest::new(&project_name);
+    manifest.save()?;
 
     term.write_text(format!("{} initialized", &project_name))?;
     Ok(())
 }
 
-pub fn build(term: &Terminal, config: &Config) -> anyhow::Result<()> {
-    term.write_heading(format!("Building {}", config.project_name))?;
+pub fn build(term: &Terminal, manifest: &Manifest) -> anyhow::Result<()> {
+    term.write_heading(format!("Building {}", manifest.project_name))?;
 
-    if config.modules.is_empty() {
+    if manifest.modules.is_empty() {
         term.write_text("No modules to build")?;
         return Ok(());
     }
 
-    for (i, module) in config.modules.iter().enumerate() {
-        let prefix = format!("[{}/{}]", i + 1, config.modules.len());
+    for (i, module) in manifest.modules.iter().enumerate() {
+        let prefix = format!("[{}/{}]", i + 1, manifest.modules.len());
         let spinner = term.spinner_with_prefix(prefix, &module.name);
         match module.language {
             Language::Rust => {
@@ -54,8 +54,8 @@ pub fn build(term: &Terminal, config: &Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow::Result<()> {
-    term.write_heading(format!("Deploying {}", config.project_name))?;
+pub fn deploy(term: &Terminal, manifest: &Manifest, client: &NoopsClient) -> anyhow::Result<()> {
+    term.write_heading(format!("Deploying {}", manifest.project_name))?;
 
     let mut remote_modules: Vec<GetFunctionDTO> = Default::default();
     let project_exists = client.project_exists()?;
@@ -64,7 +64,7 @@ pub fn deploy(term: &Terminal, config: &Config, client: &NoopsClient) -> anyhow:
         remote_modules = client.project_get()?.functions;
     }
 
-    let diffs = ModuleDiff::new(&config.modules, &remote_modules)?;
+    let diffs = ModuleDiff::new(&manifest.modules, &remote_modules)?;
 
     if diffs.has_changes() {
         print_changes(&diffs, term)?;
