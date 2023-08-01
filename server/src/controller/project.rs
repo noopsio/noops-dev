@@ -1,18 +1,16 @@
+use super::AppState;
+use crate::{
+    errors::Error::{self},
+    repository::user::User,
+    service::project::ProjectService,
+};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     routing::get,
     Extension, Json, Router,
 };
-use dtos::{GetFunctionDTO, GetProjectDTO};
-
-use crate::{
-    database::{models::User, Database},
-    errors::Error::{self, ProjectNotFound},
-};
-
-use super::AppState;
 
 pub fn create_routes(state: AppState) -> Router {
     Router::new()
@@ -25,48 +23,28 @@ pub fn create_routes(state: AppState) -> Router {
 
 async fn create_project(
     Path(project_name): Path<String>,
-    State(state): State<AppState>,
+    State(projects): State<ProjectService>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    state.database.create_project(user.id, project_name)?;
+    projects.create(user.id, project_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 async fn get_project(
     Path(project_name): Path<String>,
-    State(database): State<Database>,
+    State(projects): State<ProjectService>,
     Extension(user): Extension<User>,
-) -> Result<Response, Error> {
-    let project = database.read_project(&user.id, &project_name)?;
-    if project.is_none() {
-        return Err(ProjectNotFound);
-    }
-
-    let project = project.unwrap();
-    let functions = database.read_functions(&project.id)?;
-
-    let functions = functions
-        .into_iter()
-        .map(|function| GetFunctionDTO {
-            name: function.name,
-            hash: function.hash,
-        })
-        .collect();
-
-    let project = GetProjectDTO {
-        name: project.name,
-        functions,
-    };
-
-    Ok((StatusCode::OK, Json(project)).into_response())
+) -> Result<impl IntoResponse, Error> {
+    let project = projects.read(&user, &project_name)?;
+    Ok((StatusCode::OK, Json(project)))
 }
 
 async fn delete_project(
     Path(project_name): Path<String>,
-    State(state): State<AppState>,
+    State(projects): State<ProjectService>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    state.database.delete_project(&user.id, &project_name)?;
-    Ok(StatusCode::NO_CONTENT)
+    projects.delete(&user, &project_name)?;
+    Ok(StatusCode::OK)
 }
 
 /*

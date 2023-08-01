@@ -40,6 +40,18 @@ impl Jwt {
         let start = SystemTime::now();
         start.duration_since(UNIX_EPOCH).unwrap().as_secs()
     }
+
+    pub fn create_token(
+        subject: String,
+        issuer: String,
+        delta: u64,
+        key: &EncodingKey,
+    ) -> anyhow::Result<String> {
+        let issued_at = Jwt::create_issued_at();
+        let jwt = Jwt::new(issuer, subject, issued_at, delta).encode(key)?;
+
+        Ok(jwt)
+    }
 }
 
 #[cfg(test)]

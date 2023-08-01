@@ -4,5 +4,6 @@ CREATE TABLE functions (
   name VARCHAR NOT NULL,
   hash VARCHAR NOT NULL,
   project_id CHAR(21) REFERENCES project(id) NOT NULL,
-  UNIQUE(name, project_id)
+  UNIQUE(name, project_id),
+  foreign key (project_id) references projects(id)
 );

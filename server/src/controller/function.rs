@@ -1,4 +1,5 @@
-use crate::{bindgen, database::models::User, errors::Error};
+use super::AppState;
+use crate::{errors::Error, repository::user::User, service::function::FunctionService};
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
     http::StatusCode,
@@ -6,47 +7,34 @@ use axum::{
     Extension, Router,
 };
 
-use super::AppState;
-
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
 pub fn create_routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/api/:project_name/:function_name",
-            put(create_function).delete(delete_function),
+            put(create).delete(delete),
         )
         .with_state(state)
         .layer(DefaultBodyLimit::max(MAX_CONTENT_SIZE_IN_BYTES))
 }
 
-async fn create_function(
+async fn create(
     Path((project_name, function_name)): Path<(String, String)>,
-    State(state): State<AppState>,
+    State(functions): State<FunctionService>,
     Extension(user): Extension<User>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
 ) -> Result<StatusCode, Error> {
-    let wasm = bindgen::create_component(&function_dto.wasm)?;
-
-    let function = state
-        .database
-        .create_function(&user.id, &project_name, function_name, &wasm)?;
-    state.wasmstore.create_function(&function.id, &wasm)?;
-
+    functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
-async fn delete_function(
+async fn delete(
     Path((project_name, function_name)): Path<(String, String)>,
-    State(state): State<AppState>,
+    State(functions): State<FunctionService>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    let function = state
-        .database
-        .delete_function(&user.id, &project_name, &function_name)?;
-
-    state.wasmstore.delete_function(&function.id)?;
-
+    functions.delete(&user, &project_name, &function_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

@@ -6,11 +6,13 @@ use std::{
 
 use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
 
+#[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct WasmStore {
     prefix: PathBuf,
 }
 
+#[cfg_attr(test, faux::methods)]
 impl WasmStore {
     pub fn new(path: &Path) -> anyhow::Result<Self> {
         fs::create_dir_all(path)?;
@@ -19,7 +21,7 @@ impl WasmStore {
         })
     }
 
-    pub fn create_function(&self, function: &str, wasm: &[u8]) -> Result<(), Error> {
+    pub fn create(&self, function: &str, wasm: &[u8]) -> Result<(), Error> {
         let function = self.prefix.join(format!("{}.wasm", function));
         if function.exists() {
             return Err(FunctionAlreadyExists);
@@ -29,7 +31,7 @@ impl WasmStore {
         Ok(())
     }
 
-    pub fn delete_function(&self, function: &str) -> Result<(), Error> {
+    pub fn delete(&self, function: &str) -> Result<(), Error> {
         let function = self.prefix.join(format!("{}.wasm", function));
         if !function.exists() {
             return Err(FunctionNotFound);
@@ -38,7 +40,7 @@ impl WasmStore {
         Ok(())
     }
 
-    pub fn read_function(&self, function: &str) -> Result<Vec<u8>, Error> {
+    pub fn read(&self, function: &str) -> Result<Vec<u8>, Error> {
         let function = self.prefix.join(format!("{}.wasm", function));
         if !function.exists() {
             return Err(FunctionNotFound);
