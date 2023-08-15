@@ -11,7 +11,11 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        let xdg_config_home = env::var("XDG_CONFIG_HOME").unwrap();
+        let xdg_config_home = env::var("XDG_CONFIG_HOME").unwrap_or_else(|_| {
+            let home = env::var("HOME").expect("HOME directory not set");
+            format!("{}/.config", home)
+        });
+
         let config_path = Path::new(&xdg_config_home).join("noops");
         fs::create_dir_all(config_path.clone()).unwrap();
 
