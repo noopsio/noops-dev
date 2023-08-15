@@ -9,6 +9,9 @@ mod service;
 mod wasmstore;
 
 use axum::Server;
+use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use github::GithubClient;
 use service::{auth::AuthService, function::FunctionService, project::ProjectService};
 use std::{net::SocketAddr, path::Path};
@@ -19,6 +22,7 @@ use crate::controller::AppState;
 
 const WASMSTORE_PREFIX: &str = "./wasmstore";
 const DATABASE_CONNECTION: &str = "./noops.sqlite";
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -31,6 +35,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let state = create_app_state(Path::new(DATABASE_CONNECTION), Path::new(WASMSTORE_PREFIX))?;
+    run_database_migration()?;
     let app = controller::create_routes(state).layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("listening on {}", addr);
@@ -53,4 +58,12 @@ fn create_app_state(database_path: &Path, wasmstore_path: &Path) -> anyhow::Resu
     let state = AppState::new(auth_service, project_service, function_service, wasmstore);
 
     Ok(state)
+}
+
+fn run_database_migration() -> anyhow::Result<()> {
+    tracing::info!("Running Database Migrations");
+    let mut connection = SqliteConnection::establish(DATABASE_CONNECTION)?;
+    connection.run_pending_migrations(MIGRATIONS).unwrap();
+    tracing::info!("Database Migrations Successful");
+    Ok(())
 }
