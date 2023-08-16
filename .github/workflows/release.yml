@@ -70,12 +70,12 @@ jobs:
             git config user.email "bot@noops.io"
             git config user.name "Release Bot"
 
-            git switch -c ci(versioning)-bump-version-to-$NEW_VERSION
+            git switch -c ci/bump-version-to-$NEW_VERSION
 
                 
             git add ./crates/cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
-            git push -u origin ci(versioning)-bump-version-to-$NEW_VERSION
+            git push -u origin ci/bump-version-to-$NEW_VERSION
  
             gh pr create  --title "Bump Cargo to $NEW_VERSION" --body "This was automatically created" --label type:CI/CD --base main 
           
