@@ -2,11 +2,7 @@
 authors = ["Giom-fm <giom@jfcomputing.io", "Falumpaset <marc@jfcomputing.io"]
 
 [workspace]
-members = [
-    "cli",
-    "server",
-    "dtos"
-]
+members = ["crates/*"]
 
 [workspace.dependencies]
 tempfile = "3.4.0"
