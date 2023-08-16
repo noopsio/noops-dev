@@ -69,11 +69,15 @@ jobs:
             awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
             git config user.email "bot@noops.io"
             git config user.name "Release Bot"
+
+            git switch -c ci(versioning)-bump-version-to-$NEW_VERSION
+
                 
             git add ./cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
-            git push 
-            gh pr create  --title "Bump Cargo to $NEW_VERSION" --body "This was automatically created" --label type:CI/CD --base main
+            git push -u origin ci(versioning)-bump-version-to-$NEW_VERSION
+ 
+            gh pr create  --title "Bump Cargo to $NEW_VERSION" --body "This was automatically created" --label type:CI/CD --base main 
           
   build-artifacts:
     name: build 
