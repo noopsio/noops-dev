@@ -45,21 +45,30 @@ jobs:
                 minor=$(expr "$2" + "$5")
                 patch=$(expr "$3" + "$6")
                 printf "%d.%d.%d\n" "$major" "$minor" "$patch"
-            
-                #echo "$NEW_VERSION"
             }
-            NEW_VERSION=$(add_version $(echo "$CURRENT_VERSION" | tr '.' ' ') $(echo "$VERSION_INCREASE" | tr '.' ' '))
+        
+            # Extract the main version part (e.g., "1.0.0" from "1.0.0-pre-0")
+            MAIN_VERSION=$(echo "$CURRENT_VERSION" | sed 's/-pre-0//')
+        
+            # Perform the version increment
+            NEW_MAIN_VERSION=$(add_version $(echo "$MAIN_VERSION" | tr '.' ' ') $(echo "$VERSION_INCREASE" | tr '.' ' '))
+        
+            # Append '-pre-0' back to the incremented version
+            NEW_VERSION="${NEW_MAIN_VERSION}-pre-0"
             
             echo "Current Version:  $CURRENT_VERSION"
             echo "Version Bump:     $VERSION_INCREASE"
+            echo "New Main Version: $NEW_MAIN_VERSION"
             echo "New Version:      $NEW_VERSION"
-
+        
+            # Replace the version string in Cargo.toml
             awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
-
+        
             echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           else
-            echo "No 'version:major', 'version:minor' or version:patch label found in the list."
+              echo "No 'version:major', 'version:minor', or 'version:patch' label found in the list."
           fi
+    
       - name: Create PR to main
         env: 
           NEW_VERSION: ${{ steps.bump_version.outputs.NEW_VERSION }}
@@ -69,10 +78,8 @@ jobs:
             awk -v current="$CURRENT_VERSION" -v new="$NEW_VERSION" '/version =/ && !found { gsub(current, new); found=1 } 1' "$CARGO_TOML" > tmpfile && mv tmpfile "$CARGO_TOML"
             git config user.email "bot@noops.io"
             git config user.name "Release Bot"
-
             git switch -c ci/bump-version-to-$NEW_VERSION
 
-                
             git add ./crates/cli/Cargo.toml
             git commit -m "Bump Cargo.toml Version to $NEW_VERSION"
             git push -u origin ci/bump-version-to-$NEW_VERSION
