@@ -29,7 +29,7 @@ jobs:
         env: 
           PR_LABELS: ${{ steps.pr_labels.outputs.PR_LABELS }}
         run: |
-          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:ci")' > /dev/null; then
+          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:CI/CD")' > /dev/null; then
             echo "CI Release detected"
             echo "CI_RELEASE=true" >> "$GITHUB_OUTPUT"
           else 
