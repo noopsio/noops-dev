@@ -45,12 +45,12 @@ jobs:
           # Check if either "type:feature" or "type:fix" label exists in the list
           if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:feature" or . == "type:fix")' > /dev/null; then
               # Determine the tag based on the label found
-              VERSION_BUMP=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "type:feature") then "version:major" elif any(.[]; . == "type:chore") or any(.[]; . == "type:fix") then "version:minor" else empty end')
+              VERSION_BUMP=$(echo "$PR_LABELS" |jq -r 'if any(.[]; . == "type:breaking") then "version:major" elif jq -r 'if any(.[]; . == "type:feature") then "version:minor" elif any(.[]; . == "type:chore") or any(.[]; . == "type:fix") then "version:patch" else empty end')
 
               # Output the Version Tag
               echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
           else
-              echo "No 'type:feature' or 'type:fix' label found."
+              echo "No 'type:breaking', 'type:feature' or 'type:fix' label found."
               echo "No Version Bump"
           fi
 
@@ -101,22 +101,35 @@ jobs:
           VERSION_BUMP: ${{ needs.check-for-new-release.outputs.VERSION_BUMP }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
         run: |
-          # Check if $RELEASE_TAG equals "version:major"
+          # Check if $VERSION_BUMP equals "version:major"
           if [ "$VERSION_BUMP" = "version:major" ]; then
             echo "Adding 'version:major' label to the pull request."
             # Use the appropriate command to add the label to the pull request
             gh pr edit $PR_NUMBER --add-label version:major
+            
+          elif [ "$VERSION_BUMP" = "version:minor" ]; then
+            echo "Adding 'version:minor' label to the pull request."
+            # Use the appropriate command to add the label to the pull request
+            gh pr edit $PR_NUMBER --add-label version:minor
+            
           else
+            # Default case: Assume a patch version bump
+            
             # Get the list of labels for the pull request
             labels=$(gh pr view $PR_NUMBER --json labels --jq '.[0].labels | map(.name)')
-        
-            # Check if "version:major" label exists in the list
+            
+            # Check if "version:major" or "version:minor" label exists in the list
             if echo "$labels" | jq -e '.[] | select(. == "version:major")' > /dev/null; then
-              echo "Already a major Version, not adding minor"
+              echo "Already a major Version, not adding patch"
+            elif echo "$labels" | jq -e '.[] | select(. == "version:minor")' > /dev/null; then
+              echo "Already a minor Version, not adding patch"
             else
-              echo "Already Tagged with version:minor"
+              echo "Adding 'version:patch' label to the pull request."
+              # Use the appropriate command to add the 'version:patch' label to the pull request
+              gh pr edit $PR_NUMBER --add-label version:patch
             fi
           fi
+        
         
 
 
