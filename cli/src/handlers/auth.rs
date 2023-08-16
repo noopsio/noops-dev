@@ -88,7 +88,23 @@ pub fn get_jwt(path: &Path) -> anyhow::Result<Option<String>> {
 }
 
 fn set_jwt(path: &Path, jwt: &str) -> anyhow::Result<()> {
-    let mut file = File::create(path.join(JWT_FILE_NAME))?;
+    log::debug!("creating jwt dir {}", path.as_os_str().to_string_lossy());
+    std::fs::DirBuilder::new()
+        .recursive(true)
+        .create(path)
+        .expect("Could not create dir");
+    log::debug!(
+        "Writing jwt to file {}",
+        path.join(JWT_FILE_NAME).as_os_str().to_string_lossy()
+    );
+
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(path.join(JWT_FILE_NAME))
+        .expect("Failed to create/open the file");
+
     file.write_all(jwt.as_bytes())?;
+    log::debug!("File sucessfully written!");
     Ok(())
 }

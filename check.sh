@@ -23,15 +23,14 @@ function check_server() {
 }
 
 function check_cli() {
-    echo "[Server] Linting checks..."
-    cargo clippy -p noops-server -- -D warnings
-    cargo clippy --tests -p noops-server -- -D warnings
+    echo "[CLI] Linting checks..."
+    cargo clippy -p noops -- -D warnings
 
-    echo "[Server] Build..."
-    cargo build -p noops-server
+    echo "[CLI] Build..."
+    cargo build -p noops
 
-    echo "[Server] Test..."
-    cargo test -p noops-server
+    echo "[CLI] Test..."
+    cargo test -p noops
 }
 
 if [[ "$1" == "server" ]]; then
