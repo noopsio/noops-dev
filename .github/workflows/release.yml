@@ -21,7 +21,7 @@ jobs:
         id: version_increase
         run: |  
           PR_LABELS=$(gh pr list --base release --head main --state merged --json labels --jq '.[0].labels | map(.name)')
-          VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "0.1.0" elif any(.[]; . == "version:minor") then "0.0.1" else empty end')
+          VERSION_INCREASE=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "version:major") then "1.0.0" elif any(.[]; . == "version:minor") then "0.1.0" elif any(.[]; . == "version:patch") then "0.0.1" else empty end')
           echo "VERSION_INCREASE=$VERSION_INCREASE" >> "$GITHUB_OUTPUT"
         
       - name: Read CLI Version from Cargo.toml
@@ -58,7 +58,7 @@ jobs:
 
             echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           else
-            echo "No 'version:major' or 'version:minor' label found in the list."
+            echo "No 'version:major', 'version:minor' or version:patch label found in the list."
           fi
       - name: Create PR to main
         env: 
