@@ -11,7 +11,7 @@ serde.workspace = true
 anyhow = "1.0.69"
 tokio = { version = "1.26", features = ["full"] }
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
-wasmtime = { version = "7.0.0",  features = ["component-model"]}
+wasmtime = { version = "7.0.0", features = ["component-model"] }
 wasmtime-wasi = "7.0.0"
 host = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
 wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-prototyping", rev = "083879c" }
@@ -23,18 +23,20 @@ dtos = { path = "../dtos" }
 jsonwebtoken = "8.3.0"
 lazy_static = "1.4.0"
 thiserror = "1.0.41"
-diesel = { version = "2.1.0", features = ["sqlite", "r2d2", "returning_clauses_for_sqlite_3_35"] }
+diesel = { version = "2.1.0", features = [
+    "sqlite",
+    "r2d2",
+    "returning_clauses_for_sqlite_3_35",
+] }
 diesel_migrations = "2.1.0"
-reqwest = {version = "0.11.18", features = ["json"] }
+reqwest = { version = "0.11.18", features = ["json"] }
 nanoid = "0.4.0"
 faux = "0.1.9"
-
 
 
 [dev-dependencies]
 lazy_static.workspace = true
 tempfile.workspace = true
-return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
-return-params = { path = "../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
+return-status-code-200 = { path = "../../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
+return-params = { path = "../../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
 diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
-
