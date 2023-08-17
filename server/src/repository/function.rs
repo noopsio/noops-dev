@@ -33,6 +33,7 @@ impl Function {
 impl From<Function> for GetFunctionDTO {
     fn from(function: Function) -> Self {
         GetFunctionDTO {
+            id: function.id,
             name: function.name,
             hash: function.hash,
         }

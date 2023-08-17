@@ -13,6 +13,7 @@ pub struct GetProjectDTO {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
 pub struct GetFunctionDTO {
+    pub id: String,
     pub name: String,
     pub hash: String,
 }

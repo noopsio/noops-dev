@@ -104,9 +104,10 @@ fn deploy_modules(
         let prefix = format!("[{}/{}]", index, length);
         let message = format!("Creating {}", &module_name);
         let spinner = term.spinner_with_prefix(prefix, &message);
+        let module_url = client.module_create(module_name, wasm)?;
 
-        client.module_create(module_name, wasm)?;
-        spinner.finish_with_message(message);
+        let finish_message = format!("Deployed {} Url: {}", &module_name, module_url);
+        spinner.finish_with_message(finish_message);
         index += 1;
     }
 

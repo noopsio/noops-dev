@@ -9,6 +9,7 @@ use crate::{
     },
     wasmstore::WasmStore,
 };
+use dtos::GetFunctionDTO;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
@@ -40,7 +41,7 @@ impl FunctionService {
         project_name: &str,
         function_name: String,
         wasm: &[u8],
-    ) -> Result<(), Error> {
+    ) -> Result<GetFunctionDTO, Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
@@ -51,7 +52,7 @@ impl FunctionService {
         self.functions.create(&function)?;
         self.wasmstore.create(&function.id, &wasm)?;
 
-        Ok(())
+        Ok(GetFunctionDTO::from(function))
     }
 
     fn hash(wasm: &[u8]) -> String {
