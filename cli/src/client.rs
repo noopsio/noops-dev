@@ -1,4 +1,5 @@
-use dtos::GetJWTDTO;
+use anyhow::Ok;
+use dtos::{GetFunctionDTO, GetJWTDTO};
 use reqwest::blocking::Client;
 use reqwest::{header::AUTHORIZATION, StatusCode, Url};
 
@@ -109,7 +110,7 @@ impl NoopsClient {
         Ok(self.base_url.join(&self.project)?)
     }
 
-    pub fn module_create(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
+    pub fn module_create(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<Url> {
         let url = self.get_module_path(module_name)?;
         let payload = dtos::CreateFunctionDTO {
             wasm: wasm.to_owned(),
@@ -129,7 +130,8 @@ impl NoopsClient {
                 response.text()?,
             );
         }
-        Ok(())
+        let module_url = self.get_module_url(&response.json()?)?;
+        Ok(module_url)
     }
 
     pub fn module_update(&self, module_name: &str, wasm: &[u8]) -> anyhow::Result<()> {
@@ -180,5 +182,9 @@ impl NoopsClient {
             .base_url
             .join(&format!("{}/", self.project))?
             .join(module_name)?)
+    }
+
+    fn get_module_url(&self, function_dto: &GetFunctionDTO) -> anyhow::Result<Url> {
+        Ok(self.base_url.join(&function_dto.id)?)
     }
 }
