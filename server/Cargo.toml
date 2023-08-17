@@ -19,7 +19,7 @@ tracing = "0.1.37"
 wit-component = "0.7.4"
 axum = { version = "0.6.12", features = ["json", "headers"] }
 tower-http = { version = "0.4.0", features = ["trace"] }
-dtos = { path = "../dtos" }
+dtos = { path = "../crates/dtos" }
 jsonwebtoken = "8.3.0"
 lazy_static = "1.4.0"
 thiserror = "1.0.41"
@@ -37,6 +37,6 @@ faux = "0.1.9"
 [dev-dependencies]
 lazy_static.workspace = true
 tempfile.workspace = true
-return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
-return-params = { path = "../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
+return-status-code-200 = { path = "../crates/test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
+return-params = { path = "../crates/test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
 diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
