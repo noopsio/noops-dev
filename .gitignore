@@ -3,3 +3,4 @@ target/
 *.db
 
 noops.sqlite
+wasmstore/
