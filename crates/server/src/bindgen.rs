@@ -2,12 +2,12 @@ use std::fs;
 use wasmtime::component::bindgen;
 use wit_component::ComponentEncoder;
 
-const ADAPTER_PATH: &str = "../../wit/wasi_snapshot_preview1.wasm";
+const ADAPTER_PATH: &str = "../wit/wasi_snapshot_preview1.wasm";
 const ADAPTER_NAME: &str = "wasi_snapshot_preview1";
 
 bindgen!({
     world: "handler",
-    path: "../../wit",
+    path: "../wit",
     async: true
 });
 
