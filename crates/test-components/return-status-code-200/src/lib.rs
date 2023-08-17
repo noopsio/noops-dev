@@ -1,6 +1,6 @@
 wit_bindgen::generate!({
     world: "handler",
-    path: "../../wit"
+    path: "../../../wit"
 });
 
 struct TestHandler;
