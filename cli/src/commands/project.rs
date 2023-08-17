@@ -56,7 +56,7 @@ impl Command for ProjectDeployCommand {
 
         let jwt = handlers::auth::get_jwt(&config.jwt_file)?;
         if jwt.is_none() {
-            terminal.write_text("You are not logged in.")?;
+            terminal.write_text("You are not logged in. \nPlease do so with \"noops login\"")?;
             return Ok(());
         }
         let client = NoopsClient::new(config.base_url, manifest.project_name.clone(), jwt);

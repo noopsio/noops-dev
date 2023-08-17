@@ -21,7 +21,7 @@ console = "0.15.5"
 dialoguer = "0.10.4"
 lazy_static.workspace = true
 tempfile.workspace = true
-dtos = { path = "../dtos" }
+dtos = { path = "../crates/dtos" }
 indicatif = "0.17.3"
 oauth2 = "4.4.1"
 

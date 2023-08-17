@@ -3,6 +3,7 @@ use crate::{errors::Error, repository::user::User, service::function::FunctionSe
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
     http::StatusCode,
+    response::IntoResponse,
     routing::put,
     Extension, Router,
 };
@@ -24,9 +25,9 @@ async fn create(
     State(functions): State<FunctionService>,
     Extension(user): Extension<User>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
-) -> Result<StatusCode, Error> {
-    functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
-    Ok(StatusCode::NO_CONTENT)
+) -> Result<impl IntoResponse, Error> {
+    let function_dto = functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
+    Ok(Json(function_dto))
 }
 
 async fn delete(
