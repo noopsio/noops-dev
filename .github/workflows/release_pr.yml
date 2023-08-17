@@ -59,7 +59,7 @@ jobs:
         id: check_pr
         if: steps.is_ci_release.outputs.CI_RELEASE == 'false'
         run: |
-          release_prs=$(gh pr list -B release --json id)
+          release_prs=$(gh pr list -B release --json number)
           if [[ "$release_prs" == "[]" ]]; then
             echo "No open release PR"
             echo "PR_OPEN=true" >> "$GITHUB_OUTPUT"
