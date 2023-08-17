@@ -63,6 +63,7 @@ mod tests {
     #[tokio::test]
     async fn return_params() -> anyhow::Result<()> {
         let path = env!("CARGO_CDYLIB_FILE_RETURN_PARAMS");
+        println!("path {}", path);
         let module = std::fs::read(path).expect("Unable to read module");
         let component =
             bindgen::create_component(&module).expect("Unable to create component from module");

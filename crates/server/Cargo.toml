@@ -37,6 +37,6 @@ faux = "0.1.9"
 [dev-dependencies]
 lazy_static.workspace = true
 tempfile.workspace = true
-return-status-code-200 = { path = "test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi" }
-return-params = { path = "test-components/return-params", artifact = "cdylib", target = "wasm32-wasi" }
+return-status-code-200 = { path = "../test-components/return-status-code-200", artifact = "cdylib", target = "wasm32-wasi", version = "*" }
+return-params = { path = "../test-components/return-params", artifact = "cdylib", target = "wasm32-wasi", version = "*"}
 diesel_migrations = { version = "2.1.0", features = ["sqlite"] }
