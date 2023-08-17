@@ -42,15 +42,15 @@ jobs:
         env: 
           PR_LABELS: ${{ steps.pr_labels.outputs.PR_LABELS }}
         run: |
-          # Check if either "type:feature" or "type:fix" label exists in the list
-          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:breaking" or . == "type:feature" or . == "type:fix")' > /dev/null; then
+          # Check if either "type:feature" or "type:fix" or type:chore label exists in the list
+          if echo "$PR_LABELS" | jq -e '.[] | select(. == "type:breaking" or . == "type:feature" or . == "type:fix" or . == "type:chore")' > /dev/null; then
               # Determine the tag based on the label found
               VERSION_BUMP=$(echo "$PR_LABELS" | jq -r 'if any(.[]; . == "type:breaking") then "version:major" elif any(.[]; . == "type:feature") then "version:minor" elif any(.[]; . == "type:chore") or any(.[]; . == "type:fix") then "version:patch" else empty end')
           
               # Output the Version Tag
               echo "VERSION_BUMP=$VERSION_BUMP" >> "$GITHUB_OUTPUT"
           else
-              echo "No 'type:breaking', 'type:feature' or 'type:fix' label found."
+              echo "No 'type:breaking', 'type:feature', 'type:fix' or type:chore label found."
               echo "No Version Bump"
           fi
         
