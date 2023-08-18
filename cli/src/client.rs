@@ -185,6 +185,13 @@ impl NoopsClient {
     }
 
     fn get_module_url(&self, function_dto: &GetFunctionDTO) -> anyhow::Result<Url> {
-        Ok(self.base_url.join(&function_dto.id)?)
+        let mut server_url = self.base_url.clone();
+        {
+            //remove the /api
+            let mut path_segments = server_url.path_segments_mut().unwrap();
+            path_segments.pop_if_empty();
+            path_segments.pop();
+        }
+        Ok(server_url.join(&function_dto.id)?)
     }
 }
