@@ -2,8 +2,7 @@ use super::Command;
 use crate::{
     build::BaseAdapter,
     config::Config,
-    manifest::Manifest,
-    module::FunctionMetadata,
+    manifest::{Component, Manifest},
     templates::{Template, TEMPLATES},
     terminal::Terminal,
 };
@@ -27,8 +26,9 @@ impl Command for CreateCommand {
         let terminal = Terminal::new();
         let config = Config::default();
         let git = GitAdapter::new();
-
         let mut manifest = Manifest::from_yaml(&config.manifest_path)?;
+
+        terminal.write_heading("Creating component")?;
 
         let index = terminal.select_prompt("Select a template", &TEMPLATES)?;
         let template = Template::new(self.name.clone(), index);
@@ -60,7 +60,7 @@ pub fn create(
     git.checkout_template(temp_dir.path(), &template.subpath)?;
     copy_dir(&temp_dir.path().join(&template.subpath), to)?;
 
-    let module = FunctionMetadata::from_template(template);
+    let module = Component::from_template(template);
     manifest.add_module(module)?;
     Ok(())
 }

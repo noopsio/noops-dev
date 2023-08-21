@@ -1,22 +1,14 @@
-use super::DeployStep;
-use crate::module::{self, BuildFunctionMetadata};
+use super::{BuildedComponent, DeployStep};
 use client::function::FunctionClient;
-use common::dtos::CreateFunctionDTO;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug, Clone, Default)]
-pub struct UpdateStep(pub BuildFunctionMetadata);
+pub struct UpdateStep(pub BuildedComponent);
 
 impl DeployStep for UpdateStep {
     fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()> {
-        let function = CreateFunctionDTO {
-            name: self.0.name.clone(),
-            language: self.0.language,
-            wasm: module::wasm(&self.0.name)?,
-        };
-
-        client.update(project, &function)?;
+        client.update(project, &self.0.clone().into())?;
         Ok(())
     }
 }
@@ -30,16 +22,16 @@ impl Display for UpdateStep {
 }
 
 pub fn update_steps(
-    local_modules: &HashSet<BuildFunctionMetadata>,
-    remote_modules: &HashSet<BuildFunctionMetadata>,
+    local_modules: &HashSet<BuildedComponent>,
+    remote_modules: &HashSet<BuildedComponent>,
 ) -> Vec<UpdateStep> {
-    let mut local_updates: Vec<BuildFunctionMetadata> = local_modules
+    let mut local_updates: Vec<BuildedComponent> = local_modules
         .intersection(remote_modules)
         .cloned()
         .collect();
     local_updates.sort();
 
-    let mut remote_updates: Vec<BuildFunctionMetadata> = remote_modules
+    let mut remote_updates: Vec<BuildedComponent> = remote_modules
         .intersection(local_modules)
         .cloned()
         .collect();

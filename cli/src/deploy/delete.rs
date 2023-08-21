@@ -1,12 +1,10 @@
-use crate::module::BuildFunctionMetadata;
+use super::{components::BuildedComponent, DeployStep};
 use client::function::FunctionClient;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
-use super::DeployStep;
-
 #[derive(Debug, Clone, Default)]
-pub struct DeleteStep(pub BuildFunctionMetadata);
+pub struct DeleteStep(pub BuildedComponent);
 
 impl DeployStep for DeleteStep {
     fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()> {
@@ -24,8 +22,8 @@ impl Display for DeleteStep {
 }
 
 pub fn delete_steps(
-    local_modules: &HashSet<BuildFunctionMetadata>,
-    remote_modules: &HashSet<BuildFunctionMetadata>,
+    local_modules: &HashSet<BuildedComponent>,
+    remote_modules: &HashSet<BuildedComponent>,
 ) -> Vec<DeleteStep> {
     remote_modules
         .difference(local_modules)
