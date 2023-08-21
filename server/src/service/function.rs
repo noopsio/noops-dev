@@ -14,6 +14,17 @@ use common::{
     hash,
 };
 
+impl From<Function> for GetFunctionDTO {
+    fn from(function: Function) -> Self {
+        GetFunctionDTO {
+            name: function.name,
+            language: function.language,
+            hash: function.hash,
+            link: todo!(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct FunctionService {
     projects: ProjectRepository,
@@ -80,7 +91,14 @@ impl FunctionService {
             .belonging_to_by_name(&project, &function_name)?
             .ok_or(Error::FunctionNotFound)?;
 
-        Ok(function.into())
+        let function = GetFunctionDTO {
+            name: function.name,
+            language: function.language,
+            hash: function.hash,
+            link: function.id,
+        };
+
+        Ok(function)
     }
 
     pub fn delete(

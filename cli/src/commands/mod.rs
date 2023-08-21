@@ -4,10 +4,11 @@ pub mod deploy;
 pub mod destroy;
 pub mod init;
 pub mod login;
+pub mod show;
 
 use self::{
     build::BuildCommand, create::CreateCommand, deploy::DeployCommand, destroy::DestroyCommand,
-    init::InitCommand, login::LoginCommand,
+    init::InitCommand, login::LoginCommand, show::ShowCommand,
 };
 use clap::Parser;
 
@@ -36,4 +37,7 @@ pub enum Cli {
 
     /// Destroy a function
     Destroy(DestroyCommand),
+
+    /// Show information about the project or a function
+    Show(ShowCommand),
 }

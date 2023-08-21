@@ -45,16 +45,6 @@ impl Function {
     }
 }
 
-impl From<Function> for GetFunctionDTO {
-    fn from(function: Function) -> Self {
-        GetFunctionDTO {
-            name: function.name,
-            language: function.language,
-            hash: function.hash,
-        }
-    }
-}
-
 #[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
 pub struct FunctionRepository {
