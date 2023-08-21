@@ -60,7 +60,7 @@ impl Repository<User> for UserRepository {
         Ok(())
     }
 
-    fn delete(&self, _id: &str) -> anyhow::Result<User> {
+    fn delete(&self, _id: &str) -> anyhow::Result<()> {
         unimplemented!()
     }
 }

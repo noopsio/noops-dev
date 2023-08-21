@@ -21,14 +21,6 @@ impl Default for Request<'_> {
 }
 
 pub fn create_component(wasm_module: &[u8]) -> anyhow::Result<Vec<u8>> {
-    use std::env;
-
-    // Get the current directory.
-    let current_dir = env::current_dir().unwrap();
-
-    // Print it out
-    println!("The current directory is {}", current_dir.display());
-
     let adapter = fs::read(ADAPTER_PATH)?;
     let component = ComponentEncoder::default()
         .module(wasm_module)?

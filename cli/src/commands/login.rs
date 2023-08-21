@@ -1,27 +1,26 @@
-use clap::Parser;
-
-use crate::{
-    client::NoopsClient,
-    config::Config,
-    handlers,
-    manifest::{self, Manifest},
-    terminal::Terminal,
-};
+use std::{fs::File, io::Write, path::Path};
 
 use super::Command;
+use crate::config::Config;
+use clap::Parser;
+use client::auth::AuthClient;
 
 #[derive(Parser, Debug)]
 pub struct LoginCommand;
 
 impl Command for LoginCommand {
     fn execute(&self) -> anyhow::Result<()> {
-        let terminal = Terminal::new();
-        let manifest = Manifest::from_yaml(manifest::MANIFEST_FILE_NAME)?;
         let config = Config::default();
-
-        let client = NoopsClient::new(config.base_url, manifest.project_name, None);
-        handlers::auth::login(&client, &terminal, &config.jwt_file)?;
+        let auth_client = AuthClient::new(&config.base_url);
+        let jwt = auth_client.login()?;
+        set_jwt(&config.jwt_file, &jwt)?;
 
         Ok(())
     }
+}
+
+fn set_jwt(path: &Path, jwt: &str) -> anyhow::Result<()> {
+    let mut file = File::create(path)?;
+    file.write_all(jwt.as_bytes())?;
+    Ok(())
 }

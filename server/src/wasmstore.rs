@@ -1,10 +1,9 @@
+use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
 use std::{
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
 };
-
-use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
 
 #[cfg_attr(test, faux::create)]
 #[derive(Debug, Clone)]
@@ -21,31 +20,46 @@ impl WasmStore {
         })
     }
 
-    pub fn create(&self, function: &str, wasm: &[u8]) -> Result<(), Error> {
-        let function = self.prefix.join(format!("{}.wasm", function));
-        if function.exists() {
+    pub fn create(&self, function_id: &str, wasm: &[u8]) -> Result<(), Error> {
+        let path = self.prefix.join(format!("{}.wasm", function_id));
+        if path.exists() {
             return Err(FunctionAlreadyExists);
         }
-        let mut file = File::create(function).map_err(|err| anyhow::anyhow!(err))?;
+        self.write(wasm, &path)?;
+        Ok(())
+    }
+
+    pub fn update(&self, function_id: &str, wasm: &[u8]) -> Result<(), Error> {
+        let path = self.create_path(function_id);
+        self.write(wasm, &path)?;
+        Ok(())
+    }
+
+    fn write(&self, wasm: &[u8], path: &Path) -> Result<(), Error> {
+        let mut file = File::create(path).map_err(|err| anyhow::anyhow!(err))?;
         file.write_all(wasm).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn delete(&self, function: &str) -> Result<(), Error> {
-        let function = self.prefix.join(format!("{}.wasm", function));
-        if !function.exists() {
+    pub fn delete(&self, function_id: &str) -> Result<(), Error> {
+        let path = self.create_path(function_id);
+        if !path.exists() {
             return Err(FunctionNotFound);
         }
-        fs::remove_file(function).map_err(|err| anyhow::anyhow!(err))?;
+        fs::remove_file(path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn read(&self, function: &str) -> Result<Vec<u8>, Error> {
-        let function = self.prefix.join(format!("{}.wasm", function));
-        if !function.exists() {
+    pub fn read(&self, function_id: &str) -> Result<Vec<u8>, Error> {
+        let path = self.create_path(function_id);
+        if !path.exists() {
             return Err(FunctionNotFound);
         }
-        let wasm = fs::read(function).map_err(|err| anyhow::anyhow!(err))?;
+        let wasm = fs::read(path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(wasm)
+    }
+
+    fn create_path(&self, function: &str) -> PathBuf {
+        self.prefix.join(format!("{}.wasm", function))
     }
 }

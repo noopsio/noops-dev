@@ -9,10 +9,9 @@ use crate::{
     },
     wasmstore::WasmStore,
 };
-use dtos::GetFunctionDTO;
-use std::{
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
+use common::{
+    dtos::{GetFunctionDTO, Language},
+    hash,
 };
 
 #[derive(Debug, Clone)]
@@ -41,24 +40,47 @@ impl FunctionService {
         project_name: &str,
         function_name: String,
         wasm: &[u8],
+    ) -> Result<(), Error> {
+        let project = self
+            .projects
+            .belonging_to_by_name(user, project_name)?
+            .ok_or(ProjectNotFound)?;
+        let old_function = self
+            .functions
+            .belonging_to_by_name(&project, &function_name)?;
+
+        let hash = hash::hash(wasm);
+        let wasm = bindgen::create_component(wasm)?;
+        // FIXME Pass correct Language
+        let function = Function::new(function_name, Language::Rust, hash, project.id);
+        self.functions.create(&function)?;
+
+        if let Some(old_function) = old_function {
+            self.wasmstore.update(&old_function.id, &wasm)?;
+        } else {
+            self.wasmstore.create(&function.id, &wasm)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn read(
+        &self,
+        user: &User,
+        project_name: &str,
+        function_name: String,
     ) -> Result<GetFunctionDTO, Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
             .ok_or(ProjectNotFound)?;
-        let wasm = bindgen::create_component(wasm)?;
-        let hash = Self::hash(&wasm);
-        let function = Function::new(function_name, hash, project.id);
-        self.functions.create(&function)?;
-        self.wasmstore.create(&function.id, &wasm)?;
 
-        Ok(GetFunctionDTO::from(function))
-    }
+        let function = self
+            .functions
+            .belonging_to_by_name(&project, &function_name)?
+            .ok_or(Error::FunctionNotFound)?;
 
-    fn hash(wasm: &[u8]) -> String {
-        let mut hasher = DefaultHasher::new();
-        wasm.hash(&mut hasher);
-        hasher.finish().to_string()
+        Ok(function.into())
     }
 
     pub fn delete(

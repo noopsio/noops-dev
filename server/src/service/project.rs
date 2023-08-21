@@ -7,7 +7,7 @@ use crate::{
         Repository,
     },
 };
-use dtos::{GetFunctionDTO, GetProjectDTO};
+use common::dtos::{GetFunctionDTO, GetProjectDTO};
 
 #[derive(Debug, Clone)]
 pub struct ProjectService {
@@ -67,6 +67,7 @@ impl ProjectService {
 mod tests {
     use super::*;
     use crate::repository::user::User;
+    use common::dtos::Language;
     use faux::when;
     use lazy_static::lazy_static;
 
@@ -89,11 +90,13 @@ mod tests {
 
         let function_1 = Function::new(
             "FUNCTION_1".to_string(),
+            Language::Rust,
             "lohSh8xi".to_string(),
             project_expected.id.clone(),
         );
         let function_2 = Function::new(
             "FUNCTION_2".to_string(),
+            Language::Rust,
             "yie7aeH1".to_string(),
             project_expected.id.clone(),
         );

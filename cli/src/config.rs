@@ -1,27 +1,30 @@
-use reqwest::Url;
+use etcetera::{choose_app_strategy, AppStrategy, AppStrategyArgs};
 use std::{
-    env, fs,
+    fs,
     path::{Path, PathBuf},
 };
 
 pub struct Config {
     pub jwt_file: PathBuf,
-    pub base_url: Url,
+    pub base_url: String,
+    pub manifest_path: PathBuf,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let xdg_config_home = env::var("XDG_CONFIG_HOME").unwrap_or_else(|_| {
-            let home = env::var("HOME").expect("HOME directory not set");
-            format!("{}/.config", home)
-        });
+        let strategy = choose_app_strategy(AppStrategyArgs {
+            top_level_domain: "io".to_string(),
+            author: "Noops".to_string(),
+            app_name: "noops".to_string(),
+        })
+        .unwrap();
 
-        let config_path = Path::new(&xdg_config_home).join("noops");
-        fs::create_dir_all(config_path.clone()).unwrap();
+        fs::create_dir_all(strategy.cache_dir()).unwrap();
 
         Self {
-            jwt_file: config_path.join("jwt"),
-            base_url: Url::parse("http://localhost:8080/api/").unwrap(),
+            jwt_file: strategy.in_cache_dir("jwt"),
+            base_url: "http://localhost:8080/api/".to_string(),
+            manifest_path: Path::new("./noops.yaml").to_path_buf(),
         }
     }
 }

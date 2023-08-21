@@ -10,7 +10,6 @@ edition = "2021"
 clap = { version = "4.1.8", features = ["cargo", "derive"] }
 env_logger = "0.10.0"
 log = "0.4.17"
-reqwest = { version = "0.11.14", features = ["json", "blocking"] }
 serde.workspace = true
 serde_json = "1.0.94"
 serde_yaml = "0.9.19"
@@ -21,9 +20,11 @@ console = "0.15.5"
 dialoguer = "0.10.4"
 lazy_static.workspace = true
 tempfile.workspace = true
-dtos = { path = "../crates/dtos" }
+common = { path = "../crates/common" }
 indicatif = "0.17.3"
-oauth2 = "4.4.1"
+etcetera = "0.8.0"
+client = { version = "0.1.0", path = "../crates/client" }
 
 [dev-dependencies]
 indoc = "2.0.1"
+

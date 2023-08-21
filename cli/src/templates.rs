@@ -1,4 +1,4 @@
-use crate::modules::Language;
+use common::dtos::Language;
 use lazy_static::lazy_static;
 use std::{fmt::Display, path::PathBuf};
 
@@ -25,6 +25,14 @@ pub struct Template {
     pub description: String,
     pub subpath: PathBuf,
     pub language: Language,
+}
+
+impl Template {
+    pub fn new(name: String, index: usize) -> Self {
+        let mut template = TEMPLATES[index].clone();
+        template.name = name;
+        template
+    }
 }
 
 impl Display for Template {
