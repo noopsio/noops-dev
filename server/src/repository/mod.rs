@@ -14,7 +14,7 @@ pub trait Repository<T> {
     fn new(pool: Pool<ConnectionManager<SqliteConnection>>) -> Self;
     fn read(&self, id: &str) -> anyhow::Result<Option<T>>;
     fn create(&self, element: &T) -> anyhow::Result<()>;
-    fn delete(&self, id: &str) -> anyhow::Result<T>;
+    fn delete(&self, id: &str) -> anyhow::Result<()>;
 }
 
 pub fn create_pool(path: &Path) -> Pool<ConnectionManager<SqliteConnection>> {

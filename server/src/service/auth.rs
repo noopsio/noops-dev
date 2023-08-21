@@ -3,13 +3,13 @@ use crate::github::GithubClient;
 use crate::jwt::Jwt;
 use crate::repository::user::User;
 use crate::repository::{user::UserRepository, Repository};
-use dtos::GetJWTDTO;
+use common::dtos::GetJWTDTO;
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use lazy_static::lazy_static;
 
 const JWT_SECRET: &str = "ieb9upai2pooYoo9guthohchio5xie6Poo1ooThaetubahCheemaixaeZei1rah0";
 const JWT_ISSUER: &str = "noops.io";
-const JWT_EXPIRATION_DELTA: u64 = 3600; // 1 hour
+const JWT_EXPIRATION_DELTA: u64 = 86400; // 24 hours
 
 lazy_static! {
     pub static ref ENCODING_KEY: EncodingKey = EncodingKey::from_secret(JWT_SECRET.as_bytes());

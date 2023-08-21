@@ -1,4 +1,3 @@
 pub mod auth;
-mod diff;
-pub mod modules;
+pub mod function;
 pub mod project;
