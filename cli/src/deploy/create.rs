@@ -1,23 +1,14 @@
-use crate::module::{self, BuildFunctionMetadata};
+use super::{components::BuildedComponent, DeployStep};
 use client::function::FunctionClient;
-use common::dtos::CreateFunctionDTO;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
-use super::DeployStep;
-
 #[derive(Debug, Clone, Default)]
-pub struct CreateStep(pub BuildFunctionMetadata);
+pub struct CreateStep(pub BuildedComponent);
 
 impl DeployStep for CreateStep {
     fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()> {
-        let function = CreateFunctionDTO {
-            name: self.0.name.clone(),
-            language: self.0.language,
-            wasm: module::wasm(&self.0.name)?,
-        };
-
-        client.create(project, &function)?;
+        client.create(project, &self.0.clone().into())?;
         Ok(())
     }
 }
@@ -31,8 +22,8 @@ impl Display for CreateStep {
 }
 
 pub fn create_steps(
-    local_modules: &HashSet<BuildFunctionMetadata>,
-    remote_modules: &HashSet<BuildFunctionMetadata>,
+    local_modules: &HashSet<BuildedComponent>,
+    remote_modules: &HashSet<BuildedComponent>,
 ) -> Vec<CreateStep> {
     local_modules
         .difference(remote_modules)

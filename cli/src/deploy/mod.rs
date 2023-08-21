@@ -1,11 +1,12 @@
-use self::plan::DeployPlan;
-use crate::{manifest::Manifest, module::BuildFunctionMetadata, terminal::Terminal};
-use client::{function::FunctionClient, project::ProjectClient};
-
+mod components;
 mod create;
 mod delete;
 mod plan;
 mod update;
+
+use self::{components::BuildedComponent, plan::DeployPlan};
+use crate::{manifest::Manifest, terminal::Terminal};
+use client::{function::FunctionClient, project::ProjectClient};
 
 trait DeployStep {
     fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()>;
@@ -24,17 +25,19 @@ pub fn deploy_project(
         project_client.create(&project)?;
     };
 
-    let local_functions: Vec<BuildFunctionMetadata> = manifest
+    let local_functions: Vec<BuildedComponent> = manifest
         .functions
-        .into_iter()
-        .map(BuildFunctionMetadata::from)
+        .iter()
+        .filter(|component| component.is_build())
+        .cloned()
+        .map(|component| BuildedComponent::try_from(component).unwrap())
         .collect();
 
-    let remote_functions: Vec<BuildFunctionMetadata> = project_client
+    let remote_functions: Vec<BuildedComponent> = project_client
         .get(&project)?
         .functions
         .into_iter()
-        .map(BuildFunctionMetadata::from)
+        .map(BuildedComponent::from)
         .collect();
 
     let plan = DeployPlan::new(local_functions, remote_functions);
@@ -57,11 +60,12 @@ pub fn deploy_function(
         project_client.create(&project)?;
     };
 
-    let local_function: BuildFunctionMetadata = manifest
+    let local_function: BuildedComponent = manifest
         .get_module_by_name(name)
         .ok_or(anyhow::anyhow!("Module not found"))?
-        .into();
-    let remote_function: BuildFunctionMetadata = function_client.read(&project, name)?.into();
+        .try_into()?;
+
+    let remote_function: BuildedComponent = function_client.read(&project, name)?.into();
 
     let plan = DeployPlan::new(vec![local_function], vec![remote_function]);
     prompt_deploy(&plan, terminal, function_client, &project)?;

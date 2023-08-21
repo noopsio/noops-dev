@@ -1,12 +1,36 @@
-use crate::{config::Config, module::FunctionMetadata};
+use crate::{config::Config, templates::Template};
+use common::dtos::Language;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Manifest {
     #[serde(rename = "project")]
     pub project_name: String,
-    pub functions: Vec<FunctionMetadata>,
+    pub functions: Vec<Component>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Component {
+    pub name: String,
+    pub language: Language,
+}
+
+impl Component {
+    pub fn from_template(template: &Template) -> Self {
+        Self {
+            name: template.name.clone(),
+            language: template.language,
+        }
+    }
+
+    pub fn is_build(&self) -> bool {
+        self.handler_path().exists()
+    }
+
+    pub fn handler_path(&self) -> PathBuf {
+        Path::new(&self.name).join("out").join("handler.wasm")
+    }
 }
 
 impl Manifest {
@@ -31,24 +55,24 @@ impl Manifest {
         Ok(serde_yaml::from_reader(file)?)
     }
 
-    pub fn add_module(&mut self, metadata: FunctionMetadata) -> anyhow::Result<()> {
-        self.functions.push(metadata);
+    pub fn add_module(&mut self, component: Component) -> anyhow::Result<()> {
+        self.functions.push(component);
         self.save()?;
         Ok(())
     }
 
-    pub fn get_module_by_name(&self, name: &str) -> Option<FunctionMetadata> {
+    pub fn get_module_by_name(&self, name: &str) -> Option<Component> {
         self.functions
             .iter()
             .cloned()
-            .find(|metadata| metadata.name == name)
+            .find(|component| component.name == name)
     }
 
     pub fn delete_module_by_name(&mut self, name: &str) -> anyhow::Result<()> {
         let index = self
             .functions
             .iter()
-            .position(|metadata: &FunctionMetadata| metadata.name == name)
+            .position(|component: &Component| component.name == name)
             .ok_or(anyhow::anyhow!("Module not found"))?;
         self.functions.remove(index);
         self.save()?;

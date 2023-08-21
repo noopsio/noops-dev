@@ -1,10 +1,11 @@
 use super::{
+    components::BuildedComponent,
     create::{self, CreateStep},
     delete::{self, DeleteStep},
     update::{self, UpdateStep},
     DeployStep,
 };
-use crate::{module::BuildFunctionMetadata, terminal::Terminal};
+use crate::terminal::Terminal;
 use client::function::FunctionClient;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
@@ -19,11 +20,11 @@ pub struct DeployPlan {
 
 impl DeployPlan {
     pub fn new(
-        local_modules: Vec<BuildFunctionMetadata>,
-        remote_modules: Vec<BuildFunctionMetadata>,
+        local_modules: Vec<BuildedComponent>,
+        remote_modules: Vec<BuildedComponent>,
     ) -> Self {
-        let local_modules: HashSet<BuildFunctionMetadata> = HashSet::from_iter(local_modules);
-        let remote_modules: HashSet<BuildFunctionMetadata> = HashSet::from_iter(remote_modules);
+        let local_modules: HashSet<BuildedComponent> = HashSet::from_iter(local_modules);
+        let remote_modules: HashSet<BuildedComponent> = HashSet::from_iter(remote_modules);
 
         let create_steps = create::create_steps(&local_modules, &remote_modules);
         let update_steps = update::update_steps(&local_modules, &remote_modules);

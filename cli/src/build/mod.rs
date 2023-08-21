@@ -1,7 +1,8 @@
 pub mod cargo;
 pub mod golang;
 
-use crate::{manifest::Manifest, module::FunctionMetadata, terminal::Terminal};
+use crate::manifest::Component;
+use crate::{manifest::Manifest, terminal::Terminal};
 use anyhow::anyhow;
 use anyhow::Context;
 
@@ -89,7 +90,7 @@ pub fn build_by_name(name: &str, manifest: &Manifest) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn build(metadata: &FunctionMetadata) -> anyhow::Result<()> {
+pub fn build(metadata: &Component) -> anyhow::Result<()> {
     match metadata.language {
         Language::Rust => {
             let cargo = CargoAdapter::new();
