@@ -4,10 +4,13 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
 
 const TICK_STRING: &[&str] = &["⠲", "⠴", "⠦", "⠖", "✔️"];
+
 pub struct Terminal {
     term: console::Term,
 }
 
+// Allowed because console::Term does not implements Default
+#[allow(clippy::new_without_default)]
 impl Terminal {
     pub fn new() -> Self {
         Self {
@@ -32,7 +35,7 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn text_prompt(&self, text: &str) -> anyhow::Result<String> {
+    pub fn _text_prompt(&self, text: &str) -> anyhow::Result<String> {
         let response = Input::new().with_prompt(text).interact_on(&self.term)?;
         Ok(response)
     }

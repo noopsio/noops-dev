@@ -11,7 +11,7 @@ use axum::{
 };
 use serde::Deserialize;
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/auth/login", get(login))
         .with_state(state)

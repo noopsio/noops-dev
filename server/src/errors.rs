@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use dtos::ErrorDTO;
+use common::dtos::ErrorDTO;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

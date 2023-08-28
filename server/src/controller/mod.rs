@@ -59,14 +59,14 @@ impl FromRef<AppState> for FunctionService {
     }
 }
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
-        .merge(project::create_routes(state.clone()))
-        .merge(function::create_routes(state.clone()))
+        .merge(project::routes(state.clone()))
+        .merge(function::routes(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             auth::auth_middleware,
         ))
-        .merge(auth::create_routes(state.clone()))
-        .merge(execute::create_routes(state))
+        .merge(auth::routes(state.clone()))
+        .merge(execute::routes(state))
 }

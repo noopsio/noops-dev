@@ -4,6 +4,7 @@ diesel::table! {
     functions (id) {
         id -> Text,
         name -> Text,
+        language -> Text,
         hash -> Text,
         project_id -> Text,
     }

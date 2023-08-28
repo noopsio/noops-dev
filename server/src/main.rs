@@ -8,6 +8,7 @@ mod repository;
 mod service;
 mod wasmstore;
 
+use crate::controller::AppState;
 use axum::Server;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
@@ -17,8 +18,6 @@ use service::{auth::AuthService, function::FunctionService, project::ProjectServ
 use std::{net::SocketAddr, path::Path};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{self, layer::SubscriberExt, util::SubscriberInitExt};
-
-use crate::controller::AppState;
 
 const WASMSTORE_PREFIX: &str = "./wasmstore";
 const DATABASE_CONNECTION: &str = "./noops.sqlite";
@@ -36,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
 
     let state = create_app_state(Path::new(DATABASE_CONNECTION), Path::new(WASMSTORE_PREFIX))?;
     run_database_migration()?;
-    let app = controller::create_routes(state).layer(TraceLayer::new_for_http());
+    let app = controller::routes(state).layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("listening on {}", addr);
     Server::bind(&addr)

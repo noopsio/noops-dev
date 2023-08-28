@@ -1,8 +1,15 @@
-pub mod function;
+pub mod build;
+pub mod create;
+pub mod deploy;
+pub mod destroy;
+pub mod init;
 pub mod login;
-pub mod project;
+pub mod show;
 
-use self::{function::FunctionCommands, login::LoginCommand, project::ProjectCommands};
+use self::{
+    build::BuildCommand, create::CreateCommand, deploy::DeployCommand, destroy::DestroyCommand,
+    init::InitCommand, login::LoginCommand, show::ShowCommand,
+};
 use clap::Parser;
 
 pub trait Command {
@@ -13,14 +20,24 @@ pub trait Command {
 #[clap(author, version, about = "noops cli", long_about = None)]
 #[clap(propagate_version = true)]
 pub enum Cli {
+    /// Initialise a project
+    Init(InitCommand),
+
     /// Login in the noops cloud
     Login(LoginCommand),
 
-    /// Project subcommands
-    #[clap(subcommand)]
-    Project(ProjectCommands),
+    /// Create a function
+    Create(CreateCommand),
 
-    /// Function subcommands
-    #[clap(subcommand)]
-    Function(FunctionCommands),
+    /// Build the project or a function
+    Build(BuildCommand),
+
+    /// Deploy the project or a function
+    Deploy(DeployCommand),
+
+    /// Destroy a function
+    Destroy(DestroyCommand),
+
+    /// Show information about the project or a function
+    Show(ShowCommand),
 }

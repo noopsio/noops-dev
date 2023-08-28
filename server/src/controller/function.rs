@@ -7,14 +7,15 @@ use axum::{
     routing::put,
     Extension, Router,
 };
+use common::dtos;
 
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/api/:project_name/:function_name",
-            put(create).delete(delete),
+            put(create).delete(delete).get(read),
         )
         .with_state(state)
         .layer(DefaultBodyLimit::max(MAX_CONTENT_SIZE_IN_BYTES))
@@ -25,9 +26,18 @@ async fn create(
     State(functions): State<FunctionService>,
     Extension(user): Extension<User>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
+) -> Result<StatusCode, Error> {
+    functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn read(
+    Path((project_name, function_name)): Path<(String, String)>,
+    State(functions): State<FunctionService>,
+    Extension(user): Extension<User>,
 ) -> Result<impl IntoResponse, Error> {
-    let function_dto = functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
-    Ok(Json(function_dto))
+    let function = functions.read(&user, &project_name, function_name)?;
+    Ok((StatusCode::OK, Json(function)))
 }
 
 async fn delete(
