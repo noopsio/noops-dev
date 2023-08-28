@@ -12,7 +12,7 @@ use axum::{
     Extension, Json, Router,
 };
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/api/:project_name",

@@ -11,6 +11,7 @@ fn main() -> anyhow::Result<()> {
         commands::Cli::Create(cmd) => cmd.execute()?,
         commands::Cli::Deploy(cmd) => cmd.execute()?,
         commands::Cli::Destroy(cmd) => cmd.execute()?,
+        commands::Cli::Show(cmd) => cmd.execute()?,
     }
     Ok(())
 }

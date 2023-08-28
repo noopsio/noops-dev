@@ -5,7 +5,7 @@ use super::{
     Repository,
 };
 use anyhow;
-use common::dtos::{GetFunctionDTO, Language};
+use common::dtos::Language;
 use diesel::{
     prelude::*,
     r2d2::{ConnectionManager, Pool},
@@ -41,16 +41,6 @@ impl Function {
             language,
             hash,
             project_id,
-        }
-    }
-}
-
-impl From<Function> for GetFunctionDTO {
-    fn from(function: Function) -> Self {
-        GetFunctionDTO {
-            name: function.name,
-            language: function.language,
-            hash: function.hash,
         }
     }
 }

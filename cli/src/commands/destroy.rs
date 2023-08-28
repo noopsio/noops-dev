@@ -26,7 +26,7 @@ impl Command for DestroyCommand {
 }
 
 pub fn destroy(name: &str, manifest: &mut Manifest) -> anyhow::Result<()> {
-    manifest.delete_module_by_name(name)?;
+    manifest.delete(name)?;
     fs::remove_dir_all(Path::new(name))?;
     Ok(())
 }

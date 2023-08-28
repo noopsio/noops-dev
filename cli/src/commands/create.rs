@@ -48,7 +48,7 @@ pub fn create(
     git: &GitAdapter,
     template: &Template,
 ) -> anyhow::Result<()> {
-    if manifest.get_module_by_name(&template.name).is_some() {
+    if manifest.get(&template.name).is_some() {
         anyhow::bail!("Module already exists");
     }
     let to = Path::new(&template.name);
@@ -61,7 +61,7 @@ pub fn create(
     copy_dir(&temp_dir.path().join(&template.subpath), to)?;
 
     let module = Component::from_template(template);
-    manifest.add_module(module)?;
+    manifest.add(module)?;
     Ok(())
 }
 

@@ -11,7 +11,7 @@ use common::dtos;
 
 const MAX_CONTENT_SIZE_IN_BYTES: usize = 10_000_000;
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
         .route(
             "/api/:project_name/:function_name",

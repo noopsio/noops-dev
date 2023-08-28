@@ -68,6 +68,7 @@ pub struct GetFunctionDTO {
     pub name: String,
     pub language: Language,
     pub hash: String,
+    pub link: String,
 }
 
 impl Display for Language {

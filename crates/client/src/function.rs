@@ -1,5 +1,5 @@
 use common::dtos::{CreateFunctionDTO, GetFunctionDTO};
-use reqwest::{blocking::Client as ReqwestClient, header::AUTHORIZATION, Url};
+use reqwest::{blocking::Client as ReqwestClient, header::AUTHORIZATION, StatusCode, Url};
 
 pub struct FunctionClient {
     base_url: Url,
@@ -54,6 +54,54 @@ impl FunctionClient {
             );
         }
         Ok(response.json()?)
+    }
+
+    pub fn read_opt(
+        &self,
+        project: &str,
+        function: &str,
+    ) -> anyhow::Result<Option<GetFunctionDTO>> {
+        let url = self.function_url(project, function)?;
+
+        let response = self
+            .client
+            .get(url)
+            .header(AUTHORIZATION, format!("Bearer {}", self.jwt))
+            .send()?;
+
+        if !response.status().is_success() && response.status() != StatusCode::NOT_FOUND {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?
+            );
+        }
+
+        if response.status() == StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            Ok(Some(response.json()?))
+        }
+    }
+
+    pub fn exists(&self, project: &str, function: &str) -> anyhow::Result<bool> {
+        let url = self.function_url(project, function)?;
+
+        let response = self
+            .client
+            .get(url)
+            .header(AUTHORIZATION, format!("Bearer {}", self.jwt))
+            .send()?;
+
+        if !response.status().is_success() && response.status() != StatusCode::NOT_FOUND {
+            anyhow::bail!(
+                "Request failed with status code {}: {}",
+                response.status(),
+                response.text()?
+            );
+        }
+
+        Ok(response.status().is_success() && response.status() != StatusCode::NOT_FOUND)
     }
 
     pub fn update(&self, project: &str, function: &CreateFunctionDTO) -> anyhow::Result<()> {
