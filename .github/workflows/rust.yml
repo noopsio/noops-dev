@@ -13,7 +13,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  server_build_and_test:
+  server_build_and_test: 
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,6 +51,7 @@ jobs:
         run: cargo test -p noops-server        
 
   cli_build_and_test:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
