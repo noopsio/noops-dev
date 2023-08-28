@@ -8,7 +8,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Token error: {}", .0)]
+    #[error("Token error", .0)]
     Token(#[from] jsonwebtoken::errors::Error),
     #[error("Unknown error: {}", .0)]
     Unknown(#[from] anyhow::Error),
