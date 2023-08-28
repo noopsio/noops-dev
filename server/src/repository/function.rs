@@ -5,7 +5,7 @@ use super::{
     Repository,
 };
 use anyhow;
-use common::dtos::{GetFunctionDTO, Language};
+use common::dtos::Language;
 use diesel::{
     prelude::*,
     r2d2::{ConnectionManager, Pool},

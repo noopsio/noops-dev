@@ -61,7 +61,7 @@ pub fn deploy_function(
     };
 
     let local_function: BuildedComponent = manifest
-        .get_module_by_name(name)
+        .get(name)
         .ok_or(anyhow::anyhow!("Module not found"))?
         .try_into()?;
 

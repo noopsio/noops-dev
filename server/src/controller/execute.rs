@@ -9,7 +9,7 @@ use axum::{
 };
 use std::collections::HashMap;
 
-pub fn create_routes(state: AppState) -> Router {
+pub fn routes(state: AppState) -> Router {
     Router::new()
         .route("/:function", get(execute))
         .with_state(state)

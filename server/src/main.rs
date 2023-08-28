@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
 
     let state = create_app_state(Path::new(DATABASE_CONNECTION), Path::new(WASMSTORE_PREFIX))?;
     run_database_migration()?;
-    let app = controller::create_routes(state).layer(TraceLayer::new_for_http());
+    let app = controller::routes(state).layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("listening on {}", addr);
     Server::bind(&addr)

@@ -1,6 +1,7 @@
-use super::Command;
-use crate::{config::Config, manifest::Manifest, terminal::Terminal};
+use super::{deploy::get_jwt, Command};
+use crate::{config::Config, info, manifest::Manifest, terminal::Terminal};
 use clap::Parser;
+use client::{function::FunctionClient, project::ProjectClient};
 
 #[derive(Parser, Debug)]
 pub struct ShowCommand {
@@ -13,19 +14,15 @@ impl Command for ShowCommand {
         let config = Config::default();
         let manifest = Manifest::from_yaml(&config.manifest_path)?;
 
+        let jwt = get_jwt(&config.jwt_file)?.ok_or(anyhow::anyhow!("You are not logged in"))?;
+        let function_client = FunctionClient::new(&config.base_url, jwt.clone());
+        let project_client = ProjectClient::new(&config.base_url, jwt);
+
         match self.name.clone() {
-            Some(name) => show_function()?,
-            None => show_project()?,
+            Some(name) => info::show_function(&name, &manifest, &function_client, &terminal)?,
+            None => info::show_project(&manifest, &project_client, &terminal)?,
         }
 
         Ok(())
     }
-}
-
-fn show_project(manifest: &Manifest) -> anyhow::Result<()> {
-    todo!()
-}
-
-fn show_function() -> anyhow::Result<()> {
-    todo!()
 }

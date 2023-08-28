@@ -55,20 +55,20 @@ impl Manifest {
         Ok(serde_yaml::from_reader(file)?)
     }
 
-    pub fn add_module(&mut self, component: Component) -> anyhow::Result<()> {
+    pub fn add(&mut self, component: Component) -> anyhow::Result<()> {
         self.functions.push(component);
         self.save()?;
         Ok(())
     }
 
-    pub fn get_module_by_name(&self, name: &str) -> Option<Component> {
+    pub fn get(&self, name: &str) -> Option<Component> {
         self.functions
             .iter()
             .cloned()
             .find(|component| component.name == name)
     }
 
-    pub fn delete_module_by_name(&mut self, name: &str) -> anyhow::Result<()> {
+    pub fn delete(&mut self, name: &str) -> anyhow::Result<()> {
         let index = self
             .functions
             .iter()

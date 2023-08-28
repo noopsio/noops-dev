@@ -84,7 +84,7 @@ pub fn build_function(terminal: &Terminal, manifest: &Manifest, name: &str) -> a
 
 pub fn build_by_name(name: &str, manifest: &Manifest) -> anyhow::Result<()> {
     let module = manifest
-        .get_module_by_name(name)
+        .get(name)
         .ok_or(anyhow::anyhow!("Module not found"))?;
     build(&module)?;
     Ok(())
