@@ -22,6 +22,10 @@ diesel::table! {
     users (id) {
         id -> Text,
         email -> Text,
+        name -> Text,
+        location -> Text,
+        company -> Text,
+        github_login -> Text,
         github_id -> Integer,
         github_access_token -> Text,
     }
@@ -29,4 +33,9 @@ diesel::table! {
 
 diesel::joinable!(functions -> projects (project_id));
 diesel::joinable!(projects -> users (user_id));
-diesel::allow_tables_to_appear_in_same_query!(functions, projects, users,);
+
+diesel::allow_tables_to_appear_in_same_query!(
+    functions,
+    projects,
+    users,
+);
