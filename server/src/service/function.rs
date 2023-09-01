@@ -121,15 +121,24 @@ mod tests {
     use lazy_static::lazy_static;
 
     const PROJECT_NAME: &str = "PROJECT_NAME";
+
     const USER_EMAIL: &str = "test@example.com";
+    const USER_NAME: &str = "user_name";
+    const USER_LOCATION: &str = "Hamburg";
+    const USER_COMPANY: &str = "Noops.io";
     const USER_GH_ACCESS_TOKEN: &str = "Yiu0Hae4ietheereij4OhneuNe6tae0e";
+    const USER_GH_LOGIN: &str = "login_name";
     const USER_GH_ID: i32 = 42;
 
     lazy_static! {
         static ref USER: User = User::new(
             USER_EMAIL.to_string(),
+            USER_NAME.to_string(),
+            USER_LOCATION.to_string(),
+            USER_COMPANY.to_string(),
             USER_GH_ID,
-            USER_GH_ACCESS_TOKEN.to_string(),
+            USER_GH_LOGIN.to_string(),
+            USER_GH_ACCESS_TOKEN.to_string()
         );
     }
 
