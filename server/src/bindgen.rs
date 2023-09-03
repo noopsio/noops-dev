@@ -12,7 +12,7 @@ bindgen!({
 });
 
 #[allow(clippy::derivable_impls)]
-impl Default for Request<'_> {
+impl Default for Request {
     fn default() -> Self {
         Self {
             query_params: Default::default(),

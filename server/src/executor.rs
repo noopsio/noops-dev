@@ -1,45 +1,65 @@
-use host::{self, WasiCtx};
-use wasi_cap_std_sync::WasiCtxBuilder;
+use crate::bindgen;
 use wasmtime::{
     component::{Component, Linker},
     Config, Engine, Store, WasmBacktraceDetails,
 };
+use wasmtime_wasi::preview2::{self, Table, WasiCtx, WasiCtxBuilder, WasiView};
 
-use crate::bindgen;
+struct CommandCtx {
+    table: Table,
+    wasi: WasiCtx,
+}
+
+impl WasiView for CommandCtx {
+    fn table(&self) -> &Table {
+        &self.table
+    }
+    fn table_mut(&mut self) -> &mut Table {
+        &mut self.table
+    }
+    fn ctx(&self) -> &WasiCtx {
+        &self.wasi
+    }
+    fn ctx_mut(&mut self) -> &mut WasiCtx {
+        &mut self.wasi
+    }
+}
+
+lazy_static::lazy_static! {
+    static ref ENGINE: Engine = {
+        let mut config = Config::new();
+        config.wasm_backtrace_details(WasmBacktraceDetails::Enable);
+        config.wasm_component_model(true);
+        config.async_support(true);
+
+        let engine = Engine::new(&config).unwrap();
+        engine
+    };
+}
 
 pub async fn execute(
     wasm: Vec<u8>,
-    request: bindgen::Request<'_>,
+    request: bindgen::Request,
 ) -> anyhow::Result<bindgen::Response> {
-    let config = create_config();
-    let engine = Engine::new(&config)?;
-    let component = Component::from_binary(&engine, &wasm)?;
+    let component = Component::from_binary(&ENGINE, &wasm)?;
 
-    let mut linker = Linker::new(&engine);
-    host::command::add_to_linker(&mut linker, |ctx: &mut WasiCtx| ctx)?;
+    let mut linker = Linker::new(&ENGINE);
+    //preview2::command::add_to_linker(&mut linker)?;
+    //wasmtime_wasi::add_to_linker(lin&mut linker), get_cx)
+
+    let mut table = Table::new();
+    let wasi = WasiCtxBuilder::new().build(&mut table)?;
+
+    preview2::command::add_to_linker(&mut linker)?;
     let linker = linker;
 
-    let mut store = Store::new(
-        &engine,
-        WasiCtxBuilder::new()
-            .inherit_stdin()
-            .inherit_stdout()
-            .build(),
-    );
+    let mut store = Store::new(&ENGINE, CommandCtx { table, wasi });
 
     let (bindings, _) =
         bindgen::Handler::instantiate_async(&mut store, &component, &linker).await?;
 
-    let response = bindings.call_handle(&mut store, request).await?;
+    let response = bindings.call_handle(&mut store, &request).await?;
     Ok(response)
-}
-
-fn create_config() -> Config {
-    Config::new()
-        .wasm_backtrace_details(WasmBacktraceDetails::Enable)
-        .wasm_component_model(true)
-        .async_support(true)
-        .clone()
 }
 
 #[cfg(test)]

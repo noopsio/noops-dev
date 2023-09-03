@@ -19,8 +19,8 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "args": ["build", "hello-go"],
+            "cwd": "${workspaceFolder}/cli"
         },
         {
             "type": "lldb",

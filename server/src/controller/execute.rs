@@ -21,14 +21,14 @@ async fn execute(
     State(wasmstore): State<WasmStore>,
 ) -> Result<Response, Error> {
     let function = wasmstore.read(&function)?;
-    let mut query_list: Vec<(&str, &str)> = Vec::new();
-    for (key, value) in query_map.iter() {
+    let mut query_list: Vec<(String, String)> = Vec::new();
+    for (key, value) in query_map.into_iter() {
         query_list.push((key, value));
     }
     let result = query_list;
 
     let request = bindgen::Request {
-        query_params: &result[..],
+        query_params: result,
     };
     let response = executor::execute(function, request).await?;
 
