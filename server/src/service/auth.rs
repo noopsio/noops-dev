@@ -40,7 +40,15 @@ impl AuthService {
         let user = match result {
             Some(user) => user,
             None => {
-                let user = User::new(gh_user.email, gh_user.id, github_access_token);
+                let user = User::new(
+                    gh_user.email,
+                    gh_user.name,
+                    gh_user.location,
+                    gh_user.company,
+                    gh_user.id,
+                    gh_user.login,
+                    github_access_token,
+                );
                 self.users.create(&user)?;
                 user
             }
@@ -74,14 +82,22 @@ mod tests {
     use crate::{github::GithubUser, repository::user::UserRepository};
 
     const USER_EMAIL: &str = "test@example.com";
+    const USER_NAME: &str = "user_name";
+    const USER_LOCATION: &str = "Hamburg";
+    const USER_COMPANY: &str = "Noops.io";
     const USER_GH_ACCESS_TOKEN: &str = "Yiu0Hae4ietheereij4OhneuNe6tae0e";
+    const USER_GH_LOGIN: &str = "login_name";
     const USER_GH_ID: i32 = 42;
 
     lazy_static! {
         static ref USER: User = User::new(
             USER_EMAIL.to_string(),
+            USER_NAME.to_string(),
+            USER_LOCATION.to_string(),
+            USER_COMPANY.to_string(),
             USER_GH_ID,
-            USER_GH_ACCESS_TOKEN.to_string(),
+            USER_GH_LOGIN.to_string(),
+            USER_GH_ACCESS_TOKEN.to_string()
         );
         static ref JWT: String = Jwt::create_token(
             USER.id.clone(),
@@ -93,6 +109,10 @@ mod tests {
         static ref GITHUB_USER: GithubUser = GithubUser {
             id: USER_GH_ID,
             email: USER.email.clone(),
+            name: USER_NAME.to_string(),
+            location: USER_LOCATION.to_string(),
+            company: USER_COMPANY.to_string(),
+            login: USER_GH_LOGIN.to_string(),
             access_token: USER_GH_ACCESS_TOKEN.to_string(),
         };
     }

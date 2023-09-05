@@ -8,19 +8,27 @@ use serde::Deserialize;
 const GITHUB_API_USER: &str = "https://api.github.com/user";
 const GITHUB_API_EMAIL: &str = "https://api.github.com/user/emails";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GithubUser {
     pub id: i32,
+    pub name: String,
     pub email: String,
+    pub login: String,
+    pub location: String,
+    pub company: String,
     pub access_token: String,
 }
 
-#[derive(Deserialize)]
-struct User {
-    id: i32,
+#[derive(Debug, Clone, Default, Deserialize)]
+struct RawGithubUser {
+    pub id: i32,
+    pub name: String,
+    pub login: String,
+    pub location: String,
+    pub company: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 struct Email {
     email: String,
     primary: bool,
@@ -43,17 +51,21 @@ impl GithubClient {
     pub async fn get_user(&self, access_token: String) -> anyhow::Result<GithubUser> {
         let headers = self.create_headers(&access_token)?;
 
-        let user_infos = self.get_user_infos(headers.clone()).await?;
+        let user_info = self.get_user_infos(headers.clone()).await?;
         let email = self.get_primary_email(headers).await?;
 
         Ok(GithubUser {
-            id: user_infos.id,
             email: email.email,
+            name: user_info.name,
+            location: user_info.location,
+            company: user_info.company,
+            login: user_info.login,
+            id: user_info.id,
             access_token,
         })
     }
 
-    async fn get_user_infos(&self, headers: HeaderMap) -> anyhow::Result<User> {
+    async fn get_user_infos(&self, headers: HeaderMap) -> anyhow::Result<RawGithubUser> {
         let user = self
             .client
             .get(GITHUB_API_USER)

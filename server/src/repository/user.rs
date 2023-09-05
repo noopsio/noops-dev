@@ -14,16 +14,32 @@ use diesel::{
 pub struct User {
     pub id: String,
     pub email: String,
+    pub name: String,
+    pub location: String,
+    pub company: String,
+    pub github_login: String,
     pub github_id: i32,
     pub github_access_token: String,
 }
 
 impl User {
-    pub fn new(email: String, github_id: i32, github_access_token: String) -> Self {
+    pub fn new(
+        email: String,
+        name: String,
+        location: String,
+        company: String,
+        github_id: i32,
+        github_login: String,
+        github_access_token: String,
+    ) -> Self {
         Self {
             id: create_id(),
             email,
+            name,
+            location,
+            company,
             github_id,
+            github_login,
             github_access_token,
         }
     }
@@ -89,14 +105,23 @@ mod tests {
     use tempfile::{tempdir, TempDir};
 
     const DATABASE_NAME: &str = "noops_test.sqlite";
+
     const USER_EMAIL: &str = "test@example.com";
+    const USER_NAME: &str = "user_name";
+    const USER_LOCATION: &str = "Hamburg";
+    const USER_COMPANY: &str = "Noops.io";
     const USER_GH_ACCESS_TOKEN: &str = "Yiu0Hae4ietheereij4OhneuNe6tae0e";
+    const USER_GH_LOGIN: &str = "login_name";
     const USER_GH_ID: i32 = 42;
 
     lazy_static! {
         static ref USER: User = User::new(
             USER_EMAIL.to_string(),
+            USER_NAME.to_string(),
+            USER_LOCATION.to_string(),
+            USER_COMPANY.to_string(),
             USER_GH_ID,
+            USER_GH_LOGIN.to_string(),
             USER_GH_ACCESS_TOKEN.to_string()
         );
     }
@@ -134,7 +159,11 @@ mod tests {
         let (_temp_dir, users) = setup()?;
         let user = User::new(
             USER_EMAIL.to_string(),
+            USER_NAME.to_string(),
+            USER_LOCATION.to_string(),
+            USER_COMPANY.to_string(),
             USER_GH_ID,
+            USER_GH_LOGIN.to_string(),
             USER_GH_ACCESS_TOKEN.to_string(),
         );
         users.create(&user)?;
