@@ -64,8 +64,8 @@ impl Manifest {
     pub fn get(&self, name: &str) -> Option<Component> {
         self.functions
             .iter()
-            .cloned()
             .find(|component| component.name == name)
+            .cloned()
     }
 
     pub fn delete(&mut self, name: &str) -> anyhow::Result<()> {
