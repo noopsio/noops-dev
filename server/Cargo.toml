@@ -11,7 +11,7 @@ serde.workspace = true
 anyhow = "1.0.69"
 tokio = { version = "1.26", features = ["full"] }
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
-wasmtime = { version = "12.0.0",  features = ["component-model", "cranelift"]}
+wasmtime = { version = "12.0.0",  features = ["component-model"]}
 wasmtime-wasi = "12.0.0"
 tracing = "0.1.37"
 wit-component.workspace = true

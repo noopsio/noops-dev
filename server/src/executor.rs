@@ -5,6 +5,17 @@ use wasmtime::{
 };
 use wasmtime_wasi::preview2::{self, Table, WasiCtx, WasiCtxBuilder, WasiView};
 
+lazy_static::lazy_static! {
+    static ref ENGINE: Engine = {
+        let mut config = Config::new();
+        config.wasm_backtrace_details(WasmBacktraceDetails::Enable);
+        config.wasm_component_model(true);
+        config.async_support(true);
+
+        Engine::new(&config).unwrap()
+    };
+}
+
 struct CommandCtx {
     table: Table,
     wasi: WasiCtx,
@@ -25,18 +36,6 @@ impl WasiView for CommandCtx {
     }
 }
 
-lazy_static::lazy_static! {
-    static ref ENGINE: Engine = {
-        let mut config = Config::new();
-        config.wasm_backtrace_details(WasmBacktraceDetails::Enable);
-        config.wasm_component_model(true);
-        config.async_support(true);
-
-        let engine = Engine::new(&config).unwrap();
-        engine
-    };
-}
-
 pub async fn execute(
     wasm: Vec<u8>,
     request: bindgen::Request,
@@ -44,15 +43,11 @@ pub async fn execute(
     let component = Component::from_binary(&ENGINE, &wasm)?;
 
     let mut linker = Linker::new(&ENGINE);
-    //preview2::command::add_to_linker(&mut linker)?;
-    //wasmtime_wasi::add_to_linker(lin&mut linker), get_cx)
-
     let mut table = Table::new();
     let wasi = WasiCtxBuilder::new().build(&mut table)?;
-
     preview2::command::add_to_linker(&mut linker)?;
-    let linker = linker;
 
+    let linker = linker;
     let mut store = Store::new(&ENGINE, CommandCtx { table, wasi });
 
     let (bindings, _) =
@@ -87,7 +82,11 @@ mod tests {
         let component =
             bindgen::create_component(&module).expect("Unable to create component from module");
         let request = bindgen::Request {
-            query_params: &[("key1", "value1"), ("key2", "value2"), ("key3", "value3")],
+            query_params: vec![
+                ("key1".to_string(), "value1".to_string()),
+                ("key2".to_string(), "value2".to_string()),
+                ("key3".to_string(), "value3".to_string()),
+            ],
         };
         let response = executor::execute(component, request).await?;
         assert_eq!(200, response.status);

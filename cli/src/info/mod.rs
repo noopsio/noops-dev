@@ -27,8 +27,8 @@ pub fn show_project(
         .map(|local_component| {
             let remote_component = remote_components
                 .iter()
-                .cloned()
-                .find(|remote_component| remote_component.name == local_component.name);
+                .find(|remote_component| remote_component.name == local_component.name)
+                .cloned();
 
             ComponentInformation::new(local_component, remote_component)
         })
