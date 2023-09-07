@@ -1,4 +1,6 @@
-default world handler {
+package noops:handler@0.1.0
+
+world handler {
 
     record request {
         query-params: list<tuple<string, string>>

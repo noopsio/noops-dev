@@ -1,11 +1,14 @@
 wit_bindgen::generate!({
     world: "handler",
-    path: "../../wit"
+    path: "../../wit",
+    exports: {
+        world: TestHandler
+    }
 });
 
 struct TestHandler;
 
-impl Handler for TestHandler {
+impl Guest for TestHandler {
     fn handle(req: Request) -> Response {
         let mut response_body = String::default();
         for (key, value) in req.query_params {
@@ -19,5 +22,3 @@ impl Handler for TestHandler {
         }
     }
 }
-
-export_handler!(TestHandler);
