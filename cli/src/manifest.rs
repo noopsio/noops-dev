@@ -83,7 +83,7 @@ impl Manifest {
     pub fn save(&self) -> anyhow::Result<()> {
         // FIXME Inject config or path
         let config = Config::default();
-        self.save_to(&config.manifest_path)?;
+        self.save_to(&config.manifest)?;
         Ok(())
     }
 

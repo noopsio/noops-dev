@@ -12,7 +12,7 @@ impl Command for ShowCommand {
     fn execute(&self) -> anyhow::Result<()> {
         let terminal = Terminal::new();
         let config = Config::default();
-        let manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let manifest = Manifest::from_yaml(&config.manifest)?;
 
         let jwt = get_jwt(&config.jwt_file)?.ok_or(anyhow::anyhow!("You are not logged in"))?;
         let function_client = FunctionClient::new(&config.base_url, jwt.clone());
