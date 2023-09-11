@@ -11,7 +11,7 @@ impl Command for BuildCommand {
     fn execute(&self) -> anyhow::Result<()> {
         let terminal = Terminal::new();
         let config = Config::default();
-        let manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let manifest = Manifest::from_yaml(&config.manifest)?;
 
         match self.name.clone() {
             Some(name) => build::build_function(&terminal, &manifest, &name)?,

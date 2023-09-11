@@ -13,7 +13,7 @@ impl Command for InitCommand {
         let terminal = Terminal::new();
         let config = Config::default();
 
-        Manifest::init(&self.name, &config.manifest_path).context("Initializing project failed")?;
+        Manifest::init(&self.name, &config.manifest).context("Initializing project failed")?;
         terminal.write_text(format!("{} successfully initialized", &self.name))?;
         Ok(())
     }

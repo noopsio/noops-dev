@@ -14,9 +14,11 @@ impl Command for DeployCommand {
     fn execute(&self) -> anyhow::Result<()> {
         let terminal = Terminal::new();
         let config = Config::default();
-        let manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let manifest = Manifest::from_yaml(&config.manifest)?;
 
-        let jwt = get_jwt(&config.jwt_file)?.ok_or(anyhow::anyhow!("You are not logged in"))?;
+        let jwt = get_jwt(&config.jwt_file)?.ok_or(anyhow::anyhow!(
+            "You are not logged in - Use \" noops login\""
+        ))?;
 
         let function_client = FunctionClient::new(&config.base_url, jwt.clone());
         let project_client = ProjectClient::new(&config.base_url, jwt);

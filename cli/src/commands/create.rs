@@ -5,7 +5,7 @@ use crate::{
     template::{Template, TemplateManager},
     terminal::Terminal,
 };
-use anyhow::Context;
+use anyhow::{bail, Context};
 use clap::Parser;
 use std::fs;
 use std::path::Path;
@@ -21,11 +21,15 @@ impl Command for CreateCommand {
         let terminal = Terminal::new();
         let config = Config::default();
         let template_manager = TemplateManager::new();
-        let mut manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let mut manifest = Manifest::from_yaml(&config.manifest)?;
 
         terminal.write_heading("Creating component")?;
 
-        let templates = template_manager.list(&config.templates_dir)?;
+        if !config.template_manifest.exists() {
+            bail!("Templates not synced - Use \"noops template update\"");
+        }
+
+        let templates = template_manager.list(&config.template_manifest)?;
         let index = terminal.select_prompt("Select a template", &templates)?;
         let mut template = templates[index].clone();
         template.name = self.name.clone();
