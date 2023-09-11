@@ -1,5 +1,5 @@
 use crate::adapter::BaseAdapter;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use common::dtos::Language;
 use serde::Deserialize;
 use std::{fmt::Display, path::PathBuf};
@@ -23,8 +23,10 @@ pub struct Template {
 
 impl Display for Template {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{} - {}", &self.name, &self.description))?;
-        Ok(())
+        f.write_str(&format!(
+            "Name:\t\t{}\nDescription:\t{}\nLanguage:\t{}",
+            self.name, self.description, self.language
+        ))
     }
 }
 
@@ -49,13 +51,17 @@ impl TemplateManager {
                 .build_command(template_dir, &["clone", REPOSITORY, "."])
         };
 
-        self.adapter.execute(command)?;
+        self.adapter
+            .execute(command)
+            .context("Failed to update templates")?;
         Ok(())
     }
 
     pub fn list(&self, template_manifest: &Path) -> Result<Vec<Template>> {
-        let template_manifest = std::fs::File::open(template_manifest)?;
-        let template_manifest: TemplateManifest = serde_yaml::from_reader(template_manifest)?;
+        let template_manifest =
+            std::fs::File::open(template_manifest).context("Failed to open templates manifest")?;
+        let template_manifest: TemplateManifest = serde_yaml::from_reader(template_manifest)
+            .context("Failed to parse templates manifest")?;
         Ok(template_manifest.templates)
     }
 }

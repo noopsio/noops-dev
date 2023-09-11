@@ -30,6 +30,15 @@ fn list() -> Result<()> {
     let manager = TemplateManager::new();
     let terminal = Terminal::new();
     let templates = manager.list(&config.template_manifest)?;
-    terminal.write_text(format!("{:?}", templates))?;
+
+    terminal.write_heading("Available templates")?;
+    for (index, template) in templates.iter().enumerate() {
+        if index < templates.len() - 1 {
+            terminal.write_text(format!("{}\n\n", template))?;
+        } else {
+            terminal.write_text(format!("{}\n", template))?;
+        }
+    }
+
     Ok(())
 }
