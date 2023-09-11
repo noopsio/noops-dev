@@ -22,9 +22,9 @@ diesel::table! {
     users (id) {
         id -> Text,
         email -> Text,
-        name -> Text,
-        location -> Text,
-        company -> Text,
+        name -> Nullable<Text>,
+        location -> Nullable<Text>,
+        company -> Nullable<Text>,
         github_login -> Text,
         github_id -> Integer,
         github_access_token -> Text,

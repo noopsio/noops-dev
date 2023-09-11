@@ -14,9 +14,9 @@ use diesel::{
 pub struct User {
     pub id: String,
     pub email: String,
-    pub name: String,
-    pub location: String,
-    pub company: String,
+    pub name: Option<String>,
+    pub location: Option<String>,
+    pub company: Option<String>,
     pub github_login: String,
     pub github_id: i32,
     pub github_access_token: String,
@@ -25,9 +25,9 @@ pub struct User {
 impl User {
     pub fn new(
         email: String,
-        name: String,
-        location: String,
-        company: String,
+        name: Option<String>,
+        location: Option<String>,
+        company: Option<String>,
         github_id: i32,
         github_login: String,
         github_access_token: String,
@@ -117,9 +117,9 @@ mod tests {
     lazy_static! {
         static ref USER: User = User::new(
             USER_EMAIL.to_string(),
-            USER_NAME.to_string(),
-            USER_LOCATION.to_string(),
-            USER_COMPANY.to_string(),
+            Some(USER_NAME.to_string()),
+            Some(USER_LOCATION.to_string()),
+            Some(USER_COMPANY.to_string()),
             USER_GH_ID,
             USER_GH_LOGIN.to_string(),
             USER_GH_ACCESS_TOKEN.to_string()
@@ -159,9 +159,9 @@ mod tests {
         let (_temp_dir, users) = setup()?;
         let user = User::new(
             USER_EMAIL.to_string(),
-            USER_NAME.to_string(),
-            USER_LOCATION.to_string(),
-            USER_COMPANY.to_string(),
+            Some(USER_NAME.to_string()),
+            Some(USER_LOCATION.to_string()),
+            Some(USER_COMPANY.to_string()),
             USER_GH_ID,
             USER_GH_LOGIN.to_string(),
             USER_GH_ACCESS_TOKEN.to_string(),

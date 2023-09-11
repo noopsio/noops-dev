@@ -11,21 +11,21 @@ const GITHUB_API_EMAIL: &str = "https://api.github.com/user/emails";
 #[derive(Debug, Clone, Default)]
 pub struct GithubUser {
     pub id: i32,
-    pub name: String,
+    pub name: Option<String>,
     pub email: String,
     pub login: String,
-    pub location: String,
-    pub company: String,
+    pub location: Option<String>,
+    pub company: Option<String>,
     pub access_token: String,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
 struct RawGithubUser {
     pub id: i32,
-    pub name: String,
     pub login: String,
-    pub location: String,
-    pub company: String,
+    pub name: Option<String>,
+    pub location: Option<String>,
+    pub company: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
