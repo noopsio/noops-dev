@@ -30,6 +30,7 @@ impl Command for CreateCommand {
         }
 
         let templates = template_manager.list(&config.template_manifest)?;
+
         let index = terminal.select_prompt("Select a template", &templates)?;
         let mut template = templates[index].clone();
         template.name = self.name.clone();
