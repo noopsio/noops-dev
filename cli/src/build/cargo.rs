@@ -1,5 +1,6 @@
-use super::BaseAdapter;
 use std::path::Path;
+
+use crate::adapter::BaseAdapter;
 
 const PROGRAM: &str = "cargo";
 
@@ -10,9 +11,7 @@ pub struct CargoAdapter {
 impl CargoAdapter {
     pub fn new() -> Self {
         CargoAdapter {
-            adapter: BaseAdapter {
-                program: PROGRAM.to_string(),
-            },
+            adapter: BaseAdapter::new(PROGRAM),
         }
     }
 

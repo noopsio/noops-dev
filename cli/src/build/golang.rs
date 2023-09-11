@@ -1,4 +1,4 @@
-use super::BaseAdapter;
+use crate::adapter::BaseAdapter;
 use anyhow::{Context, Result};
 use std::{borrow::Cow, fs, path::Path};
 use wasm_encoder::{Encode, Section};
@@ -15,9 +15,7 @@ pub struct GolangAdapter {
 impl GolangAdapter {
     pub fn new() -> Self {
         GolangAdapter {
-            adapter: BaseAdapter {
-                program: PROGRAM.to_string(),
-            },
+            adapter: BaseAdapter::new(PROGRAM),
         }
     }
 
