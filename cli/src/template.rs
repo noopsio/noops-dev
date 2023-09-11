@@ -6,7 +6,7 @@ use std::{fmt::Display, path::PathBuf};
 use std::{fs, path::Path};
 
 const PROGRAM: &str = "git";
-const REPOSITORY: &str = "https://github.com/JFComputing/noops-templates.git";
+const REPOSITORY: &str = "https://github.com/noopsio/noops-templates.git";
 
 #[derive(Default, Clone, Debug, Deserialize)]
 pub struct TemplateManifest {
@@ -53,8 +53,8 @@ impl TemplateManager {
         Ok(())
     }
 
-    pub fn list(&self, template_dir: &Path) -> Result<Vec<Template>> {
-        let template_manifest = std::fs::File::open(template_dir.join("manifest.yaml"))?;
+    pub fn list(&self, template_manifest: &Path) -> Result<Vec<Template>> {
+        let template_manifest = std::fs::File::open(template_manifest)?;
         let template_manifest: TemplateManifest = serde_yaml::from_reader(template_manifest)?;
         Ok(template_manifest.templates)
     }

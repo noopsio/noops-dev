@@ -29,7 +29,7 @@ fn list() -> Result<()> {
     let config = Config::default();
     let manager = TemplateManager::new();
     let terminal = Terminal::new();
-    let templates = manager.list(&config.templates_dir)?;
+    let templates = manager.list(&config.template_manifest)?;
     terminal.write_text(format!("{:?}", templates))?;
     Ok(())
 }

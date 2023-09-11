@@ -14,7 +14,7 @@ impl Command for DestroyCommand {
     fn execute(&self) -> anyhow::Result<()> {
         let terminal = Terminal::new();
         let config = Config::default();
-        let mut manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let mut manifest = Manifest::from_yaml(&config.manifest)?;
 
         let text = format!("Removing {}", &self.name);
         let spinner = terminal.spinner(&text);
