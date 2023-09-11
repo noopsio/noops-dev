@@ -12,6 +12,7 @@ fn main() -> anyhow::Result<()> {
         commands::Cli::Deploy(cmd) => cmd.execute()?,
         commands::Cli::Destroy(cmd) => cmd.execute()?,
         commands::Cli::Show(cmd) => cmd.execute()?,
+        commands::Cli::Template(cmd) => cmd.execute()?,
     }
     Ok(())
 }

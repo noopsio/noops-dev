@@ -1,4 +1,4 @@
-use crate::{config::Config, templates::Template};
+use crate::{config::Config, template::Template};
 use common::dtos::Language;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
