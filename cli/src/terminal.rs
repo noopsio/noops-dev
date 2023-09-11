@@ -26,7 +26,7 @@ impl Terminal {
     }
 
     pub fn write_text(&self, text: impl AsRef<str>) -> anyhow::Result<()> {
-        self.term.write_line(text.as_ref())?;
+        self.term.write_str(text.as_ref())?;
         Ok(())
     }
 
