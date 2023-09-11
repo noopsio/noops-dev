@@ -8,6 +8,7 @@ pub struct Config {
     pub jwt_file: PathBuf,
     pub base_url: String,
     pub manifest_path: PathBuf,
+    pub templates_dir: PathBuf,
 }
 
 impl Default for Config {
@@ -25,6 +26,7 @@ impl Default for Config {
             jwt_file: strategy.in_cache_dir("jwt"),
             base_url: "http://localhost:8080/api/".to_string(),
             manifest_path: Path::new("./noops.yaml").to_path_buf(),
+            templates_dir: strategy.in_cache_dir("templates"),
         }
     }
 }

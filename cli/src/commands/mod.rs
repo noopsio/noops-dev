@@ -5,10 +5,11 @@ pub mod destroy;
 pub mod init;
 pub mod login;
 pub mod show;
+pub mod template;
 
 use self::{
     build::BuildCommand, create::CreateCommand, deploy::DeployCommand, destroy::DestroyCommand,
-    init::InitCommand, login::LoginCommand, show::ShowCommand,
+    init::InitCommand, login::LoginCommand, show::ShowCommand, template::TemplateCommand,
 };
 use clap::Parser;
 
@@ -40,4 +41,8 @@ pub enum Cli {
 
     /// Show information about the project or a function
     Show(ShowCommand),
+
+    /// template
+    #[command(subcommand)]
+    Template(TemplateCommand),
 }

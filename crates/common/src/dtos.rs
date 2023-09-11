@@ -25,9 +25,9 @@ use std::fmt::Display;
 #[diesel(sql_type = Text)]
 pub enum Language {
     #[default]
-    #[serde(rename = "rust")]
+    #[serde(rename = "Rust")]
     Rust,
-    #[serde(rename = "golang")]
+    #[serde(rename = "Golang")]
     Golang,
 }
 
@@ -43,8 +43,8 @@ impl FromSql<Text, sqlite::Sqlite> for Language {
         let value = <String as FromSql<Text, sqlite::Sqlite>>::from_sql(bytes)?;
 
         match value.as_str() {
-            "rust" => Ok(Language::Rust),
-            "golang" => Ok(Language::Golang),
+            "Rust" => Ok(Language::Rust),
+            "Golang" => Ok(Language::Golang),
             _ => Err("Invalid language".into()),
         }
     }
@@ -74,8 +74,8 @@ pub struct GetFunctionDTO {
 impl Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Language::Rust => f.write_str("rust"),
-            Language::Golang => f.write_str("golang"),
+            Language::Rust => f.write_str("Rust"),
+            Language::Golang => f.write_str("Golang"),
         }
     }
 }
