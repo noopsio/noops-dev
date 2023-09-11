@@ -24,8 +24,8 @@ pub struct Template {
 impl Display for Template {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
-            "Name:\t\t{}\nDescription:\t{}\nLanguage:\t{}",
-            self.name, self.description, self.language
+            "Name:\t\t{}\n  Description:\t{}\n  Language:\t{}\n",
+            &self.name, &self.description, &self.language
         ))
     }
 }

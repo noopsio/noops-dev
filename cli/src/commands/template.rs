@@ -32,11 +32,17 @@ fn list() -> Result<()> {
     let templates = manager.list(&config.template_manifest)?;
 
     terminal.write_heading("Available templates")?;
+
     for (index, template) in templates.iter().enumerate() {
+        let entry = format!(
+            "Name:\t\t{}\nDescription:\t{}\nLanguage:\t{}",
+            template.name, template.description, template.language
+        );
+
         if index < templates.len() - 1 {
-            terminal.write_text(format!("{}\n\n", template))?;
+            terminal.write_text(format!("{}\n\n", entry))?;
         } else {
-            terminal.write_text(format!("{}\n", template))?;
+            terminal.write_text(format!("{}\n", entry))?;
         }
     }
 
