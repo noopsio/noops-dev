@@ -1667,7 +1667,7 @@ dependencies = [
 
 [[package]]
 name = "noops"
-version = "0.2.2-pre-0"
+version = "0.3.0-pre-0"
 dependencies = [
  "anyhow",
  "clap",
