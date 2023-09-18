@@ -7,16 +7,16 @@ use std::path::{Path, PathBuf};
 pub struct Manifest {
     #[serde(rename = "project")]
     pub project_name: String,
-    pub functions: Vec<Component>,
+    pub handlers: Vec<Handler>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Component {
+pub struct Handler {
     pub name: String,
     pub language: Language,
 }
 
-impl Component {
+impl Handler {
     pub fn from_template(template: &Template) -> Self {
         Self {
             name: template.name.clone(),
@@ -55,14 +55,14 @@ impl Manifest {
         Ok(serde_yaml::from_reader(file)?)
     }
 
-    pub fn add(&mut self, component: Component) -> anyhow::Result<()> {
-        self.functions.push(component);
+    pub fn add(&mut self, component: Handler) -> anyhow::Result<()> {
+        self.handlers.push(component);
         self.save()?;
         Ok(())
     }
 
-    pub fn get(&self, name: &str) -> Option<Component> {
-        self.functions
+    pub fn get(&self, name: &str) -> Option<Handler> {
+        self.handlers
             .iter()
             .find(|component| component.name == name)
             .cloned()
@@ -70,11 +70,11 @@ impl Manifest {
 
     pub fn delete(&mut self, name: &str) -> anyhow::Result<()> {
         let index = self
-            .functions
+            .handlers
             .iter()
-            .position(|component: &Component| component.name == name)
+            .position(|component: &Handler| component.name == name)
             .ok_or(anyhow::anyhow!("Module not found"))?;
-        self.functions.remove(index);
+        self.handlers.remove(index);
         self.save()?;
 
         Ok(())

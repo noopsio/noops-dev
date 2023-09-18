@@ -1,7 +1,7 @@
 use super::Command;
 use crate::{
     config::Config,
-    manifest::{Component, Manifest},
+    manifest::{Handler, Manifest},
     template::{Template, TemplateManager},
     terminal::Terminal,
 };
@@ -23,7 +23,7 @@ impl Command for CreateCommand {
         let template_manager = TemplateManager::new();
         let mut manifest = Manifest::from_yaml(&config.manifest)?;
 
-        terminal.write_heading("Creating component")?;
+        terminal.write_heading("Creating a handler")?;
 
         if !config.template_manifest.exists() {
             bail!("Templates not synced - Use \"noops template update\"");
@@ -42,7 +42,7 @@ impl Command for CreateCommand {
             &template,
             &config.templates_dir.join(&template.subpath),
         )
-        .context(format!("Creating module \"{}\" failed", self.name))?;
+        .context(format!("Creating handler \"{}\" failed", self.name))?;
         spinner.finish_with_message(text);
 
         Ok(())
@@ -64,8 +64,8 @@ pub fn create(
 
     copy_dir(template_path, to)?;
 
-    let module = Component::from_template(template);
-    manifest.add(module)?;
+    let handler = Handler::from_template(template);
+    manifest.add(handler)?;
     Ok(())
 }
 

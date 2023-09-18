@@ -14,7 +14,7 @@ impl Command for BuildCommand {
         let manifest = Manifest::from_yaml(&config.manifest)?;
 
         match self.name.clone() {
-            Some(name) => build::build_function(&terminal, &manifest, &name)?,
+            Some(name) => build::build_handler(&terminal, &manifest, &name)?,
             None => build::build_project(&terminal, &manifest)?,
         }
 

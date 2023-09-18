@@ -6,7 +6,7 @@ use super::{
     DeployStep,
 };
 use crate::terminal::Terminal;
-use client::function::FunctionClient;
+use client::handler::HandlerClient;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
@@ -20,15 +20,15 @@ pub struct DeployPlan {
 
 impl DeployPlan {
     pub fn new(
-        local_modules: Vec<BuildedComponent>,
-        remote_modules: Vec<BuildedComponent>,
+        local_handlers: Vec<BuildedComponent>,
+        remote_handlers: Vec<BuildedComponent>,
     ) -> Self {
-        let local_modules: HashSet<BuildedComponent> = HashSet::from_iter(local_modules);
-        let remote_modules: HashSet<BuildedComponent> = HashSet::from_iter(remote_modules);
+        let local_handlers: HashSet<BuildedComponent> = HashSet::from_iter(local_handlers);
+        let remote_handlers: HashSet<BuildedComponent> = HashSet::from_iter(remote_handlers);
 
-        let create_steps = create::create_steps(&local_modules, &remote_modules);
-        let update_steps = update::update_steps(&local_modules, &remote_modules);
-        let delete_steps = delete::delete_steps(&local_modules, &remote_modules);
+        let create_steps = create::create_steps(&local_handlers, &remote_handlers);
+        let update_steps = update::update_steps(&local_handlers, &remote_handlers);
+        let delete_steps = delete::delete_steps(&local_handlers, &remote_handlers);
 
         Self {
             steps: create_steps.len() + update_steps.len() + delete_steps.len(),
@@ -46,12 +46,12 @@ impl DeployPlan {
         &self,
         terminal: &Terminal,
         project: &str,
-        client: &FunctionClient,
+        client: &HandlerClient,
     ) -> anyhow::Result<()> {
         let mut step = 1;
         for create_step in &self.create_steps {
             let prefix = format!("[{}/{}]", step, self.steps);
-            let message = format!("Creating module {}", &create_step.0.name);
+            let message = format!("Creating handler {}", &create_step.0.name);
             let spinner = terminal.spinner_with_prefix(prefix, &message);
             create_step.deploy(project, client)?;
             spinner.finish_with_message(message);
@@ -60,7 +60,7 @@ impl DeployPlan {
 
         for update_step in &self.update_steps {
             let prefix = format!("[{}/{}]", step, self.steps);
-            let message = format!("Updating module {}", &update_step.0.name);
+            let message = format!("Updating handler {}", &update_step.0.name);
             let spinner = terminal.spinner_with_prefix(prefix, &message);
             update_step.deploy(project, client)?;
             spinner.finish_with_message(message);
@@ -69,7 +69,7 @@ impl DeployPlan {
 
         for delete_step in &self.delete_steps {
             let prefix = format!("[{}/{}]", step, self.steps);
-            let message = format!("Deleting module {}", &delete_step.0.name);
+            let message = format!("Deleting handler {}", &delete_step.0.name);
             let spinner = terminal.spinner_with_prefix(prefix, &message);
             delete_step.deploy(project, client)?;
             spinner.finish_with_message(message);

@@ -60,11 +60,11 @@ pub struct CreateFunctionDTO {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
 pub struct GetProjectDTO {
     pub name: String,
-    pub functions: Vec<GetFunctionDTO>,
+    pub handlers: Vec<GetHandlerDTO>,
 }
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone, Default, Hash, PartialOrd, Ord)]
-pub struct GetFunctionDTO {
+pub struct GetHandlerDTO {
     pub name: String,
     pub language: Language,
     pub hash: String,

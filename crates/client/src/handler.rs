@@ -1,13 +1,13 @@
-use common::dtos::{CreateFunctionDTO, GetFunctionDTO};
+use common::dtos::{CreateFunctionDTO, GetHandlerDTO};
 use reqwest::{blocking::Client as ReqwestClient, header::AUTHORIZATION, StatusCode, Url};
 
-pub struct FunctionClient {
+pub struct HandlerClient {
     base_url: Url,
     client: ReqwestClient,
     jwt: String,
 }
 
-impl FunctionClient {
+impl HandlerClient {
     pub fn new(base_url: &str, jwt: String) -> Self {
         Self {
             base_url: Url::parse(base_url).unwrap(),
@@ -36,7 +36,7 @@ impl FunctionClient {
         Ok(())
     }
 
-    pub fn read(&self, project: &str, function: &str) -> anyhow::Result<GetFunctionDTO> {
+    pub fn read(&self, project: &str, function: &str) -> anyhow::Result<GetHandlerDTO> {
         let url = self.function_url(project, function)?;
 
         let response = self
@@ -56,11 +56,7 @@ impl FunctionClient {
         Ok(response.json()?)
     }
 
-    pub fn read_opt(
-        &self,
-        project: &str,
-        function: &str,
-    ) -> anyhow::Result<Option<GetFunctionDTO>> {
+    pub fn read_opt(&self, project: &str, function: &str) -> anyhow::Result<Option<GetHandlerDTO>> {
         let url = self.function_url(project, function)?;
 
         let response = self

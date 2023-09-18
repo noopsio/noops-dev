@@ -1,4 +1,4 @@
-use crate::errors::Error::{self, FunctionAlreadyExists, FunctionNotFound};
+use crate::errors::Error::{self, FunctionAlreadyExists, HandlerNotFound};
 use std::{
     fs::{self, File},
     io::Write,
@@ -20,8 +20,8 @@ impl WasmStore {
         })
     }
 
-    pub fn create(&self, function_id: &str, wasm: &[u8]) -> Result<(), Error> {
-        let path = self.prefix.join(format!("{}.wasm", function_id));
+    pub fn create(&self, handler_id: &str, wasm: &[u8]) -> Result<(), Error> {
+        let path = self.prefix.join(format!("{}.wasm", handler_id));
         if path.exists() {
             return Err(FunctionAlreadyExists);
         }
@@ -29,8 +29,8 @@ impl WasmStore {
         Ok(())
     }
 
-    pub fn update(&self, function_id: &str, wasm: &[u8]) -> Result<(), Error> {
-        let path = self.create_path(function_id);
+    pub fn update(&self, handler_id: &str, wasm: &[u8]) -> Result<(), Error> {
+        let path = self.create_path(handler_id);
         self.write(wasm, &path)?;
         Ok(())
     }
@@ -41,25 +41,25 @@ impl WasmStore {
         Ok(())
     }
 
-    pub fn delete(&self, function_id: &str) -> Result<(), Error> {
-        let path = self.create_path(function_id);
+    pub fn delete(&self, handler_id: &str) -> Result<(), Error> {
+        let path = self.create_path(handler_id);
         if !path.exists() {
-            return Err(FunctionNotFound);
+            return Err(HandlerNotFound);
         }
         fs::remove_file(path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(())
     }
 
-    pub fn read(&self, function_id: &str) -> Result<Vec<u8>, Error> {
-        let path = self.create_path(function_id);
+    pub fn read(&self, handler_id: &str) -> Result<Vec<u8>, Error> {
+        let path = self.create_path(handler_id);
         if !path.exists() {
-            return Err(FunctionNotFound);
+            return Err(HandlerNotFound);
         }
         let wasm = fs::read(path).map_err(|err| anyhow::anyhow!(err))?;
         Ok(wasm)
     }
 
-    fn create_path(&self, function: &str) -> PathBuf {
-        self.prefix.join(format!("{}.wasm", function))
+    fn create_path(&self, handler: &str) -> PathBuf {
+        self.prefix.join(format!("{}.wasm", handler))
     }
 }

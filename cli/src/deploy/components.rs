@@ -1,5 +1,5 @@
-use crate::manifest::Component;
-use common::dtos::{CreateFunctionDTO, GetFunctionDTO, Language};
+use crate::manifest::Handler;
+use common::dtos::{CreateFunctionDTO, GetHandlerDTO, Language};
 use std::{fs, hash::Hash};
 
 #[derive(Debug, Clone, Default, Eq, PartialOrd, Ord)]
@@ -22,10 +22,10 @@ impl PartialEq for BuildedComponent {
     }
 }
 
-impl TryFrom<Component> for BuildedComponent {
+impl TryFrom<Handler> for BuildedComponent {
     type Error = anyhow::Error;
 
-    fn try_from(value: Component) -> Result<Self, Self::Error> {
+    fn try_from(value: Handler) -> Result<Self, Self::Error> {
         let wasm = fs::read(value.handler_path())?;
         let hash = common::hash::hash(&wasm);
 
@@ -49,8 +49,8 @@ impl From<BuildedComponent> for CreateFunctionDTO {
     }
 }
 
-impl From<GetFunctionDTO> for BuildedComponent {
-    fn from(value: GetFunctionDTO) -> Self {
+impl From<GetHandlerDTO> for BuildedComponent {
+    fn from(value: GetHandlerDTO) -> Self {
         Self {
             name: value.name,
             language: value.language,

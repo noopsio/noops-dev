@@ -1,8 +1,8 @@
 use crate::{
     bindgen,
-    errors::Error::{self, FunctionNotFound, ProjectNotFound},
+    errors::Error::{self, HandlerNotFound, ProjectNotFound},
     repository::{
-        function::{Function, FunctionRepository},
+        handler::{Handler, HandlerRepository},
         project::ProjectRepository,
         user::User,
         Repository,
@@ -10,26 +10,26 @@ use crate::{
     wasmstore::WasmStore,
 };
 use common::{
-    dtos::{GetFunctionDTO, Language},
+    dtos::{GetHandlerDTO, Language},
     hash,
 };
 
 #[derive(Debug, Clone)]
-pub struct FunctionService {
+pub struct HandlerService {
     projects: ProjectRepository,
-    functions: FunctionRepository,
+    handlers: HandlerRepository,
     wasmstore: WasmStore,
 }
 
-impl FunctionService {
+impl HandlerService {
     pub fn new(
         projects: ProjectRepository,
-        functions: FunctionRepository,
+        handlers: HandlerRepository,
         wasmstore: WasmStore,
     ) -> Self {
         Self {
             projects,
-            functions,
+            handlers,
             wasmstore,
         }
     }
@@ -38,27 +38,27 @@ impl FunctionService {
         &self,
         user: &User,
         project_name: &str,
-        function_name: String,
+        handler_name: String,
         wasm: &[u8],
     ) -> Result<(), Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
             .ok_or(ProjectNotFound)?;
-        let old_function = self
-            .functions
-            .belonging_to_by_name(&project, &function_name)?;
+        let old_handler = self
+            .handlers
+            .belonging_to_by_name(&project, &handler_name)?;
 
         let hash = hash::hash(wasm);
         let wasm = bindgen::create_component(wasm)?;
         // FIXME Pass correct Language
-        let function = Function::new(function_name, Language::Rust, hash, project.id);
-        self.functions.create(&function)?;
+        let handler = Handler::new(handler_name, Language::Rust, hash, project.id);
+        self.handlers.create(&handler)?;
 
-        if let Some(old_function) = old_function {
-            self.wasmstore.update(&old_function.id, &wasm)?;
+        if let Some(old_handler) = old_handler {
+            self.wasmstore.update(&old_handler.id, &wasm)?;
         } else {
-            self.wasmstore.create(&function.id, &wasm)?;
+            self.wasmstore.create(&handler.id, &wasm)?;
         }
 
         Ok(())
@@ -68,39 +68,34 @@ impl FunctionService {
         &self,
         user: &User,
         project_name: &str,
-        function_name: String,
-    ) -> Result<GetFunctionDTO, Error> {
+        handler_name: String,
+    ) -> Result<GetHandlerDTO, Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
             .ok_or(ProjectNotFound)?;
 
-        let function = self
-            .functions
-            .belonging_to_by_name(&project, &function_name)?
-            .ok_or(Error::FunctionNotFound)?;
+        let handler = self
+            .handlers
+            .belonging_to_by_name(&project, &handler_name)?
+            .ok_or(Error::HandlerNotFound)?;
 
-        Ok(function.into())
+        Ok(handler.into())
     }
 
-    pub fn delete(
-        &self,
-        user: &User,
-        project_name: &str,
-        function_name: &str,
-    ) -> Result<(), Error> {
+    pub fn delete(&self, user: &User, project_name: &str, handler_name: &str) -> Result<(), Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
             .ok_or(ProjectNotFound)?;
 
-        let function = self
-            .functions
-            .belonging_to_by_name(&project, function_name)?
-            .ok_or(FunctionNotFound)?;
+        let handler = self
+            .handlers
+            .belonging_to_by_name(&project, handler_name)?
+            .ok_or(HandlerNotFound)?;
 
-        self.functions.delete(&function.id)?;
-        self.wasmstore.delete(&function.id)?;
+        self.handlers.delete(&handler.id)?;
+        self.wasmstore.delete(&handler.id)?;
 
         Ok(())
     }
@@ -108,10 +103,10 @@ impl FunctionService {
 
 #[cfg(test)]
 mod tests {
-    use super::FunctionService;
+    use super::HandlerService;
     use crate::{
         repository::{
-            function::FunctionRepository,
+            handler::HandlerRepository,
             project::{Project, ProjectRepository},
             user::User,
         },
@@ -145,7 +140,7 @@ mod tests {
     #[test]
     #[ignore]
     fn create_ok() {
-        // FIXME: Deactivated due to the lack of the faux crate to assert a functions has been called
+        // FIXME: Deactivated due to the lack of the faux crate to assert a handlers has been called
     }
 
     #[test]
@@ -155,14 +150,14 @@ mod tests {
             .once()
             .then_return(Ok(None));
 
-        let functions_mock = FunctionRepository::faux();
+        let handlers_mock = HandlerRepository::faux();
         let wasmstore_mock: WasmStore = WasmStore::faux();
 
         // -------------------------------------------------------------------------------------
 
-        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
+        let handler_service = HandlerService::new(projects_mock, handlers_mock, wasmstore_mock);
         let result =
-            function_service.create(&USER, PROJECT_NAME, "function_1".to_string(), &[0, 0, 0]);
+            handler_service.create(&USER, PROJECT_NAME, "handler_1".to_string(), &[0, 0, 0]);
 
         assert!(result.is_err())
     }
@@ -170,7 +165,7 @@ mod tests {
     #[test]
     #[ignore]
     fn delete_ok() {
-        // FIXME: Deactivated due to the lack of the faux crate to assert a functions has been called
+        // FIXME: Deactivated due to the lack of the faux crate to assert a handlers has been called
     }
 
     #[test]
@@ -180,20 +175,20 @@ mod tests {
             .once()
             .then_return(Ok(None));
 
-        let functions_mock = FunctionRepository::faux();
+        let handlers_mock = HandlerRepository::faux();
         let wasmstore_mock: WasmStore = WasmStore::faux();
 
         // -------------------------------------------------------------------------------------
 
-        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
-        let result = function_service.delete(&USER, PROJECT_NAME, "function_1");
+        let handler_service = HandlerService::new(projects_mock, handlers_mock, wasmstore_mock);
+        let result = handler_service.delete(&USER, PROJECT_NAME, "handler_1");
 
         assert!(result.is_err())
     }
 
     #[test]
-    fn delete_function_not_found() {
-        let function_name = "function_1";
+    fn delete_handler_not_found() {
+        let handler_name = "handler_1";
         let project_expected = Project::new(PROJECT_NAME.to_string(), USER.id.clone());
 
         // -------------------------------------------------------------------------------------
@@ -203,16 +198,16 @@ mod tests {
             .once()
             .then_return(Ok(Some(project_expected.clone())));
 
-        let mut functions_mock = FunctionRepository::faux();
-        when!(functions_mock.belonging_to_by_name(project_expected, function_name))
+        let mut handlers_mock = HandlerRepository::faux();
+        when!(handlers_mock.belonging_to_by_name(project_expected, handler_name))
             .once()
             .then_return(Ok(None));
         let wasmstore_mock: WasmStore = WasmStore::faux();
 
         // -------------------------------------------------------------------------------------
 
-        let function_service = FunctionService::new(projects_mock, functions_mock, wasmstore_mock);
-        let result = function_service.delete(&USER, PROJECT_NAME, function_name);
+        let handler_service = HandlerService::new(projects_mock, handlers_mock, wasmstore_mock);
+        let result = handler_service.delete(&USER, PROJECT_NAME, handler_name);
 
         assert!(result.is_err())
     }

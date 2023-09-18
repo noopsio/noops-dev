@@ -1,5 +1,5 @@
 -- Your SQL goes here
-CREATE TABLE functions (
+CREATE TABLE handlers (
   id CHAR(21) PRIMARY KEY NOT NULL,
   name VARCHAR NOT NULL,
   language VARCHAR NOT NULL,

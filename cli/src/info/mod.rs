@@ -6,8 +6,8 @@ use crate::{
     manifest::Manifest,
     terminal::Terminal,
 };
-use client::{function::FunctionClient, project::ProjectClient};
-use common::dtos::GetFunctionDTO;
+use client::{handler::HandlerClient, project::ProjectClient};
+use common::dtos::GetHandlerDTO;
 
 pub fn show_project(
     manifest: &Manifest,
@@ -15,12 +15,12 @@ pub fn show_project(
     terminal: &Terminal,
 ) -> anyhow::Result<()> {
     let deployed = project_client.exists(&manifest.project_name)?;
-    let mut remote_components: Vec<GetFunctionDTO> = Default::default();
+    let mut remote_components: Vec<GetHandlerDTO> = Default::default();
 
     if deployed {
-        remote_components = project_client.get(&manifest.project_name)?.functions;
+        remote_components = project_client.get(&manifest.project_name)?.handlers;
     }
-    let local_components = manifest.functions.clone();
+    let local_components = manifest.handlers.clone();
 
     let component_information: Vec<ComponentInformation> = local_components
         .iter()
@@ -46,16 +46,16 @@ pub fn show_project(
     Ok(())
 }
 
-pub fn show_function(
+pub fn show_handler(
     name: &str,
     manifest: &Manifest,
-    function_client: &FunctionClient,
+    handler_client: &HandlerClient,
     terminal: &Terminal,
 ) -> anyhow::Result<()> {
     let local_component = manifest
         .get(name)
-        .ok_or(anyhow::anyhow!("Module not found"))?;
-    let remote_component = function_client.read_opt(&manifest.project_name, name)?;
+        .ok_or(anyhow::anyhow!("Handler not found"))?;
+    let remote_component = handler_client.read_opt(&manifest.project_name, name)?;
 
     let component_info = ComponentInformation::new(&local_component, remote_component);
 

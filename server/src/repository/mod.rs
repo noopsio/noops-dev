@@ -1,9 +1,9 @@
-pub mod function;
+pub mod handler;
 pub mod project;
 pub mod schema;
 pub mod user;
 
-use self::{function::FunctionRepository, project::ProjectRepository, user::UserRepository};
+use self::{handler::HandlerRepository, project::ProjectRepository, user::UserRepository};
 use diesel::{
     prelude::*,
     r2d2::{ConnectionManager, Pool},
@@ -27,13 +27,13 @@ pub fn create_pool(path: &Path) -> Pool<ConnectionManager<SqliteConnection>> {
         .unwrap()
 }
 
-pub fn new(path: &Path) -> (UserRepository, ProjectRepository, FunctionRepository) {
+pub fn new(path: &Path) -> (UserRepository, ProjectRepository, HandlerRepository) {
     let pool = create_pool(path);
 
     (
         UserRepository::new(pool.clone()),
         ProjectRepository::new(pool.clone()),
-        FunctionRepository::new(pool),
+        HandlerRepository::new(pool),
     )
 }
 
