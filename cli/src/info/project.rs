@@ -1,6 +1,5 @@
-use std::fmt::Display;
-
 use super::component::ComponentInformation;
+use std::fmt::Display;
 
 pub struct ProjectInformation {
     name: String,
@@ -21,12 +20,13 @@ impl ProjectInformation {
 impl Display for ProjectInformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
-            "Name:\t\t{}\nDeployed:\t{}",
-            self.name, self.deployed
+            "Name:\t\t{}\nDeployed:\t{}\nComponents:\t{}\n",
+            self.name,
+            self.deployed,
+            self.components.len()
         ))?;
-        f.write_fmt(format_args!("\n\nComponents:\t{}", self.components.len()))?;
         for component in &self.components {
-            f.write_fmt(format_args!("\n\n{}", component))?;
+            f.write_fmt(format_args!("\n{}", component))?;
         }
 
         Ok(())

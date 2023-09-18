@@ -1,4 +1,4 @@
-use crate::{config::Config, templates::Template};
+use crate::{config::Config, template::Template};
 use common::dtos::Language;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -64,8 +64,8 @@ impl Manifest {
     pub fn get(&self, name: &str) -> Option<Component> {
         self.functions
             .iter()
-            .cloned()
             .find(|component| component.name == name)
+            .cloned()
     }
 
     pub fn delete(&mut self, name: &str) -> anyhow::Result<()> {
@@ -83,7 +83,7 @@ impl Manifest {
     pub fn save(&self) -> anyhow::Result<()> {
         // FIXME Inject config or path
         let config = Config::default();
-        self.save_to(&config.manifest_path)?;
+        self.save_to(&config.manifest)?;
         Ok(())
     }
 

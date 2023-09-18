@@ -14,7 +14,6 @@ impl Command for LoginCommand {
         let auth_client = AuthClient::new(&config.base_url);
         let jwt = auth_client.login()?;
         set_jwt(&config.jwt_file, &jwt)?;
-
         Ok(())
     }
 }

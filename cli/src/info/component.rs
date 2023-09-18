@@ -1,8 +1,6 @@
-use std::fmt::Display;
-
-use common::dtos::{GetFunctionDTO, Language};
-
 use crate::manifest::Component;
+use common::dtos::{GetFunctionDTO, Language};
+use std::fmt::Display;
 
 pub struct ComponentInformation {
     pub name: String,
@@ -34,7 +32,7 @@ impl ComponentInformation {
 impl Display for ComponentInformation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
-            "Name:\t\t{}\nLanguage:\t{}\nBuild:\t\t{}\nDeployed:\t{}\nLink:\t\t{}",
+            "Name:\t\t{}\nLanguage:\t{}\nBuild:\t\t{}\nDeployed:\t{}\nLink:\t\t{}\n",
             self.name, self.language, self.build, self.deployed, self.link
         ))
     }

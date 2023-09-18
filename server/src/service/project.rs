@@ -84,9 +84,9 @@ mod tests {
     lazy_static! {
         static ref USER: User = User::new(
             USER_EMAIL.to_string(),
-            USER_NAME.to_string(),
-            USER_LOCATION.to_string(),
-            USER_COMPANY.to_string(),
+            Some(USER_NAME.to_string()),
+            Some(USER_LOCATION.to_string()),
+            Some(USER_COMPANY.to_string()),
             USER_GH_ID,
             USER_GH_LOGIN.to_string(),
             USER_GH_ACCESS_TOKEN.to_string()

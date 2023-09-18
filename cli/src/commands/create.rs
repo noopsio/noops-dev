@@ -1,20 +1,15 @@
 use super::Command;
 use crate::{
-    build::BaseAdapter,
     config::Config,
     manifest::{Component, Manifest},
-    templates::{Template, TEMPLATES},
+    template::{Template, TemplateManager},
     terminal::Terminal,
 };
-use anyhow::Context;
+use anyhow::{bail, Context};
 use clap::Parser;
 use std::fs;
 use std::path::Path;
-use tempfile::tempdir;
 use walkdir::WalkDir;
-
-const PROGRAM: &str = "git";
-const REPOSITORY: &str = "https://github.com/JFComputing/noops-templates.git";
 
 #[derive(Parser, Debug)]
 pub struct CreateCommand {
@@ -25,18 +20,29 @@ impl Command for CreateCommand {
     fn execute(&self) -> anyhow::Result<()> {
         let terminal = Terminal::new();
         let config = Config::default();
-        let git = GitAdapter::new();
-        let mut manifest = Manifest::from_yaml(&config.manifest_path)?;
+        let template_manager = TemplateManager::new();
+        let mut manifest = Manifest::from_yaml(&config.manifest)?;
 
         terminal.write_heading("Creating component")?;
 
-        let index = terminal.select_prompt("Select a template", &TEMPLATES)?;
-        let template = Template::new(self.name.clone(), index);
+        if !config.template_manifest.exists() {
+            bail!("Templates not synced - Use \"noops template update\"");
+        }
+
+        let templates = template_manager.list(&config.template_manifest)?;
+
+        let index = terminal.select_prompt("Select a template", &templates)?;
+        let mut template = templates[index].clone();
+        template.name = self.name.clone();
 
         let text = format!("Adding {}", &template.name);
         let spinner = terminal.spinner(&text);
-        create(&mut manifest, &git, &template)
-            .context(format!("Creating module \"{}\" failed", self.name))?;
+        create(
+            &mut manifest,
+            &template,
+            &config.templates_dir.join(&template.subpath),
+        )
+        .context(format!("Creating module \"{}\" failed", self.name))?;
         spinner.finish_with_message(text);
 
         Ok(())
@@ -45,8 +51,8 @@ impl Command for CreateCommand {
 
 pub fn create(
     manifest: &mut Manifest,
-    git: &GitAdapter,
     template: &Template,
+    template_path: &Path,
 ) -> anyhow::Result<()> {
     if manifest.get(&template.name).is_some() {
         anyhow::bail!("Module already exists");
@@ -56,9 +62,7 @@ pub fn create(
         anyhow::bail!("Module target path is not empty");
     }
 
-    let temp_dir = tempdir()?;
-    git.checkout_template(temp_dir.path(), &template.subpath)?;
-    copy_dir(&temp_dir.path().join(&template.subpath), to)?;
+    copy_dir(template_path, to)?;
 
     let module = Component::from_template(template);
     manifest.add(module)?;
@@ -78,60 +82,4 @@ pub fn copy_dir(from: &Path, to: &Path) -> anyhow::Result<()> {
         }
     }
     Ok(())
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct GitAdapter {
-    adapter: BaseAdapter,
-}
-
-impl GitAdapter {
-    pub fn new() -> Self {
-        GitAdapter {
-            adapter: BaseAdapter::new(PROGRAM),
-        }
-    }
-
-    pub fn checkout_template(&self, working_dir: &Path, path: &Path) -> anyhow::Result<()> {
-        self.clone_no_checkout(working_dir, working_dir)?;
-        self.sparse_checkout(working_dir, path)?;
-        self.checkout(working_dir)?;
-        Ok(())
-    }
-
-    fn clone_no_checkout(&self, working_dir: &Path, path: &Path) -> anyhow::Result<()> {
-        let command = self.adapter.build_command(
-            working_dir,
-            &[
-                "clone",
-                "--no-checkout",
-                REPOSITORY,
-                path.to_string_lossy().as_ref(),
-            ],
-        );
-        self.adapter.execute(command)?;
-        Ok(())
-    }
-
-    fn sparse_checkout(&self, working_dir: &Path, subpath: &Path) -> anyhow::Result<()> {
-        let command = self
-            .adapter
-            .build_command(working_dir, &["sparse-checkout", "init", "cone"]);
-        self.adapter.execute(command)?;
-
-        let command = self.adapter.build_command(
-            working_dir,
-            &["sparse-checkout", "set", subpath.to_string_lossy().as_ref()],
-        );
-        self.adapter.execute(command)?;
-        Ok(())
-    }
-
-    fn checkout(&self, working_dir: &Path) -> anyhow::Result<()> {
-        let command = self
-            .adapter
-            .build_command(working_dir, &["checkout", "main"]);
-        self.adapter.execute(command)?;
-        Ok(())
-    }
 }

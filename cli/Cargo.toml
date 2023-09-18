@@ -11,6 +11,7 @@ clap = { version = "4.1.8", features = ["cargo", "derive"] }
 env_logger = "0.10.0"
 log = "0.4.17"
 serde.workspace = true
+wit-component.workspace = true
 serde_json = "1.0.94"
 serde_yaml = "0.9.19"
 text_io = "0.1.12"
@@ -24,6 +25,8 @@ common = { path = "../crates/common" }
 indicatif = "0.17.3"
 etcetera = "0.8.0"
 client = { version = "0.1.0", path = "../crates/client" }
+wit-parser = "0.11.0"
+wasm-encoder = "0.32.0"
 
 [dev-dependencies]
 indoc = "2.0.1"
