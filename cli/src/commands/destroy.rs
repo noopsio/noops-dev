@@ -19,7 +19,7 @@ impl Command for DestroyCommand {
         let text = format!("Removing {}", &self.name);
         let spinner = terminal.spinner(&text);
         destroy(&self.name, &mut manifest)
-            .context(format!("Destroying module \"{}\" failed", self.name))?;
+            .context(format!("Destroying handler \"{}\" failed", self.name))?;
         spinner.finish_with_message(text);
         Ok(())
     }

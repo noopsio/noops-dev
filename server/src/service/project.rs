@@ -1,4 +1,4 @@
-use crate::repository::function::{Function, FunctionRepository};
+use crate::repository::handler::{Handler, HandlerRepository};
 use crate::{
     errors::Error::{self, ProjectNotFound},
     repository::{
@@ -7,20 +7,17 @@ use crate::{
         Repository,
     },
 };
-use common::dtos::{GetFunctionDTO, GetProjectDTO};
+use common::dtos::{GetHandlerDTO, GetProjectDTO};
 
 #[derive(Debug, Clone)]
 pub struct ProjectService {
     projects: ProjectRepository,
-    functions: FunctionRepository,
+    handlers: HandlerRepository,
 }
 
 impl ProjectService {
-    pub fn new(projects: ProjectRepository, functions: FunctionRepository) -> Self {
-        Self {
-            projects,
-            functions,
-        }
+    pub fn new(projects: ProjectRepository, handlers: HandlerRepository) -> Self {
+        Self { projects, handlers }
     }
 
     pub fn create(&self, user_id: String, project_name: String) -> Result<(), Error> {
@@ -30,36 +27,36 @@ impl ProjectService {
     }
 
     pub fn read(&self, user: &User, project_name: &str) -> Result<GetProjectDTO, Error> {
-        let (project, functions) = self.get_project_and_functions(user, project_name)?;
+        let (project, handlers) = self.get_project_and_handlers(user, project_name)?;
 
         Ok(GetProjectDTO {
             name: project.name,
-            functions: functions.into_iter().map(GetFunctionDTO::from).collect(),
+            handlers: handlers.into_iter().map(GetHandlerDTO::from).collect(),
         })
     }
 
     pub fn delete(&self, user: &User, project_name: &str) -> Result<(), Error> {
-        let (project, functions) = self.get_project_and_functions(user, project_name)?;
+        let (project, handlers) = self.get_project_and_handlers(user, project_name)?;
         self.projects.delete(&project.id)?;
-        for function in functions {
-            self.functions.delete(&function.id)?;
+        for handler in handlers {
+            self.handlers.delete(&handler.id)?;
         }
 
         Ok(())
     }
 
-    fn get_project_and_functions(
+    fn get_project_and_handlers(
         &self,
         user: &User,
         project_name: &str,
-    ) -> Result<(Project, Vec<Function>), Error> {
+    ) -> Result<(Project, Vec<Handler>), Error> {
         let project = self
             .projects
             .belonging_to_by_name(user, project_name)?
             .ok_or(ProjectNotFound)?;
-        let functions = self.functions.belonging_to(&project)?.into_iter().collect();
+        let handlers = self.handlers.belonging_to(&project)?.into_iter().collect();
 
-        Ok((project, functions))
+        Ok((project, handlers))
     }
 }
 
@@ -97,19 +94,19 @@ mod tests {
     fn read_ok() -> anyhow::Result<()> {
         let project_expected = Project::new(PROJECT_NAME.to_string(), USER.id.clone());
 
-        let function_1 = Function::new(
-            "FUNCTION_1".to_string(),
+        let handler_1 = Handler::new(
+            "HANDLER_1".to_string(),
             Language::Rust,
             "lohSh8xi".to_string(),
             project_expected.id.clone(),
         );
-        let function_2 = Function::new(
-            "FUNCTION_2".to_string(),
+        let handler_2 = Handler::new(
+            "HANDLER_2".to_string(),
             Language::Rust,
             "yie7aeH1".to_string(),
             project_expected.id.clone(),
         );
-        let functions_expected = vec![function_1.clone(), function_2.clone()];
+        let handlers_expected = vec![handler_1.clone(), handler_2.clone()];
 
         // -------------------------------------------------------------------------------------
 
@@ -118,19 +115,19 @@ mod tests {
             .once()
             .then_return(Ok(Some(project_expected.clone())));
 
-        let mut functions_mock = FunctionRepository::faux();
-        when!(functions_mock.belonging_to(project_expected))
+        let mut handlers_mock = HandlerRepository::faux();
+        when!(handlers_mock.belonging_to(project_expected))
             .once()
-            .then_return(Ok(functions_expected));
+            .then_return(Ok(handlers_expected));
 
         // -------------------------------------------------------------------------------------
 
-        let project_service = ProjectService::new(projects_mock, functions_mock);
+        let project_service = ProjectService::new(projects_mock, handlers_mock);
         let project = project_service.read(&USER, PROJECT_NAME)?;
 
         assert_eq!(PROJECT_NAME, project.name);
-        assert_eq!(GetFunctionDTO::from(function_1), project.functions[0]);
-        assert_eq!(GetFunctionDTO::from(function_2), project.functions[1]);
+        assert_eq!(GetHandlerDTO::from(handler_1), project.handlers[0]);
+        assert_eq!(GetHandlerDTO::from(handler_2), project.handlers[1]);
 
         Ok(())
     }
@@ -141,11 +138,11 @@ mod tests {
         when!(projects_mock.belonging_to_by_name(USER.clone(), PROJECT_NAME))
             .once()
             .then_return(Ok(None));
-        let functions_mock = FunctionRepository::faux();
+        let handlers_mock = HandlerRepository::faux();
 
         // -------------------------------------------------------------------------------------
 
-        let project_service = ProjectService::new(projects_mock, functions_mock);
+        let project_service = ProjectService::new(projects_mock, handlers_mock);
         let result = project_service.read(&USER, PROJECT_NAME);
 
         assert!(result.is_err());
@@ -156,7 +153,7 @@ mod tests {
     #[ignore]
     #[test]
     fn delete_ok() {
-        // FIXME: Deactivated due to the lack of the faux crate to assert a functions has been called
+        // FIXME: Deactivated due to the lack of the faux crate to assert a handlers has been called
     }
 
     #[test]
@@ -165,11 +162,11 @@ mod tests {
         when!(projects_mock.belonging_to_by_name(USER.clone(), PROJECT_NAME))
             .once()
             .then_return(Ok(None));
-        let functions_mock = FunctionRepository::faux();
+        let handlers_mock = HandlerRepository::faux();
 
         // -------------------------------------------------------------------------------------
 
-        let project_service = ProjectService::new(projects_mock, functions_mock);
+        let project_service = ProjectService::new(projects_mock, handlers_mock);
         let result = project_service.delete(&USER, PROJECT_NAME);
 
         assert!(result.is_err());

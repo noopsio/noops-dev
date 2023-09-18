@@ -20,7 +20,7 @@ pub enum Error {
     ProjectNotFound,
 
     #[error("Function not found")]
-    FunctionNotFound,
+    HandlerNotFound,
 
     #[error("Function already exists")]
     FunctionAlreadyExists,
@@ -55,7 +55,7 @@ impl IntoResponse for Error {
                 (StatusCode::UNAUTHORIZED, "User not registered".to_string())
             }
             Error::ProjectNotFound => (StatusCode::NOT_FOUND, "Project not found".to_string()),
-            Error::FunctionNotFound => (StatusCode::NOT_FOUND, "Function not found".to_string()),
+            Error::HandlerNotFound => (StatusCode::NOT_FOUND, "Function not found".to_string()),
 
             Error::FunctionAlreadyExists => {
                 (StatusCode::CONFLICT, "Function already exists".to_string())

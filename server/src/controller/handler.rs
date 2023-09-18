@@ -1,5 +1,5 @@
 use super::AppState;
-use crate::{errors::Error, repository::user::User, service::function::FunctionService};
+use crate::{errors::Error, repository::user::User, service::handler::HandlerService};
 use axum::{
     extract::{DefaultBodyLimit, Json, Path, State},
     http::StatusCode,
@@ -22,30 +22,30 @@ pub fn routes(state: AppState) -> Router {
 }
 
 async fn create(
-    Path((project_name, function_name)): Path<(String, String)>,
-    State(functions): State<FunctionService>,
+    Path((project_name, handler_name)): Path<(String, String)>,
+    State(functions): State<HandlerService>,
     Extension(user): Extension<User>,
     Json(function_dto): Json<dtos::CreateFunctionDTO>,
 ) -> Result<StatusCode, Error> {
-    functions.create(&user, &project_name, function_name, &function_dto.wasm)?;
+    functions.create(&user, &project_name, handler_name, &function_dto.wasm)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
 async fn read(
-    Path((project_name, function_name)): Path<(String, String)>,
-    State(functions): State<FunctionService>,
+    Path((project_name, handler_name)): Path<(String, String)>,
+    State(functions): State<HandlerService>,
     Extension(user): Extension<User>,
 ) -> Result<impl IntoResponse, Error> {
-    let function = functions.read(&user, &project_name, function_name)?;
+    let function = functions.read(&user, &project_name, handler_name)?;
     Ok((StatusCode::OK, Json(function)))
 }
 
 async fn delete(
-    Path((project_name, function_name)): Path<(String, String)>,
-    State(functions): State<FunctionService>,
+    Path((project_name, handler_name)): Path<(String, String)>,
+    State(functions): State<HandlerService>,
     Extension(user): Extension<User>,
 ) -> Result<StatusCode, Error> {
-    functions.delete(&user, &project_name, &function_name)?;
+    functions.delete(&user, &project_name, &handler_name)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

@@ -2,11 +2,11 @@
 
 mod auth;
 mod execute;
-mod function;
+mod handler;
 mod project;
 
 use crate::service::auth::AuthService;
-use crate::service::function::FunctionService;
+use crate::service::handler::HandlerService;
 use crate::service::project::ProjectService;
 use crate::wasmstore::WasmStore;
 use axum::{extract::FromRef, middleware, Router};
@@ -15,7 +15,7 @@ use axum::{extract::FromRef, middleware, Router};
 pub struct AppState {
     auth: AuthService,
     projects: ProjectService,
-    functions: FunctionService,
+    handlers: HandlerService,
     wasmstore: WasmStore,
 }
 
@@ -23,13 +23,13 @@ impl AppState {
     pub fn new(
         auth: AuthService,
         projects: ProjectService,
-        functions: FunctionService,
+        handlers: HandlerService,
         wasmstore: WasmStore,
     ) -> Self {
         Self {
             auth,
             projects,
-            functions,
+            handlers,
             wasmstore,
         }
     }
@@ -53,16 +53,16 @@ impl FromRef<AppState> for ProjectService {
     }
 }
 
-impl FromRef<AppState> for FunctionService {
-    fn from_ref(app_state: &AppState) -> FunctionService {
-        app_state.functions.clone()
+impl FromRef<AppState> for HandlerService {
+    fn from_ref(app_state: &AppState) -> HandlerService {
+        app_state.handlers.clone()
     }
 }
 
 pub fn routes(state: AppState) -> Router {
     Router::new()
         .merge(project::routes(state.clone()))
-        .merge(function::routes(state.clone()))
+        .merge(handler::routes(state.clone()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             auth::auth_middleware,

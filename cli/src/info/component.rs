@@ -1,5 +1,5 @@
-use crate::manifest::Component;
-use common::dtos::{GetFunctionDTO, Language};
+use crate::manifest::Handler;
+use common::dtos::{GetHandlerDTO, Language};
 use std::fmt::Display;
 
 pub struct ComponentInformation {
@@ -11,7 +11,7 @@ pub struct ComponentInformation {
 }
 
 impl ComponentInformation {
-    pub fn new(local_component: &Component, remote_component: Option<GetFunctionDTO>) -> Self {
+    pub fn new(local_component: &Handler, remote_component: Option<GetHandlerDTO>) -> Self {
         let deployed = remote_component.is_some();
         let link = if let Some(remote_component) = remote_component {
             remote_component.link

@@ -1,5 +1,5 @@
 use super::{components::BuildedComponent, DeployStep};
-use client::function::FunctionClient;
+use client::handler::HandlerClient;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
@@ -7,7 +7,7 @@ use std::{collections::HashSet, fmt::Display};
 pub struct CreateStep(pub BuildedComponent);
 
 impl DeployStep for CreateStep {
-    fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()> {
+    fn deploy(&self, project: &str, client: &HandlerClient) -> anyhow::Result<()> {
         client.create(project, &self.0.clone().into())?;
         Ok(())
     }
@@ -22,11 +22,11 @@ impl Display for CreateStep {
 }
 
 pub fn create_steps(
-    local_modules: &HashSet<BuildedComponent>,
-    remote_modules: &HashSet<BuildedComponent>,
+    local_handlers: &HashSet<BuildedComponent>,
+    remote_handlers: &HashSet<BuildedComponent>,
 ) -> Vec<CreateStep> {
-    local_modules
-        .difference(remote_modules)
+    local_handlers
+        .difference(remote_handlers)
         .cloned()
         .map(CreateStep)
         .collect()

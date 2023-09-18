@@ -3,7 +3,7 @@ use std::{fs::File, io::Read, path::Path};
 use super::Command;
 use crate::{config::Config, deploy, manifest::Manifest, terminal::Terminal};
 use clap::Parser;
-use client::{function::FunctionClient, project::ProjectClient};
+use client::{handler::HandlerClient, project::ProjectClient};
 
 #[derive(Parser, Debug)]
 pub struct DeployCommand {
@@ -20,18 +20,18 @@ impl Command for DeployCommand {
             "You are not logged in - Use \" noops login\""
         ))?;
 
-        let function_client = FunctionClient::new(&config.base_url, jwt.clone());
+        let handler_client = HandlerClient::new(&config.base_url, jwt.clone());
         let project_client = ProjectClient::new(&config.base_url, jwt);
 
         match self.name.clone() {
-            Some(name) => deploy::deploy_function(
+            Some(name) => deploy::deploy_handler(
                 &name,
                 &terminal,
                 manifest,
                 &project_client,
-                &function_client,
+                &handler_client,
             )?,
-            None => deploy::deploy_project(&terminal, manifest, &project_client, &function_client)?,
+            None => deploy::deploy_project(&terminal, manifest, &project_client, &handler_client)?,
         }
 
         Ok(())

@@ -1,24 +1,24 @@
-use common::dtos::GetFunctionDTO;
+use common::dtos::GetHandlerDTO;
 
-use crate::repository::function::Function;
+use crate::repository::handler::Handler;
 
 pub mod auth;
-pub mod function;
+pub mod handler;
 pub mod project;
 
 const URL: &str = "http://localhost:8080/";
 
-fn function_url(function_id: &str) -> String {
-    URL.to_string() + function_id
+fn handler_url(handler_id: &str) -> String {
+    URL.to_string() + handler_id
 }
 
-impl From<Function> for GetFunctionDTO {
-    fn from(value: Function) -> Self {
-        GetFunctionDTO {
+impl From<Handler> for GetHandlerDTO {
+    fn from(value: Handler) -> Self {
+        GetHandlerDTO {
             name: value.name,
             language: value.language,
             hash: value.hash,
-            link: function_url(&value.id),
+            link: handler_url(&value.id),
         }
     }
 }

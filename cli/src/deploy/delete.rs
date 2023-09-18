@@ -1,5 +1,5 @@
 use super::{components::BuildedComponent, DeployStep};
-use client::function::FunctionClient;
+use client::handler::HandlerClient;
 use console::style;
 use std::{collections::HashSet, fmt::Display};
 
@@ -7,7 +7,7 @@ use std::{collections::HashSet, fmt::Display};
 pub struct DeleteStep(pub BuildedComponent);
 
 impl DeployStep for DeleteStep {
-    fn deploy(&self, project: &str, client: &FunctionClient) -> anyhow::Result<()> {
+    fn deploy(&self, project: &str, client: &HandlerClient) -> anyhow::Result<()> {
         client.delete(project, &self.0.name)?;
         Ok(())
     }
@@ -22,11 +22,11 @@ impl Display for DeleteStep {
 }
 
 pub fn delete_steps(
-    local_modules: &HashSet<BuildedComponent>,
-    remote_modules: &HashSet<BuildedComponent>,
+    local_handlers: &HashSet<BuildedComponent>,
+    remote_handlers: &HashSet<BuildedComponent>,
 ) -> Vec<DeleteStep> {
-    remote_modules
-        .difference(local_modules)
+    remote_handlers
+        .difference(local_handlers)
         .cloned()
         .map(DeleteStep)
         .collect()

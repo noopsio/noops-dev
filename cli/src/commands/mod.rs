@@ -27,19 +27,19 @@ pub enum Cli {
     /// Login in the noops cloud
     Login(LoginCommand),
 
-    /// Create a function
+    /// Create a handler
     Create(CreateCommand),
 
-    /// Build the project or a function
+    /// Build the project or a handler
     Build(BuildCommand),
 
-    /// Deploy the project or a function
+    /// Deploy the project or a handler
     Deploy(DeployCommand),
 
-    /// Destroy a function
+    /// Destroy a handler
     Destroy(DestroyCommand),
 
-    /// Show information about the project or a function
+    /// Show information about the project or a handler
     Show(ShowCommand),
 
     /// template

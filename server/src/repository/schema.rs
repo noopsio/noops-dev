@@ -1,7 +1,7 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    functions (id) {
+    handlers (id) {
         id -> Text,
         name -> Text,
         language -> Text,
@@ -31,11 +31,7 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(functions -> projects (project_id));
+diesel::joinable!(handlers -> projects (project_id));
 diesel::joinable!(projects -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    functions,
-    projects,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(handlers, projects, users,);
