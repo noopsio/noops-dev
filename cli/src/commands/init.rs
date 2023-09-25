@@ -5,6 +5,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct InitCommand {
+    /// The name of the project
     pub name: String,
 }
 

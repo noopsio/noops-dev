@@ -5,7 +5,9 @@ use clap::Subcommand;
 
 #[derive(Debug, Subcommand)]
 pub enum TemplateCommand {
+    /// Lists all cached templates
     List,
+    /// Updates the template cache
     Update,
 }
 

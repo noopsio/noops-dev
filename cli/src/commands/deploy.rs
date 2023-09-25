@@ -1,23 +1,35 @@
 use std::{fs::File, io::Read, path::Path};
 
-use super::Command;
+use super::{build::BuildCommand, Command};
 use crate::{config::Config, deploy, manifest::Manifest, terminal::Terminal};
 use clap::Parser;
 use client::{handler::HandlerClient, project::ProjectClient};
 
 #[derive(Parser, Debug)]
 pub struct DeployCommand {
+    /// The handler to deploy
     pub name: Option<String>,
+
+    /// Builds the handler(s) before deploying
+    #[arg(short, long)]
+    pub build: bool,
 }
 
 impl Command for DeployCommand {
     fn execute(&self) -> anyhow::Result<()> {
+        if self.build {
+            let build_cmd = BuildCommand {
+                name: self.name.clone(),
+            };
+            build_cmd.execute()?;
+        }
+
         let terminal = Terminal::new();
         let config = Config::default();
         let manifest = Manifest::from_yaml(&config.manifest)?;
 
         let jwt = get_jwt(&config.jwt_file)?.ok_or(anyhow::anyhow!(
-            "You are not logged in - Use \" noops login\""
+            "You are not logged in - Use \"noops login\""
         ))?;
 
         let handler_client = HandlerClient::new(&config.base_url, jwt.clone());

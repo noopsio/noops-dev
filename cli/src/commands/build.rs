@@ -4,6 +4,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct BuildCommand {
+    /// The handler to build
     pub name: Option<String>,
 }
 

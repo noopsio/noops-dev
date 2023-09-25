@@ -13,6 +13,7 @@ use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
 pub struct CreateCommand {
+    /// The name of the new handler
     pub name: String,
 }
 
