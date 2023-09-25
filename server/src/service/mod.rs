@@ -6,7 +6,7 @@ pub mod auth;
 pub mod handler;
 pub mod project;
 
-const URL: &str = "http://localhost:8080/";
+const URL: &str = "https://app.noops.rocks/";
 
 fn handler_url(handler_id: &str) -> String {
     URL.to_string() + handler_id
