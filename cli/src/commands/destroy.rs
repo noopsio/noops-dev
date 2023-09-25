@@ -7,6 +7,7 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct DestroyCommand {
+    /// The handler to destroy
     pub name: String,
 }
 

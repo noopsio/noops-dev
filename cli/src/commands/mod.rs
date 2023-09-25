@@ -42,7 +42,7 @@ pub enum Cli {
     /// Show information about the project or a handler
     Show(ShowCommand),
 
-    /// template
+    /// Template subcommand
     #[command(subcommand)]
     Template(TemplateCommand),
 }

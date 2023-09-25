@@ -5,6 +5,7 @@ use client::{handler::HandlerClient, project::ProjectClient};
 
 #[derive(Parser, Debug)]
 pub struct ShowCommand {
+    /// The handler to show
     pub name: Option<String>,
 }
 
