@@ -4,7 +4,11 @@ FROM debian:bullseye as builder
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y \
     curl \
-    build-essential
+    build-essential \
+    pkg-config \
+    libsqlite3-dev \
+    libssl-dev 
+
 
 # Install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly-2023-03-01
@@ -14,11 +18,16 @@ WORKDIR /build
 
 COPY ./ ./
 
-RUN cargo \ 
-    build \
-    -Z bindeps \
-    -p noops-server \
-    --release 
+RUN cargo build --release
+
+# -------------------------------------------------------------
+
+FROM scratch AS binaries
+
+COPY --from=builder /build/target/release/noops-server /
+COPY --from=builder /build/target/release/noops /
+
+# -------------------------------------------------------------
 
 FROM debian:bullseye
 

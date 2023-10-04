@@ -25,7 +25,7 @@ impl Default for Config {
 
         Self {
             jwt_file: strategy.in_cache_dir("jwt"),
-            base_url: "https://app.noops.rocks/api/".to_string(),
+            base_url: "http://localhost:8080/api/".to_string(),
             manifest: Path::new("./noops.yaml").to_path_buf(),
             templates_dir: strategy.in_cache_dir("templates"),
             template_manifest: strategy.in_cache_dir("templates").join("manifest.yaml"),
