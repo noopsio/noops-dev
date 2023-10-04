@@ -13,3 +13,6 @@ tempfile = "3.4.0"
 lazy_static = "1.4.0"
 serde = { version = "1.0.154", features = ["derive"] }
 wit-component = "0.14.0"
+
+[profile.release]
+strip = "symbols"
